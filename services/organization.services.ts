@@ -1,8 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import http from "@/services/base";
 import { routes } from "@/services/routes";
-import { OrganizationMember, GetInternalOrganizationsParams } from "@/interfaces/organizations.interfaces";
+import { OrganizationMember, GetInternalOrganizationsParams, Organization } from "@/interfaces/organizations.interfaces";
 import { invalidateActivityLogs } from "@/services/activity-logs";
+import { InviteUserPayload, ProjectMemberRole } from "@/interfaces/projects.interfaces";
+import { queryClient } from "@/lib/react-query";
 
 export const useGetMyOrganizations = () => {
     return useQuery({
@@ -50,6 +52,60 @@ export const useGetInternalOrganizations = (params: GetInternalOrganizationsPara
                 }
             });
             return data;
+        },
+    });
+};
+
+export const useGetInternalOrganization = (organizationId: string) => {
+    return useQuery({
+        queryKey: ["internal-organization", organizationId],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.internalGet(organizationId),
+            });
+            return data as Organization;
+        },
+        enabled: !!organizationId,
+    });
+};
+
+export interface GetOrganizationUsersParams {
+    organizationId: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+}
+
+export const useGetOrganizationUsers = (params: GetOrganizationUsersParams) => {
+    return useQuery({
+        queryKey: ["organization-users", params],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.internalUsers(params.organizationId),
+                query: {
+                    page: params.page,
+                    limit: params.limit,
+                    search: params.search
+                }
+            });
+            return data;
+        },
+        enabled: !!params.organizationId,
+    });
+};
+
+export const useInviteUserToOrganization = (organizationId: string) => {
+    return useMutation({
+        mutationFn: async (payload: { members: InviteUserPayload[] }) => {
+            const data = await http.post({
+                url: routes.organization.internalInviteUser(organizationId),
+                body: { payload: payload.members },
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["organization-users", { organizationId }] });
+            invalidateActivityLogs();
         },
     });
 };

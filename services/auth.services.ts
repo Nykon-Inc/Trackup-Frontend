@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import http from "@/services/base";
 import { setCookie } from "nookies";
 import { routes } from "@/services/routes";
@@ -11,6 +11,7 @@ import {
     VerifyPayloadInterface,
 } from "@/interfaces/auth.interfaces";
 import { cookieKey, useAuthStore } from "@/stores/auth.store";
+import { InvitationData } from "@/interfaces/users.interfaces";
 
 export const useLogin = () => {
     const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
@@ -119,6 +120,33 @@ export const useLogout = () => {
         onSuccess: () => {
             localStorage.clear();
             window.location.href = "/login";
+        },
+    });
+};
+
+
+export const useValidateInvitation = (params: { token: string; type: string }) => {
+    return useQuery({
+        queryKey: ["validate-invitation", params],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.auth.invitation,
+                query: params,
+            });
+            return data as InvitationData;
+        },
+        enabled: !!params.token && !!params.type,
+        retry: false,
+    });
+};
+
+export const useRejectInvitation = () => {
+    return useMutation({
+        mutationFn: async (payload: { token: string, type: string }) => {
+            return await http.post({
+                url: routes.auth.rejectInvitation,
+                body: payload,
+            });
         },
     });
 };

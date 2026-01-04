@@ -18,6 +18,8 @@ import { useState } from "react";
 import { InviteUserPayload, ProjectMemberRole } from "@/interfaces/projects.interfaces";
 import { useInviteUser } from "@/services/projects.services";
 
+import { useInviteUserToOrganization } from "@/services/organization.services";
+
 // Validation schema for adding staff members
 const AddStaffSchema = Yup.object().shape({
     users: Yup.array().of(
@@ -30,10 +32,22 @@ const AddStaffSchema = Yup.object().shape({
     ).min(1, "At least one user is required"),
 });
 
-export function AddStaffMember({ projectId }: { projectId: string }) {
+export function AddStaffMember({ projectId, organizationId }: { projectId?: string, organizationId?: string }) {
     const [open, setOpen] = useState(false);
 
-    const { mutateAsync: inviteUser } = useInviteUser(projectId)
+    const projectInviteMutation = useInviteUser(projectId || "");
+    const organizationInviteMutation = useInviteUserToOrganization(organizationId || "");
+
+    const inviteUser = async (payload: { members: InviteUserPayload[] }) => {
+        if (organizationId) {
+            return await organizationInviteMutation.mutateAsync(payload);
+        } else if (projectId) {
+            return await projectInviteMutation.mutateAsync(payload);
+        } else {
+            throw new Error("No context provided for invitation");
+        }
+    }
+
     // Initial user object
     const initialUser: InviteUserPayload = { email: "", role: ProjectMemberRole.MEMBER };
 
@@ -45,9 +59,9 @@ export function AddStaffMember({ projectId }: { projectId: string }) {
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
                 await inviteUser({ members: values.users })
-                console.log("Adding staff members:", values.users)
                 setOpen(false);
                 resetForm();
+                // Toast logic handles success feedback usually, or add here if missing
             } catch (error) {
                 console.error("Failed to add staff members:", error);
             } finally {

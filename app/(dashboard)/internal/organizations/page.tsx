@@ -9,11 +9,13 @@ import { Input } from "@/components/ui/input";
 import { DebouncedSearch } from "@/components/ui/debounced-search";
 import { Search, Building2, MonitorOff, Activity } from "lucide-react";
 import { InternalStatCard } from "@/components/internal/stat-card";
-import { Organization, OrganizationMember } from "@/interfaces/organizations.interfaces";
+import { Organization } from "@/interfaces/organizations.interfaces";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 export default function InternalOrganizationsPage() {
+    const router = useRouter();
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [search, setSearch] = useState("");
@@ -115,7 +117,7 @@ export default function InternalOrganizationsPage() {
                         loading={isLoading}
                         rowKey={(row) => row.id}
                         emptyMessage="No organizations found."
-                        onRowClick={(row) => window.location.href = `/internal/organizations/${row.id}/projects`}
+                        onRowClick={(row) => router.push(`/internal/organizations/${row.id}`)}
                     />
 
                     <TablePagination
