@@ -13,6 +13,7 @@ export default function OrganizationLayout({
             <SidebarProvider>
                 <AppSidebar />
                 <SidebarInset>
+                    Carry on
                     {children}
                 </SidebarInset>
             </SidebarProvider>
