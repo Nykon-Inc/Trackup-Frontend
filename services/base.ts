@@ -32,7 +32,7 @@ class HttpFacade {
     }
 
     private async setupRequirements() {
-        console.log(this.baseUrl)
+        console.log("BASE URL", this.baseUrl)
         let isRefreshing = false;
         let refreshPromise: Promise<string> | null = null;
         let failedQueue: {
