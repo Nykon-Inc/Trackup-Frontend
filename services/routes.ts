@@ -12,22 +12,22 @@ export const routes = {
         rejectInvitation: "/auth/invitation/reject",
     },
     organization: {
-        index: "/organizations",
-        me: "/organizations/me",
+        index: "/client/organizations",
+        me: "/client/organizations/me",
         internalCreate: "/internal/organizations",
         internalGet: (id: string) => `/internal/organizations/${id}`,
         internalUsers: (id: string) => `/internal/organizations/${id}/users`,
         internalInviteUser: (id: string, suffix = "/invite") => `/internal/organizations/${id}${suffix}`,
     },
     projects: {
-        index: "/projects",
-        invite: "/invite", // Used as suffix
-        me: "/projects/me",
+        index: "/client/projects",
+        invite: "/client/projects/invite", // Used as suffix
+        me: "/client/projects/me",
         meInternal: "/internal/projects",
     },
     users: {
-        index: "/users",
-        createUser: "/users",
+        index: "/client/users",
+        createUser: "/client/users",
         meInternal: "/internal/users/me",
         meClient: "/client/users/me",
         internal: "/internal/users",
