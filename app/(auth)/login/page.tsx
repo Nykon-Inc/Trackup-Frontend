@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { loginSchema } from "@/validators/auth";
 import { useLogin } from "@/services/auth.services";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function LoginPage() {
     const loginMutation = useLogin();
@@ -20,11 +21,15 @@ export default function LoginPage() {
         },
         validationSchema: loginSchema,
         onSubmit: async (values) => {
-            const { account, organization, credentials, permissions } = await loginMutation.mutateAsync(values);
-            if (account.accountType === "client") {
-                router.push(`/dashboard/${organization?.id}`);
-            } else {
-                router.push(`/internal`);
+            try {
+                const { account, organization, credentials, permissions } = await loginMutation.mutateAsync(values);
+                if (account.accountType === "client") {
+                    router.push(`/dashboard/${organization?.id}`);
+                } else {
+                    router.push(`/internal`);
+                }
+            } catch (error) {
+                toast.error("Invalid email or password");
             }
         },
     });
