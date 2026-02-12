@@ -2,6 +2,7 @@
 
 import { ProjectsList } from "@/components/internal/projects/projects-list";
 import { PageHeader } from "@/components/page-header";
+import { useParams } from "next/navigation";
 
 interface PageProps {
     params: {
@@ -9,7 +10,8 @@ interface PageProps {
     };
 }
 
-export default function OrganizationProjectsPage({ params }: PageProps) {
+export default function OrganizationProjectsPage() {
+    const params = useParams()
     return (
         <div className="flex flex-col h-full">
             <PageHeader
@@ -23,7 +25,7 @@ export default function OrganizationProjectsPage({ params }: PageProps) {
             />
             <div className="p-6">
                 <ProjectsList
-                    organizationId={params.orgId}
+                    organizationId={params.orgId as string}
                     basePath={`/internal/organizations/${params.orgId}/projects`}
                 />
             </div>

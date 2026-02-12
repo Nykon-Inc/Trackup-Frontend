@@ -22,67 +22,78 @@ export default function LoginPage() {
         validationSchema: loginSchema,
         onSubmit: async (values) => {
             try {
-                const { account, organization, credentials, permissions } = await loginMutation.mutateAsync(values);
+                const { account } = await loginMutation.mutateAsync(values);
                 if (account.accountType === "client") {
-                    router.push(`/dashboard/${organization?.id}`);
+                    router.push(`/select-organization`);
                 } else {
                     router.push(`/internal`);
                 }
-            } catch (error) {
-                toast.error("Invalid email or password");
+            } catch (error: any) {
+                const message = error?.response?.data?.message || "Invalid email or password";
+                toast.error(message);
             }
         },
     });
 
+    const isLoading = loginMutation.isPending;
+
     return (
-        <Card>
-            <CardHeader className="space-y-1">
-                <CardTitle className="text-2xl text-center">Sign in</CardTitle>
-                <CardDescription className="text-center">
+        <Card className="w-full max-w-md mx-auto">
+            <CardHeader className="space-y-2 text-center">
+                <CardTitle className="text-3xl font-bold tracking-tight">Sign in</CardTitle>
+                <CardDescription className="text-base">
                     Enter your email and password to access your account
                 </CardDescription>
             </CardHeader>
             <form onSubmit={formik.handleSubmit}>
-                <CardContent className="grid gap-4">
-                    <div className="grid gap-2">
+                <CardContent className="grid gap-6">
+                    <div className="grid gap-1.5">
                         <Label htmlFor="email">Email</Label>
                         <Input
                             id="email"
                             type="email"
                             placeholder="m@example.com"
+                            autoComplete="email"
+                            disabled={isLoading}
                             {...formik.getFieldProps("email")}
                         />
                         {formik.touched.email && formik.errors.email && (
-                            <div className="text-sm text-red-500">{formik.errors.email}</div>
+                            <div className="text-xs font-medium text-destructive">{formik.errors.email}</div>
                         )}
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="password">Password</Label>
+                    <div className="grid gap-1.5">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="password">Password</Label>
+                            <Link
+                                href="/forgot-password"
+                                className="text-xs font-medium text-primary hover:underline underline-offset-4"
+                                tabIndex={-1}
+                            >
+                                Forgot password?
+                            </Link>
+                        </div>
                         <Input
                             id="password"
                             type="password"
+                            autoComplete="current-password"
+                            placeholder="••••••••"
+                            disabled={isLoading}
                             {...formik.getFieldProps("password")}
                         />
                         {formik.touched.password && formik.errors.password && (
-                            <div className="text-sm text-red-500">{formik.errors.password}</div>
+                            <div className="text-xs font-medium text-destructive">{formik.errors.password}</div>
                         )}
                     </div>
                 </CardContent>
-                <CardFooter className="flex mt-2 flex-col gap-4">
-                    <Button type="submit" className="w-full" loading={loginMutation.isPending} disabled={loginMutation.isPending}>
-                        {loginMutation.isPending ? "Signing in..." : "Sign In"}
+                <CardFooter className="flex flex-col gap-5 pt-5 pb-2">
+                    <Button
+                        type="submit"
+                        className="w-full text-base py-5"
+                        loading={isLoading}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? "Signing in..." : "Sign In"}
                     </Button>
-                    <div className="text-center text-sm text-muted-foreground">
-                        <Link href="/forgot-password" className="hover:text-primary underline underline-offset-4">
-                            Forgot your password?
-                        </Link>
-                    </div>
-                    <div className="text-center text-sm text-muted-foreground">
-                        Don't have an account?{" "}
-                        <Link href="/signup" className="hover:text-primary underline underline-offset-4">
-                            Sign up
-                        </Link>
-                    </div>
                 </CardFooter>
             </form>
         </Card>

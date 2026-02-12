@@ -9,19 +9,24 @@ import {
     ResetPasswordPayloadInterface,
     LogoutPayloadInterface,
     VerifyPayloadInterface,
+    VerifyOnboardingTokenPayloadInterface,
+    VerifyResetTokenPayloadInterface,
+    VerifyTokenResponseInterface,
+    AcceptInvitePayloadInterface,
 } from "@/interfaces/auth.interfaces";
 import { cookieKey, useAuthStore } from "@/stores/auth.store";
 
 export const useLogin = () => {
     const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    //...
+
 
     return useMutation({
         mutationFn: async (payload: LoginPayloadInterface) => {
-            const data = await http.post({
+            return http.post({
                 url: routes.auth.login,
                 body: payload,
             });
-            return data as LoginResultInterface;
         },
         onSuccess: (data) => {
             setAccount(data.account);
@@ -119,6 +124,59 @@ export const useLogout = () => {
         onSuccess: () => {
             localStorage.clear();
             window.location.href = "/login";
+        },
+    });
+};
+
+export const useVerifyOnboardingToken = () => {
+    return useMutation({
+        mutationFn: async (payload: VerifyOnboardingTokenPayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.verifyOnboardingToken,
+                body: payload,
+            });
+            return data as VerifyTokenResponseInterface;
+        },
+    });
+};
+
+export const useVerifyResetToken = () => {
+    return useMutation({
+        mutationFn: async (payload: VerifyResetTokenPayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.verifyResetToken,
+                body: payload,
+            });
+            return data as VerifyTokenResponseInterface;
+        },
+    });
+};
+
+export const useAcceptInvite = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    return useMutation({
+        mutationFn: async (payload: AcceptInvitePayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.acceptInvite,
+                body: payload,
+            });
+            return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            setAccount(data.account);
+            setAccess(data.credentials);
+            if (data.account.accountType === "client" && data.organization) {
+                setOrganization(data.organization);
+            }
+            if (data.account.accountType === "internal" && data.permissions) {
+                setPermissions(data.permissions);
+                setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+                    path: "/",
+                });
+            }
+            setCookie(null, cookieKey, data.credentials.access.token, {
+                path: "/",
+            });
         },
     });
 };

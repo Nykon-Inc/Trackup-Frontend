@@ -66,6 +66,10 @@ export interface ProjectMember {
     };
 }
 
+export interface ProjectMembership extends ProjectMember {
+    project: Project;
+}
+
 export interface GetProjectMembersQuery {
     role?: string;
     status?: string;

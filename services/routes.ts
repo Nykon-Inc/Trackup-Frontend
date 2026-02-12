@@ -6,13 +6,18 @@ export const routes = {
         acceptInvite: "/auth/accept-invite",
         logout: "/auth/logout",
         forgotPassword: "/auth/forgot-password",
-        resetPassword: "/auth/reset-password",
+        resetPassword: "/auth/finish-reset-password",
         refreshToken: "/auth/refresh-tokens",
+        verifyOnboardingToken: "/auth/verify-onboarding-token",
+        verifyResetToken: "/auth/verify-reset-token",
     },
     organization: {
         index: "/organizations",
         me: "/organizations/me",
         internalCreate: "/internal/organizations",
+        internalDetail: (id: string) => `/internal/organizations/${id}`, // Used for DELETE (disable)
+        internalEnable: (id: string) => `/internal/organizations/${id}/enable`,
+        internalResendInvite: (id: string) => `/internal/organizations/${id}/resend-invite`,
     },
     projects: {
         index: "/projects",

@@ -3,6 +3,7 @@ export interface Organization {
     id: string;
     name: string;
     domain: string;
+    status: 'active' | 'disabled'
     createdAt: string;
     updatedAt: string;
 }

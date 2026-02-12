@@ -25,7 +25,7 @@ export default function RootLayout({
       >
         <div className="flex flex-col min-h-screen">
           <Providers>
-            <React.Suspense fallback={<div>Loading...</div>}>
+            <React.Suspense fallback={<div className="h-screen w-screen flex justify-center items-center">Loading...</div>}>
               {children}
             </React.Suspense>
           </Providers>

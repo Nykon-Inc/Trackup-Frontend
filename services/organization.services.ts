@@ -53,3 +53,46 @@ export const useGetInternalOrganizations = (params: GetInternalOrganizationsPara
         },
     });
 };
+export const useDisableOrganization = () => {
+    return useMutation({
+        mutationFn: async (id: string) => {
+            const data = await http.delete({
+                url: routes.organization.internalDetail(id),
+            });
+            return data;
+        },
+        onSuccess: () => {
+            invalidateActivityLogs();
+        }
+    });
+};
+
+export const useEnableOrganization = () => {
+    return useMutation({
+        mutationFn: async (id: string) => {
+            const data = await http.patch({
+                url: routes.organization.internalEnable(id),
+                body: {},
+            });
+            return data;
+        },
+        onSuccess: () => {
+            invalidateActivityLogs();
+        }
+    });
+};
+
+export const useResendOrganizationInvite = () => {
+    return useMutation({
+        mutationFn: async (id: string) => {
+            const data = await http.post({
+                url: routes.organization.internalResendInvite(id),
+                body: {},
+            });
+            return data;
+        },
+        onSuccess: () => {
+            invalidateActivityLogs();
+        }
+    });
+};
