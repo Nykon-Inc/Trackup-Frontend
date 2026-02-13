@@ -10,17 +10,24 @@ export const routes = {
         refreshToken: "/auth/refresh-tokens",
         verifyOnboardingToken: "/auth/verify-onboarding-token",
         verifyResetToken: "/auth/verify-reset-token",
+        setupPassword: "/client/users/setup-password",
+        verifyRegistration: "/auth/verify-registration",
+        selectOrganization: "/auth/select-organization",
     },
     organization: {
-        index: "/organizations",
-        me: "/organizations/me",
+        index: "/client/organizations",
+        me: "/client/organizations/me",
         internalCreate: "/internal/organizations",
         internalDetail: (id: string) => `/internal/organizations/${id}`, // Used for DELETE (disable)
         internalEnable: (id: string) => `/internal/organizations/${id}/enable`,
         internalResendInvite: (id: string) => `/internal/organizations/${id}/resend-invite`,
+        bulkInvite: (id: string) => `/client/organizations/${id}/bulk-invite`,
+        hubstaffAuth: (id: string) => `/client/organizations/${id}/hubstaff/auth`,
+        hubstaffExchangeToken: (id: string) => `/client/organizations/${id}/hubstaff/exchange-token`,
+        hubstaffProjects: (id: string) => `/client/organizations/${id}/hubstaff/projects`,
     },
     projects: {
-        index: "/projects",
+        index: "/client/projects",
         invite: "/invite", // Used as suffix
         me: "/projects/me",
         meInternal: "/internal/projects",

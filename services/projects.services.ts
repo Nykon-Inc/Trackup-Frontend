@@ -30,6 +30,27 @@ export const useCreateProject = () => {
 };
 
 
+export const useCreateProjectOnboarding = () => {
+    return useMutation({
+        mutationFn: async ({ token, ...payload }: CreateProjectPayload & { token: string }) => {
+            const data = await http.post({
+                url: routes.projects.index,
+                body: payload,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+            return data as Project;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["projects"] });
+            invalidateActivityLogs();
+        },
+    });
+};
+
+
 export const useCreateProjectInternal = () => {
     return useMutation({
         mutationFn: async (payload: CreateProjectPayload) => {
@@ -72,29 +93,29 @@ export const useGetInternalProject = (projectId: string) => {
     });
 };
 
-export const useGetProjects = (query?: Record<string, any>) => {
+export const useGetProjects = (payload: { organizationId: string, query?: Record<string, any> }) => {
     return useQuery({
-        queryKey: ["projects", query],
+        queryKey: ["projects", payload.organizationId, payload.query],
         queryFn: async () => {
             const data = await http.get({
-                url: routes.projects.index,
-                query,
+                url: `${routes.organization.index}/${payload.organizationId}/projects`,
+                query: payload.query,
             });
             return data as GetProjectsResponse;
         },
     });
 };
 
-export const useGetProject = (projectId: string) => {
+export const useGetProject = (payload: { organizationId: string, projectId: string }) => {
     return useQuery({
-        queryKey: ["project", projectId],
+        queryKey: ["project", payload.projectId],
         queryFn: async () => {
             const data = await http.get({
-                url: `${routes.projects.index}/${projectId}`,
+                url: `${routes.organization.index}/${payload.organizationId}/projects/${payload.projectId}`,
             });
             return data as ProjectDetails;
         },
-        enabled: !!projectId,
+        enabled: !!payload.projectId,
     });
 };
 

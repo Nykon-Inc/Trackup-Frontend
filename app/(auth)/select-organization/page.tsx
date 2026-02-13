@@ -7,24 +7,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Loader2, Building2, ArrowRight } from "lucide-react";
 
+import { useSelectOrganization } from "@/services/auth.services";
+
 export default function SelectOrganizationPage() {
     const router = useRouter();
     const { data: organizations, isLoading } = useGetMyOrganizations();
+    const { mutate: selectOrganization, isPending: isSelecting } = useSelectOrganization();
 
     useEffect(() => {
         if (!isLoading && organizations) {
             if (organizations.length === 1) {
-                const orgId = organizations[0].organization.id;
-                router.push(`/dashboard/${orgId}`);
+                const orgId = organizations[0].organizationId;
+                selectOrganization({ organizationId: orgId }, {
+                    onSuccess: () => {
+                        router.push(`/dashboard/${orgId}`);
+                    }
+                });
             }
         }
-    }, [organizations, isLoading, router]);
+    }, [organizations, isLoading, router, selectOrganization]);
 
     const handleSelectOrganization = (orgId: string) => {
-        router.push(`/dashboard/${orgId}`);
+        selectOrganization({ organizationId: orgId }, {
+            onSuccess: () => {
+                router.push(`/dashboard/${orgId}`);
+            }
+        });
     };
 
-    if (isLoading) {
+    if (isLoading || isSelecting) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-gray-50/50">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />

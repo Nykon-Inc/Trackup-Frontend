@@ -25,6 +25,11 @@ export interface VerifyTokenResponseInterface {
     projectMembership?: ProjectMembership;
 }
 
+export interface SetupPasswordPayloadInterface {
+    token: string;
+    password?: string;
+}
+
 export interface AcceptInvitePayloadInterface {
     token: string;
     password?: string;
@@ -53,6 +58,10 @@ export interface ResetPasswordPayloadInterface {
 
 export interface LogoutPayloadInterface {
     refreshToken: string;
+}
+
+export interface SelectOrganizationPayloadInterface {
+    organizationId: string;
 }
 
 export interface Organization {

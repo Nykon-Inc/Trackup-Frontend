@@ -13,8 +13,40 @@ import {
     VerifyResetTokenPayloadInterface,
     VerifyTokenResponseInterface,
     AcceptInvitePayloadInterface,
+    SetupPasswordPayloadInterface,
+    SelectOrganizationPayloadInterface,
 } from "@/interfaces/auth.interfaces";
 import { cookieKey, useAuthStore } from "@/stores/auth.store";
+
+export const useSelectOrganization = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+
+    return useMutation({
+        mutationFn: async (payload: SelectOrganizationPayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.selectOrganization,
+                body: payload,
+            });
+            return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            setAccount(data.account);
+            setAccess(data.credentials);
+            if (data.account.accountType === "client" && data.organization) {
+                setOrganization(data.organization);
+            }
+            if (data.account.accountType === "internal" && data.permissions) {
+                setPermissions(data.permissions);
+                setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+                    path: "/",
+                });
+            }
+            setCookie(null, cookieKey, data.credentials.access.token, {
+                path: "/",
+            });
+        },
+    });
+};
 
 export const useLogin = () => {
     const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
@@ -159,6 +191,72 @@ export const useAcceptInvite = () => {
             const data = await http.post({
                 url: routes.auth.acceptInvite,
                 body: payload,
+            });
+            return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            setAccount(data.account);
+            setAccess(data.credentials);
+            if (data.account.accountType === "client" && data.organization) {
+                setOrganization(data.organization);
+            }
+            if (data.account.accountType === "internal" && data.permissions) {
+                setPermissions(data.permissions);
+                setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+                    path: "/",
+                });
+            }
+            setCookie(null, cookieKey, data.credentials.access.token, {
+                path: "/",
+            });
+        },
+    });
+};
+
+export const useSetupPassword = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    return useMutation({
+        mutationFn: async (payload: SetupPasswordPayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.setupPassword,
+                body: payload,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${payload.token}`,
+                },
+            });
+            return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            // setAccount(data.account);
+            // setAccess(data.credentials);
+            // if (data.account.accountType === "client" && data.organization) {
+            //     setOrganization(data.organization);
+            // }
+            // if (data.account.accountType === "internal" && data.permissions) {
+            //     setPermissions(data.permissions);
+            //     setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+            //         path: "/",
+            //     });
+            // }
+            // setCookie(null, cookieKey, data.credentials.access.token, {
+            //     path: "/",
+            // });
+        },
+    });
+};
+
+export const useCompleteRegistration = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    return useMutation({
+        mutationFn: async (payload: { token: string }) => {
+            const data = await http.post({
+                url: routes.auth.verifyRegistration,
+                body: {},
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${payload.token}`,
+                },
             });
             return data as LoginResultInterface;
         },

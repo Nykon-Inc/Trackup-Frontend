@@ -5,8 +5,30 @@ import { Users, FolderKanban, Activity, DollarSign } from "lucide-react";
 
 import { useParams } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
+import { useGetHubstaffAuthUrl, useGetHubstaffProjects } from "@/services/organization.services";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { useWorkspace } from "@/components/providers/workspace-provider";
+
 export default function DashboardPage() {
     const params = useParams();
+    const orgId = params.orgId as string;
+    const { activeOrg } = useWorkspace();
+
+    const { mutate: getHubstaffUrl, isPending: isGettingUrl } = useGetHubstaffAuthUrl();
+    // const { data: projects } = useGetHubstaffProjects(orgId);
+    const handleConnectHubstaff = () => {
+        getHubstaffUrl(orgId, {
+            onSuccess: (data) => {
+                window.location.href = data.url;
+            },
+            onError: () => {
+                toast.error("Failed to get Hubstaff authorization URL");
+            }
+        });
+    };
+
     return (
         <div className="flex flex-col h-full w-full">
             <PageHeader
@@ -61,6 +83,22 @@ export default function DashboardPage() {
                             <p className="text-xs text-muted-foreground">+20.1% from last month</p>
                         </CardContent>
                     </Card>
+                </div>
+
+                <div className="border rounded-lg p-6 flex flex-col items-start gap-4">
+                    <div>
+                        <h3 className="text-lg font-semibold">Hubstaff Integration</h3>
+                        <p className="text-sm text-muted-foreground">Connect your organization to Hubstaff to sync time entries and activity.</p>
+                    </div>
+                    {activeOrg?.organization.isHubstaffConnected ? (
+                        <Button variant="outline" disabled className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
+                            Hubstaff Connected
+                        </Button>
+                    ) : (
+                        <Button onClick={handleConnectHubstaff} disabled={isGettingUrl}>
+                            Connect Hubstaff {isGettingUrl && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>

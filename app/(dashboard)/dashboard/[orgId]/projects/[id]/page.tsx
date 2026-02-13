@@ -10,6 +10,7 @@ import clsx from "clsx"
 import Staff from "./staff/Staff"
 import { Button } from "@/components/ui/button"
 import { AddStaffMember } from "../../users/add-staff-member-dialog"
+import { useWorkspace } from "@/components/providers/workspace-provider"
 
 export default function ProjectDetailsPage() {
     const params = useParams()
@@ -17,10 +18,11 @@ export default function ProjectDetailsPage() {
     const searchParams = useSearchParams()
     const pathname = usePathname()
     const id = params?.id as string
+    const { activeOrgId } = useWorkspace();
 
     const currentTab = searchParams.get("tab") || "staff"
 
-    const { data: project, isLoading } = useGetProject(id)
+    const { data: project, isLoading } = useGetProject({ organizationId: activeOrgId || "", projectId: id })
 
     const handleTabChange = (value: string) => {
         const params = new URLSearchParams(searchParams.toString())

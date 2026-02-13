@@ -6,16 +6,6 @@ import { useWorkspace } from "@/components/providers/workspace-provider";
 import { PermissionGate } from "@/components/permission-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Activity, Clock, UserPlus, Trash2 } from "lucide-react";
 import { useGetAggregatedSessions } from "@/services/sessions.services";
 import { useAuthStore } from "@/stores/auth.store";

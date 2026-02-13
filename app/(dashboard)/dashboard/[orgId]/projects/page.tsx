@@ -41,10 +41,12 @@ export default function ProjectsPage() {
     }, [debouncedSearch]);
 
     const { data: projectsData, isLoading } = useGetProjects({
-        organizationId: activeOrgId,
-        search: debouncedSearch,
-        page,
-        limit: rowsPerPage
+        organizationId: activeOrgId || "",
+        query: {
+            search: debouncedSearch,
+            page,
+            limit: rowsPerPage
+        }
     });
 
     const projects = projectsData?.results || [];
@@ -203,7 +205,7 @@ export default function ProjectsPage() {
                         className="border-0 rounded-b-none shadow-none"
                         headerClassName="bg-transparent h-12 border-t border-b border-border"
                         emptyMessage="No projects found."
-                        onRowClick={(row) => router.push(`/${activeOrgId}/projects/${row.id}`)}
+                        onRowClick={(row) => router.push(`/dashboard/${activeOrgId}/projects/${row.id}`)}
                         rowClassName={"cursor-pointer"}
                         sortable
                         defaultSortKey="name"

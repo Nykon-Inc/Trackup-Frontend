@@ -3,6 +3,8 @@ import http from "@/services/base";
 import { routes } from "@/services/routes";
 import { OrganizationMember, GetInternalOrganizationsParams } from "@/interfaces/organizations.interfaces";
 import { invalidateActivityLogs } from "@/services/activity-logs";
+import { BulkInvitePayload } from "@/interfaces/organizations.interfaces";
+import { queryClient } from "@/lib/react-query";
 
 export const useGetMyOrganizations = () => {
     return useQuery({
@@ -94,5 +96,75 @@ export const useResendOrganizationInvite = () => {
         onSuccess: () => {
             invalidateActivityLogs();
         }
+    });
+};
+
+export const useBulkInvite = () => {
+    return useMutation({
+        mutationFn: async (payload: BulkInvitePayload) => {
+            const data = await http.post({
+                url: routes.organization.bulkInvite(payload.organizationId),
+                body: { members: payload.members },
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["organization-members"] });
+        }
+    });
+};
+
+export const useBulkInviteOnboarding = () => {
+    return useMutation({
+        mutationFn: async ({ token, ...payload }: BulkInvitePayload & { token: string }) => {
+            const data = await http.post({
+                url: routes.organization.bulkInvite(payload.organizationId),
+                body: { members: payload.members },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+            return data;
+        },
+    });
+};
+
+export const useGetHubstaffAuthUrl = () => {
+    return useMutation({
+        mutationFn: async (organizationId: string) => {
+            const data = await http.get({
+                url: routes.organization.hubstaffAuth(organizationId),
+            });
+            return data as { url: string };
+        },
+    });
+};
+
+export const useExchangeHubstaffToken = () => {
+    return useMutation({
+        mutationFn: async ({ organizationId, code }: { organizationId: string; code: string }) => {
+            const data = await http.post({
+                url: routes.organization.hubstaffExchangeToken(organizationId),
+                body: { code },
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
+        }
+    });
+};
+
+export const useGetHubstaffProjects = (organizationId: string) => {
+    return useQuery({
+        queryKey: ["hubstaff-projects", organizationId],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.hubstaffProjects(organizationId),
+            });
+            return data;
+        },
+        enabled: !!organizationId,
     });
 };
