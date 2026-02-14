@@ -130,7 +130,7 @@ export function MemberWidgets({ data, isLoading, visibleWidgets, onVisibilityCha
                 <div className="space-y-6">
                     {/* Recent Activity (Screenshots) */}
                     {isVisible("block_recent_activity") && (
-                        <Card className="rounded-md border shadow-sm">
+                        <Card className="rounded-md border shadow-sm  p-1 gap-0">
                             <CardHeader className="flex flex-row items-center justify-between p-4 py-3 border-b">
                                 <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">RECENT ACTIVITY</CardTitle>
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
@@ -218,7 +218,7 @@ export function MemberWidgets({ data, isLoading, visibleWidgets, onVisibilityCha
                 <div className="space-y-6">
                     {/* Timesheet */}
                     {isVisible("block_timesheet") && (
-                        <Card className="rounded-md border shadow-sm">
+                        <Card className="rounded-md border shadow-sm  p-1 gap-0">
                             <CardHeader className="flex flex-row items-center justify-between p-4 py-3 border-b">
                                 <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">TIMESHEET</CardTitle>
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
@@ -266,7 +266,7 @@ export function MemberWidgets({ data, isLoading, visibleWidgets, onVisibilityCha
 
                     {/* Current Project Activity */}
                     {isVisible("block_project_activity") && (
-                        <Card className="rounded-md border shadow-sm">
+                        <Card className="rounded-md border shadow-sm p-1 gap-0">
                             <CardHeader className="flex flex-row items-center justify-between p-4 py-3 border-b">
                                 <div className="flex items-center gap-1">
                                     <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">CURRENT PROJECT ACTIVITY</CardTitle>
@@ -309,7 +309,7 @@ export function MemberWidgets({ data, isLoading, visibleWidgets, onVisibilityCha
 
                     {/* Apps & URLs */}
                     {isVisible("block_apps_urls") && (
-                        <Card className="rounded-md border shadow-sm">
+                        <Card className="rounded-md border shadow-sm p-1 gap-0">
                             <CardHeader className="flex flex-row items-center justify-between p-4 py-3 border-b">
                                 <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">APPS & URLS</CardTitle>
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
