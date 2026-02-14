@@ -76,13 +76,15 @@ export function SparkLine({ data, color = "blue" }: SparkLineProps) {
         }
     };
 
+    const max = Math.max(...data, 100);
+
     return (
         <div className="w-24 h-6 ml-auto flex items-end justify-between gap-0.5">
             {data.map((val, i) => (
                 <div
                     key={i}
                     className={`w-full rounded-sm opacity-50 ${getColorClass(color)}`}
-                    style={{ height: `${val}%` }}
+                    style={{ height: `${(val / max) * 100}%` }}
                 />
             ))}
         </div>

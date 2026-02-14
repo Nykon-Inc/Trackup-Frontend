@@ -6,6 +6,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MoreVertical, Info, ChevronRight, Image as ImageIcon, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IOwnerDashboard } from "@/interfaces/dashboard.interfaces";
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+
+const chartConfig = {
+    day: {
+        label: "Day",
+        color: "var(--chart-1)",
+    },
+} satisfies ChartConfig
 
 export const OWNER_WIDGET_CONFIG = [
     { id: "stats_team_activity", label: "Team Activity", group: "Metric Cards" },
@@ -155,18 +164,37 @@ export function OwnerWidgets({ data, isLoading, visibleWidgets, onVisibilityChan
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
                             </CardHeader>
                             <CardContent className="p-6">
-                                <div className="flex items-end justify-between h-40 gap-2 mb-2">
-                                    {data.blocks.worked_week_chart.map((d) => (
-                                        <div key={d.day} className="h-full flex flex-col justify-end items-center gap-2 flex-1">
-                                            <div className="w-full max-w-[24px] bg-blue-500 rounded-sm hover:bg-blue-600 transition-colors" style={{ height: `${d.value}%` }}></div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="flex justify-between px-1">
-                                    {data.blocks.worked_week_chart.map((d) => (
-                                        <div key={d.day} className="text-[10px] text-muted-foreground flex-1 text-center">{d.day}</div>
-                                    ))}
-                                </div>
+                                <ChartContainer className="aspect-auto h-[200px] w-full" config={chartConfig}>
+                                    <BarChart accessibilityLayer data={data.blocks.worked_week_chart}>
+                                        <CartesianGrid vertical={false} horizontal={false} />
+                                        <XAxis
+                                            dataKey="day"
+                                            tickLine={false}
+                                            tickMargin={3}
+                                            axisLine={false}
+                                            tickFormatter={(value) => value.slice(0, 3)}
+                                        />
+                                        <ChartTooltip
+                                            cursor={false}
+                                            formatter={(value, name, item, index) => (
+                                                <div className="flex items-center gap-2 font-medium">
+                                                    {/* Custom label for the value */}
+                                                    <span className="text-muted-foreground">Worked:</span>
+                                                    {/* Logic to format 1.5 into "1h 30m" */}
+                                                    {`${Math.floor(Number(value))}h ${Math.round((Number(value) % 1) * 60)}m`}
+
+                                                    {/* Optional: Add a little color indicator manually */}
+                                                    <div
+                                                        className="h-2 w-2 rounded-full"
+                                                        style={{ backgroundColor: item.color }}
+                                                    />
+                                                </div>
+                                            )}
+                                            content={<ChartTooltipContent hideLabel />}
+                                        />
+                                        <Bar barSize={24} dataKey="value" fill="var(--color-desktop)" radius={8} />
+                                    </BarChart>
+                                </ChartContainer>
 
                                 <div className="mt-6 border-t pt-2 flex justify-center">
                                     <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
@@ -194,7 +222,7 @@ export function OwnerWidgets({ data, isLoading, visibleWidgets, onVisibilityChan
                                             <tr className="border-b text-muted-foreground">
                                                 <th className="font-semibold p-3 pl-4">Project</th>
                                                 <th className="font-semibold p-3 text-right">Hours</th>
-                                                <th className="font-semibold p-3 text-right pr-4">Budget</th>
+                                                <th className="font-semibold p-3 text-right pr-4">Budget Hours</th>
                                             </tr>
                                         </thead>
                                         <tbody>
