@@ -93,9 +93,9 @@ export const useGetInternalProject = (projectId: string) => {
     });
 };
 
-export const useGetProjects = (payload: { organizationId: string, query?: Record<string, any> }) => {
+export const useGetProjects = (payload: { organizationId: string, userId: string, query?: Record<string, any> }) => {
     return useQuery({
-        queryKey: ["projects", payload.organizationId, payload.query],
+        queryKey: ["projects", payload.organizationId, payload.userId, payload.query],
         queryFn: async () => {
             const data = await http.get({
                 url: `${routes.organization.index}/${payload.organizationId}/projects`,

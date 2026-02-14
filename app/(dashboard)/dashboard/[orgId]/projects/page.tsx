@@ -24,6 +24,7 @@ import TablePagination from "@/components/ui/table-pagination";
 import { PageHeader } from "@/components/page-header";
 import { useWorkspace } from "@/components/providers/workspace-provider";
 import { ProjectCard } from "./components/ProjectCard";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function ProjectsPage() {
     const router = useRouter();
@@ -31,6 +32,7 @@ export default function ProjectsPage() {
     const [statusFilter, setStatusFilter] = useState<string>("active");
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(20);
+    const { account } = useAuthStore();
 
     const debouncedSearch = useDebounce(search, 500);
 
@@ -43,6 +45,7 @@ export default function ProjectsPage() {
 
     const { data: projectsData, isLoading } = useGetProjects({
         organizationId: activeOrgId || "",
+        userId: account?.id || "",
         query: {
             search: debouncedSearch,
             page,
