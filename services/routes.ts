@@ -13,6 +13,7 @@ export const routes = {
         setupPassword: "/client/users/setup-password",
         verifyRegistration: "/auth/verify-registration",
         selectOrganization: "/auth/select-organization",
+        registerInvitedUser: "/auth/register-invited-user",
     },
     organization: {
         index: "/client/organizations",
@@ -22,9 +23,13 @@ export const routes = {
         internalEnable: (id: string) => `/internal/organizations/${id}/enable`,
         internalResendInvite: (id: string) => `/internal/organizations/${id}/resend-invite`,
         bulkInvite: (id: string) => `/client/organizations/${id}/bulk-invite`,
+        members: (id: string) => `/client/organizations/${id}/members`,
+        invitations: (id: string) => `/client/organizations/${id}/invitations`,
         hubstaffAuth: (id: string) => `/client/organizations/${id}/hubstaff/auth`,
         hubstaffExchangeToken: (id: string) => `/client/organizations/${id}/hubstaff/exchange-token`,
         hubstaffProjects: (id: string) => `/client/organizations/${id}/hubstaff/projects`,
+        acceptInvitation: (id: string) => `/client/organizations/${id}/accept-invitation`,
+        rejectInvitation: (id: string) => `/client/organizations/${id}/reject-invitation`,
     },
     projects: {
         index: "/client/projects",
@@ -51,6 +56,9 @@ export const routes = {
     },
     analytics: {
         stats: "/internal/analytics/stats",
+    },
+    dashboard: {
+        overview: (organizationId: string) => `/client/organizations/${organizationId}/dashboard`,
     },
     rbac: {
         roles: "/internal/rbac/roles",

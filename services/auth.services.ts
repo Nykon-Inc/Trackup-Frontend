@@ -15,8 +15,10 @@ import {
     AcceptInvitePayloadInterface,
     SetupPasswordPayloadInterface,
     SelectOrganizationPayloadInterface,
+    RegisterInvitedUserPayloadInterface,
 } from "@/interfaces/auth.interfaces";
 import { cookieKey, useAuthStore } from "@/stores/auth.store";
+import { queryClient } from "@/lib/react-query";
 
 export const useSelectOrganization = () => {
     const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
@@ -44,6 +46,7 @@ export const useSelectOrganization = () => {
             setCookie(null, cookieKey, data.credentials.access.token, {
                 path: "/",
             });
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
         },
     });
 };
@@ -275,6 +278,36 @@ export const useCompleteRegistration = () => {
             setCookie(null, cookieKey, data.credentials.access.token, {
                 path: "/",
             });
+        },
+    });
+};
+
+export const useRegisterInvitedUser = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    return useMutation({
+        mutationFn: async (payload: RegisterInvitedUserPayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.registerInvitedUser,
+                body: payload,
+            });
+            return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            setAccount(data.account);
+            setAccess(data.credentials);
+            if (data.account.accountType === "client" && data.organization) {
+                setOrganization(data.organization);
+            }
+            if (data.account.accountType === "internal" && data.permissions) {
+                setPermissions(data.permissions);
+                setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+                    path: "/",
+                });
+            }
+            setCookie(null, cookieKey, data.credentials.access.token, {
+                path: "/",
+            });
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
         },
     });
 };

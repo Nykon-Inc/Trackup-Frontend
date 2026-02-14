@@ -7,6 +7,7 @@ import { useGetMyOrganizations } from "@/services/organization.services";
 import { OrganizationMember } from "@/interfaces/organizations.interfaces";
 import { useGetProjects } from "@/services/projects.services";
 import { Project, ProjectDetails } from "@/interfaces/projects.interfaces";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface WorkspaceContextType {
     activeOrgId: string | null;
@@ -25,12 +26,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const router = useRouter();
     const orgId = params?.orgId as string | undefined;
     const projectId = params?.projectId as string | undefined;
-
+    const { account } = useAuthStore()
     const [activeOrg, setActiveOrg] = useState<OrganizationMember | null>(null);
     const [activeProject, setActiveProject] = useState<ProjectDetails | null>(null);
 
     // Fetch User's Organizations
-    const { data: organizations, isLoading: isLoadingOrgs } = useGetMyOrganizations();
+    const { data: organizations, isLoading: isLoadingOrgs } = useGetMyOrganizations(account?.id);
 
     // Fetch Projects for the active Org
     const { data: projectsData, isLoading: isLoadingProjects } = useGetProjects({

@@ -32,6 +32,7 @@ import { useAuthStore } from "@/stores/auth.store"
 
 import { SidebarMenuGroup } from "@/interfaces/sidebar-menu"
 import { ProfileModal } from "@/components/profile/profile-modal"
+import Link from "next/link"
 
 export function InternalSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const router = useRouter()
@@ -148,10 +149,10 @@ export function InternalSidebar({ ...props }: React.ComponentProps<typeof Sideba
                                                 size="sm"
                                                 className="text-xs h-8 font-medium"
                                             >
-                                                <button onClick={() => router.push(item.url)}>
+                                                <Link href={item.url}>
                                                     <item.icon className="h-3.5 w-3.5" />
                                                     <span>{item.title}</span>
-                                                </button>
+                                                </Link>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
                                     )
@@ -160,7 +161,7 @@ export function InternalSidebar({ ...props }: React.ComponentProps<typeof Sideba
                         </SidebarGroup>
                     })}
                 </SidebarContent>
-                <SidebarFooter>
+                <SidebarFooter className="border-t">
                     <SidebarMenu>
                         <SidebarMenuItem>
                             <DropdownMenu>

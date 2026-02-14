@@ -16,14 +16,14 @@ import {
     useSidebar,
 } from "@/components/ui/sidebar"
 import { useWorkspace } from "@/components/providers/workspace-provider"
-import { LayoutDashboard, Folder, Users, Settings, ChevronsUpDown, User, LogOut } from "lucide-react"
+import { LayoutDashboard, Folder, Users, Settings, ChevronsUpDown, User, LogOut, DollarSign, ClipboardCheck, ClipboardList } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
-import { Logo } from "../ui/logo"
 import clsx from "clsx"
 import { OrgSwitcher } from "./org-switcher"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { useAuthStore } from "@/stores/auth.store"
+import Link from "next/link"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { activeOrgId } = useWorkspace()
@@ -46,9 +46,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             icon: Folder,
         },
         {
-            title: "Team",
-            url: `/dashboard/${activeOrgId}/users`,
+            title: "Teams",
+            url: `/dashboard/${activeOrgId}/teams`,
             icon: Users,
+        },
+        {
+            title: "Insights",
+            url: `/dashboard/${activeOrgId}/insights`,
+            icon: ClipboardCheck,
+        },
+        {
+            title: "Earnings",
+            url: `/dashboard/${activeOrgId}/earnings`,
+            icon: DollarSign,
+        },
+        {
+            title: "Reports",
+            url: `/dashboard/${activeOrgId}/reports`,
+            icon: ClipboardList,
         },
         {
             title: "Settings",
@@ -77,11 +92,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         asChild
                                         isActive={isActive}
                                         tooltip={item.title}
+                                        size="sm"
+                                        className="text-xs h-8 font-medium"
                                     >
-                                        <button onClick={() => router.push(item.url)}>
-                                            <item.icon />
+                                        <Link href={item.url} className="text-sm text-muted-foreground h-9">
+                                            <item.icon className="h-3.5 w-3.5" />
                                             <span>{item.title}</span>
-                                        </button>
+                                        </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             )
@@ -89,14 +106,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </SidebarMenu>
                 </SidebarGroup>
             </SidebarContent>
-            <SidebarFooter>
+            <SidebarFooter className="border-t">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <SidebarMenuButton
                                     size="lg"
-                                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-12"
+                                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-12 focus-visible:ring-0"
                                 >
                                     <Avatar className="h-8 w-8 rounded-lg">
                                         <AvatarImage src="" alt={account?.name} />
@@ -129,15 +146,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem onClick={() => setProfileOpen(true)}>
-                                        <User className="mr-2 h-4 w-4" />
-                                        Profile
+                                    <DropdownMenuItem asChild>
+                                        <Link href={`/dashboard/${activeOrgId}/profile`}>
+                                            <User className="mr-2 h-4 w-4" />
+                                            Profile
+                                        </Link>
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => router.push("/logout")}>
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    Log out
+                                <DropdownMenuItem asChild>
+                                    <Link href="/logout">
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        Log out
+                                    </Link>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>

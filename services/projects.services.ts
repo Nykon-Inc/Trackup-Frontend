@@ -32,9 +32,9 @@ export const useCreateProject = () => {
 
 export const useCreateProjectOnboarding = () => {
     return useMutation({
-        mutationFn: async ({ token, ...payload }: CreateProjectPayload & { token: string }) => {
+        mutationFn: async ({ token, organizationId, ...payload }: CreateProjectPayload & { token: string, organizationId: string }) => {
             const data = await http.post({
-                url: routes.projects.index,
+                url: `${routes.organization.index}/${organizationId}/projects`,
                 body: payload,
                 headers: {
                     "Content-Type": "application/json",

@@ -1,4 +1,4 @@
-import { OrganizationMember } from "./organizations.interfaces";
+import { OrganizationMember, OrganizationInvitation } from "./organizations.interfaces";
 import { IProject, ProjectMembership } from "./projects.interfaces";
 
 export interface LoginPayloadInterface {
@@ -20,9 +20,13 @@ export interface VerifyResetTokenPayloadInterface {
 }
 
 export interface VerifyTokenResponseInterface {
-    user: Account;
-    organizationMembership: OrganizationMember;
-    projectMembership?: ProjectMembership;
+    flowType: 'signup' | 'setup' | 'acceptance';
+    email: string;
+    invitation?: OrganizationInvitation;
+    organizationId: string;
+    user: Account | null;
+    organizationMembership: OrganizationMember | null;
+    projectMembership?: ProjectMembership | null;
 }
 
 export interface SetupPasswordPayloadInterface {
@@ -34,6 +38,12 @@ export interface AcceptInvitePayloadInterface {
     token: string;
     password?: string;
     name?: string;
+}
+
+export interface RegisterInvitedUserPayloadInterface {
+    name: string;
+    password: string;
+    token: string;
 }
 
 export interface LoginResultInterface {

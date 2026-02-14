@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/page-header"
 import clsx from "clsx"
 import Staff from "./staff/Staff"
 import { Button } from "@/components/ui/button"
-import { AddStaffMember } from "../../users/add-staff-member-dialog"
+import { AddStaffMember } from "../../teams/add-staff-member-dialog"
 import { useWorkspace } from "@/components/providers/workspace-provider"
 
 export default function ProjectDetailsPage() {

@@ -5,10 +5,13 @@ import { OrganizationMember, GetInternalOrganizationsParams } from "@/interfaces
 import { invalidateActivityLogs } from "@/services/activity-logs";
 import { BulkInvitePayload } from "@/interfaces/organizations.interfaces";
 import { queryClient } from "@/lib/react-query";
+import { LoginResultInterface } from "@/interfaces/auth.interfaces";
+import { cookieKey, useAuthStore } from "@/stores/auth.store";
+import { setCookie } from "nookies";
 
-export const useGetMyOrganizations = () => {
+export const useGetMyOrganizations = (key?: string) => {
     return useQuery({
-        queryKey: ["my-organizations"],
+        queryKey: ["my-organizations", key],
         queryFn: async () => {
             const data = await http.get({
                 url: routes.organization.me,
@@ -110,22 +113,76 @@ export const useBulkInvite = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["organization-members"] });
+            queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
         }
     });
 };
 
 export const useBulkInviteOnboarding = () => {
     return useMutation({
-        mutationFn: async ({ token, ...payload }: BulkInvitePayload & { token: string }) => {
+        mutationFn: async ({ token, organizationId, members }: BulkInvitePayload & { token: string }) => {
             const data = await http.post({
-                url: routes.organization.bulkInvite(payload.organizationId),
-                body: { members: payload.members },
+                url: routes.organization.bulkInvite(organizationId),
+                body: { members },
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`,
                 },
             });
             return data;
+        },
+    });
+};
+
+export const useAcceptInvitation = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    return useMutation({
+        mutationFn: async ({ organizationId, token }: { organizationId: string, token: string }) => {
+            const data = await http.post({
+                url: routes.organization.acceptInvitation(organizationId),
+                body: {},
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+            return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            setAccount(data.account);
+            setAccess(data.credentials);
+            if (data.account.accountType === "client" && data.organization) {
+                setOrganization(data.organization);
+            }
+            if (data.account.accountType === "internal" && data.permissions) {
+                setPermissions(data.permissions);
+                setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+                    path: "/",
+                });
+            }
+            setCookie(null, cookieKey, data.credentials.access.token, {
+                path: "/",
+            });
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
+        },
+    });
+};
+
+export const useRejectInvitation = () => {
+    return useMutation({
+        mutationFn: async ({ organizationId, token }: { organizationId: string, token: string }) => {
+            const data = await http.post({
+                url: routes.organization.rejectInvitation(organizationId),
+                body: {},
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
         },
     });
 };
@@ -166,5 +223,42 @@ export const useGetHubstaffProjects = (organizationId: string) => {
             return data;
         },
         enabled: !!organizationId,
+    });
+};
+
+export interface GetOrganizationMembersParams {
+    organizationId: string;
+    query?: {
+        search?: string;
+        page?: number;
+        limit?: number;
+    };
+}
+
+export const useGetOrganizationMembers = (params: GetOrganizationMembersParams) => {
+    return useQuery({
+        queryKey: ["organization-members", params],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.members(params.organizationId),
+                query: params.query,
+            });
+            return data;
+        },
+        enabled: !!params.organizationId,
+    });
+};
+
+export const useGetOrganizationInvitations = (params: GetOrganizationMembersParams) => {
+    return useQuery({
+        queryKey: ["organization-invitations", params],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.invitations(params.organizationId),
+                query: params.query,
+            });
+            return data;
+        },
+        enabled: !!params.organizationId,
     });
 };

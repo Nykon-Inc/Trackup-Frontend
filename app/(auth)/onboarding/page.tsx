@@ -1,5 +1,5 @@
 "use client";
-import { useBulkInviteOnboarding } from "@/services/organization.services";
+import { useBulkInviteOnboarding, useAcceptInvitation, useRejectInvitation } from "@/services/organization.services";
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -7,17 +7,19 @@ import {
     useAcceptInvite,
     useSetupPassword,
     useCompleteRegistration,
+    useRegisterInvitedUser,
+    useSelectOrganization,
 } from "@/services/auth.services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Account, VerifyTokenResponseInterface } from "@/interfaces/auth.interfaces";
-import { useCreateProject, useCreateProjectOnboarding } from "@/services/projects.services";
+import { useCreateProjectOnboarding } from "@/services/projects.services";
 import { Loader2, FileText, Users, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Stepper } from "@/components/ui/stepper";
 
-import { OnboardingStep, OrganizationMember } from "@/interfaces/organizations.interfaces";
+import { OnboardingStep, OrganizationMember, BulkInviteMember } from "@/interfaces/organizations.interfaces";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AddOrganizationMembers } from "@/components/forms/add-organization-members";
 import { InviteUserPayload } from "@/interfaces/projects.interfaces";
@@ -30,9 +32,12 @@ export default function OnboardingPage() {
 
     const { mutate: verifyToken, isPending: isVerifying } = useVerifyOnboardingToken();
     const { mutate: acceptInvite, isPending: isAccepting } = useAcceptInvite();
+    const { mutate: acceptOrgInvite, isPending: isAcceptingOrg } = useAcceptInvitation();
+    const { mutate: rejectOrgInvite, isPending: isRejectingOrg } = useRejectInvitation();
+    const { mutate: selectOrganization, isPending: isSelecting } = useSelectOrganization();
 
     // States
-    const [view, setView] = useState<"loading" | "accept-invite" | "owner-setup" | "error">("loading");
+    const [view, setView] = useState<"loading" | "accept-invite" | "owner-setup" | "signup" | "error">("loading");
     const [onboardingData, setOnboardingData] = useState<VerifyTokenResponseInterface | null>(null);
     const [ownerStep, setOwnerStep] = useState<"password" | "project" | "members" | "complete">("password");
 
@@ -43,47 +48,30 @@ export default function OnboardingPage() {
                 {
                     onSuccess: (data) => {
                         setOnboardingData(data);
-                        if (data.projectMembership) {
+
+                        if (data.flowType === "acceptance") {
                             setView("accept-invite");
-                        } else if (data.organizationMembership) {
-                            if (data.organizationMembership.role === "owner") {
-                                const onboarding = data.organizationMembership.organization.onboarding;
+                        } else if (data.flowType === "signup") {
+                            setView("signup");
+                        } else if (data.flowType === "setup" && data.organizationMembership) {
+                            setView("owner-setup");
+                            const onboarding = data.organizationMembership.organization?.onboarding;
 
-                                if (onboarding) {
-                                    const { currentStep, completedSteps } = onboarding;
-                                    const requiredSteps = [
-                                        OnboardingStep.OWNER_INVITED,
-                                        OnboardingStep.OWNER_VERIFIED,
-                                        OnboardingStep.PROJECT_CREATED,
-                                    ];
-
-                                    const isFullyOnboarded = requiredSteps.every((step) => completedSteps.includes(step));
-
-                                    // if (isFullyOnboarded) {
-                                    //     toast.success("Onboarding already completed. Please login.");
-                                    //     router.push("/auth/login");
-                                    //     return;
-                                    // }
-
-                                    setView("owner-setup");
-
-                                    if (currentStep === OnboardingStep.OWNER_INVITED) {
-                                        setOwnerStep("password");
-                                    } else if (currentStep === OnboardingStep.OWNER_VERIFIED) {
-                                        setOwnerStep("project");
-                                    } else if (currentStep === OnboardingStep.PROJECT_CREATED) {
-                                        setOwnerStep("members");
-                                    } else if (currentStep === OnboardingStep.STAFF_INVITED) {
-                                        setOwnerStep("complete");
-                                    } else {
-                                        setOwnerStep("password");
-                                    }
+                            if (onboarding) {
+                                const { currentStep } = onboarding;
+                                if (currentStep === OnboardingStep.OWNER_INVITED) {
+                                    setOwnerStep("password");
+                                } else if (currentStep === OnboardingStep.OWNER_VERIFIED) {
+                                    setOwnerStep("project");
+                                } else if (currentStep === OnboardingStep.PROJECT_CREATED) {
+                                    setOwnerStep("members");
+                                } else if (currentStep === OnboardingStep.STAFF_INVITED) {
+                                    setOwnerStep("complete");
                                 } else {
-                                    setView("owner-setup");
                                     setOwnerStep("password");
                                 }
                             } else {
-                                setView("accept-invite");
+                                setOwnerStep("password");
                             }
                         } else {
                             setView("error");
@@ -100,19 +88,36 @@ export default function OnboardingPage() {
     }, [token, verifyToken]);
 
     const handleAccept = () => {
-        if (!token) return;
-        acceptInvite(
-            { token },
-            {
-                onSuccess: () => {
-                    toast.success("Invitation accepted!");
-                    router.push("/projects");
-                },
-                onError: (error) => {
-                    toast.error("Failed to accept invitation");
-                },
-            }
-        );
+        debugger
+        const orgId = onboardingData?.organizationId;
+        if (!orgId) return;
+        acceptOrgInvite({ organizationId: orgId, token: token! }, {
+            onSuccess: () => {
+                selectOrganization({ organizationId: orgId }, {
+                    onSuccess: () => {
+                        toast.success("Invitation accepted!");
+                        router.push(`/dashboard/${orgId}`);
+                    }
+                });
+            },
+            onError: () => {
+                toast.error("Failed to accept invitation");
+            },
+        });
+    };
+
+    const handleReject = () => {
+        const orgId = onboardingData?.organizationId;
+        if (!orgId) return;
+        rejectOrgInvite({ organizationId: orgId, token: token! }, {
+            onSuccess: () => {
+                toast.success("Invitation rejected");
+                router.push("/login");
+            },
+            onError: () => {
+                toast.error("Failed to reject invitation");
+            },
+        });
     };
 
     // calculate steps dynamically
@@ -140,26 +145,38 @@ export default function OnboardingPage() {
                     <CardContent className="flex flex-col items-center justify-center gap-4 pt-6 text-center">
                         <h1 className="text-lg font-semibold">Invalid or Expired Token</h1>
                         <p className="text-sm text-muted-foreground">Please check your link and try again.</p>
-                        <Button size="sm" onClick={() => router.push("/auth/login")}>Go to Login</Button>
+                        <Button size="sm" onClick={() => router.push("/login")}>Go to Login</Button>
                     </CardContent>
                 </Card>
             ) : view === "accept-invite" ? (
                 <Card className="w-full max-w-md mx-auto">
                     <CardHeader className="space-y-1 text-center pb-2">
                         <CardTitle className="text-lg font-semibold">
-                            Join {onboardingData?.organizationMembership?.organization?.name || "Organization"}
+                            Join {onboardingData?.organizationMembership?.organization?.name || onboardingData?.invitation?.organization?.name || "Organization"}
                         </CardTitle>
                         <CardDescription className="text-sm">
                             {onboardingData?.projectMembership ? (
                                 <>You have been invited to join project <strong>{onboardingData.projectMembership.project.name}</strong>.</>
                             ) : (
-                                <>You have been invited to join organization as <strong>{onboardingData?.organizationMembership.role}</strong>.</>
+                                <>You have been invited to join organization as <strong>{onboardingData?.organizationMembership?.role || onboardingData?.invitation?.role}</strong>.</>
                             )}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-0">
-                        <Button size="sm" onClick={handleAccept} disabled={isAccepting} className="w-full">
-                            {isAccepting ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Accept Invite"}
+                    <CardContent className="pt-4 grid grid-cols-2 gap-3">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleReject}
+                            disabled={isRejectingOrg}
+                        >
+                            {isRejectingOrg ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Reject Invite"}
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={handleAccept}
+                            disabled={isAcceptingOrg || isSelecting}
+                        >
+                            {(isAcceptingOrg || isSelecting) ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Accept Invite"}
                         </Button>
                     </CardContent>
                 </Card>
@@ -168,10 +185,25 @@ export default function OnboardingPage() {
                     <CardContent className="pt-6">
                         <OwnerOnboardingWizard
                             token={token!}
-                            user={onboardingData!.user}
-                            organizationMembership={onboardingData!.organizationMembership}
+                            user={onboardingData!.user!}
+                            organizationMembership={onboardingData!.organizationMembership!}
                             step={ownerStep}
                             setStep={setOwnerStep}
+                        />
+                    </CardContent>
+                </Card>
+            ) : view === "signup" ? (
+                <Card className="w-full max-w-md mx-auto">
+                    <CardHeader className="space-y-1 text-center pb-2">
+                        <CardTitle className="text-lg font-semibold">Create your account</CardTitle>
+                        <CardDescription className="text-sm">
+                            Join {onboardingData?.invitation?.organization?.name || "the organization"} by completing your profile.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        <SignupView
+                            token={token!}
+                            email={onboardingData?.email || ""}
                         />
                     </CardContent>
                 </Card>
@@ -180,14 +212,107 @@ export default function OnboardingPage() {
     );
 }
 
+function SignupView({ token, email }: { token: string, email: string }) {
+    const router = useRouter();
+    const { mutate: registerInvitedUser, isPending } = useRegisterInvitedUser();
+    const { mutate: selectOrganization, isPending: isSelecting } = useSelectOrganization();
+    const [name, setName] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [error, setError] = useState("");
 
 
-// ... (in OwnerOnboardingWizard component)
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters");
+            return;
+        }
+        if (password !== confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
+        setError("");
+
+        registerInvitedUser({ token, name, password }, {
+            onSuccess: (data) => {
+                const orgId = data.organization?.id;
+                if (orgId) {
+                    selectOrganization({ organizationId: orgId }, {
+                        onSuccess: () => {
+                            toast.success("Account created successfully!");
+                            router.push(`/dashboard/${orgId}`);
+                        }
+                    });
+                } else {
+                    toast.success("Account created successfully!");
+                    router.push("/auth/select-organization");
+                }
+            },
+            onError: (err: any) => {
+                toast.error(err?.response?.data?.message || "Failed to create account");
+            }
+        });
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+                <Label htmlFor="signup-email">Email</Label>
+                <Input
+                    id="signup-email"
+                    type="email"
+                    value={email}
+                    disabled
+                    className="h-9 bg-muted"
+                />
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="signup-name">Full Name</Label>
+                <Input
+                    id="signup-name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    placeholder="e.g. John Doe"
+                    className="h-9"
+                />
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="signup-password">Password</Label>
+                <Input
+                    id="signup-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-9"
+                />
+                {error && <p className="text-xs text-red-500">{error}</p>}
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="confirm-signup-password">Confirm Password</Label>
+                <Input
+                    id="confirm-signup-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="h-9"
+                />
+            </div>
+            <Button type="submit" size="sm" className="w-full" disabled={isPending || isSelecting}>
+                {(isPending || isSelecting) ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Complete Registration"}
+            </Button>
+        </form>
+    );
+}
 
 function OwnerOnboardingWizard({ token, user, organizationMembership, step, setStep }: { token: string, user: Account, organizationMembership: OrganizationMember, step: string, setStep: (s: any) => void }) {
     const router = useRouter();
     const { mutate: setupPassword, isPending: isSettingPassword } = useSetupPassword();
-    const { mutate: acceptInvite, isPending: isAccepting } = useAcceptInvite();
     const { organization } = useAuthStore()
     const { mutate: completeRegistration, isPending: isCompleting } = useCompleteRegistration();
 
@@ -210,7 +335,6 @@ function OwnerOnboardingWizard({ token, user, organizationMembership, step, setS
             }
         });
     };
-
 
     if (step === "password") {
         return (
@@ -332,9 +456,9 @@ function CreateProjectStep({ onNext, token, organizationId }: { onNext: () => vo
             </div>
             <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="space-y-1.5">
-                    <Label htmlFor="name">Project Name</Label>
+                    <Label htmlFor="project-name">Project Name</Label>
                     <Input
-                        id="name"
+                        id="project-name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
@@ -342,9 +466,9 @@ function CreateProjectStep({ onNext, token, organizationId }: { onNext: () => vo
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <Label htmlFor="description">Description (Optional)</Label>
+                    <Label htmlFor="project-description">Description (Optional)</Label>
                     <Input
-                        id="description"
+                        id="project-description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         className="h-9"
@@ -362,7 +486,12 @@ function AddMembersStep({ onNext, token, organizationId }: { onNext: () => void,
     const { mutate: bulkInvite, isPending } = useBulkInviteOnboarding();
 
     const handleSubmit = async (members: InviteUserPayload[]) => {
-        bulkInvite({ organizationId, members, token }, {
+        const mappedMembers: BulkInviteMember[] = members.map(m => ({
+            email: m.email,
+            role: m.role as 'manager' | 'member'
+        }));
+
+        bulkInvite({ organizationId, members: mappedMembers, token }, {
             onSuccess: () => {
                 toast.success("Invitations sent successfully");
                 onNext();

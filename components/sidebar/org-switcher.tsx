@@ -20,22 +20,21 @@ import {
 } from "@/components/ui/sidebar"
 import { useWorkspace } from "@/components/providers/workspace-provider"
 import { useRouter } from "next/navigation"
+import { useSelectOrganization } from "@/services/auth.services"
 
 export function OrgSwitcher() {
     const { isMobile } = useSidebar()
     const { activeOrg, organizations } = useWorkspace()
+    const { mutate: selectOrganization } = useSelectOrganization();
     const router = useRouter()
 
-    const handleOrgChange = (orgId: string) => {
-        // Navigate to the dashboard root of the new org
-        // We don't know the project yet, so maybe just /[orgId] which might redirect to a default project if we had that logic,
-        // or we force user to select project.
-        // The prompt says: "Create a layout under app/(dashboard)/[orgId]/[projectId]/."
-        // It doesn't specify what happens at /[orgId]/.
-        // I'll assume we go to `/[orgId]` and let a page there handle it, or we assume a "select project" state.
-        // However, since the structure is `[orgId]/[projectId]`, maybe we just go to `/[orgId]`
-        router.push(`/${orgId}`)
-    }
+    const handleSelectOrganization = (orgId: string) => {
+        selectOrganization({ organizationId: orgId }, {
+            onSuccess: () => {
+                router.push(`/dashboard/${orgId}`);
+            }
+        });
+    };
 
     return (
         <SidebarMenu>
@@ -44,7 +43,7 @@ export function OrgSwitcher() {
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground focus-visible:ring-0"
                         >
                             <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                                 <Building2 className="size-4" />
@@ -71,8 +70,8 @@ export function OrgSwitcher() {
                         </DropdownMenuLabel>
                         {organizations.map((org) => (
                             <DropdownMenuItem
-                                key={org.id}
-                                onClick={() => handleOrgChange(org.organization.id)}
+                                key={org.organization.id}
+                                onClick={() => handleSelectOrganization(org.organization.id)}
                                 className="gap-2 p-2"
                             >
                                 <div className="flex size-6 items-center justify-center rounded-sm border">

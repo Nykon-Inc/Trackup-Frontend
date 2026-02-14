@@ -8,24 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Building2, ArrowRight } from "lucide-react";
 
 import { useSelectOrganization } from "@/services/auth.services";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function SelectOrganizationPage() {
     const router = useRouter();
-    const { data: organizations, isLoading } = useGetMyOrganizations();
+    const { account } = useAuthStore()
+    const { data: organizations, isLoading } = useGetMyOrganizations(account?.id);
     const { mutate: selectOrganization, isPending: isSelecting } = useSelectOrganization();
 
     useEffect(() => {
         if (!isLoading && organizations) {
             if (organizations.length === 1) {
                 const orgId = organizations[0].organizationId;
-                selectOrganization({ organizationId: orgId }, {
-                    onSuccess: () => {
-                        router.push(`/dashboard/${orgId}`);
-                    }
-                });
+                handleSelectOrganization(orgId)
             }
         }
-    }, [organizations, isLoading, router, selectOrganization]);
+    }, [organizations, isLoading]);
 
     const handleSelectOrganization = (orgId: string) => {
         selectOrganization({ organizationId: orgId }, {
