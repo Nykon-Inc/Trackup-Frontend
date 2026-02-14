@@ -15,9 +15,9 @@ import { invalidateActivityLogs } from "@/services/activity-logs";
 
 export const useCreateProject = () => {
     return useMutation({
-        mutationFn: async (payload: CreateProjectPayload) => {
+        mutationFn: async ({ organizationId, ...payload }: CreateProjectPayload) => {
             const data = await http.post({
-                url: routes.projects.index,
+                url: `${routes.organization.index}/${organizationId}/projects`,
                 body: payload,
             });
             return data as Project;
@@ -32,7 +32,7 @@ export const useCreateProject = () => {
 
 export const useCreateProjectOnboarding = () => {
     return useMutation({
-        mutationFn: async ({ token, organizationId, ...payload }: CreateProjectPayload & { token: string, organizationId: string }) => {
+        mutationFn: async ({ token, organizationId, ...payload }: CreateProjectPayload & { token: string }) => {
             const data = await http.post({
                 url: `${routes.organization.index}/${organizationId}/projects`,
                 body: payload,
@@ -103,6 +103,7 @@ export const useGetProjects = (payload: { organizationId: string, query?: Record
             });
             return data as GetProjectsResponse;
         },
+        enabled: !!payload.organizationId,
     });
 };
 
@@ -131,6 +132,22 @@ export const useInviteUser = (projectId: string) => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["project", projectId] });
             queryClient.invalidateQueries({ queryKey: ["project-members", projectId, { status: "invited" }] });
+        },
+    });
+};
+
+export const useInviteMembersToProject = () => {
+    return useMutation({
+        mutationFn: async (payload: { projectId: string; members: InviteUserPayload[], organizationId: string }) => {
+            const data = await http.post({
+                url: `${routes.organization.index}/${payload.organizationId}/projects/${payload.projectId}${routes.projects.invite}`,
+                body: { members: payload.members },
+            });
+            return data;
+        },
+        onSuccess: (_, { projectId }) => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+            queryClient.invalidateQueries({ queryKey: ["project-members", projectId] });
         },
     });
 };

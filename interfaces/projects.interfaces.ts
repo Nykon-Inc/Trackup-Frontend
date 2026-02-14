@@ -4,6 +4,8 @@ export interface CreateProjectPayload {
     name: string;
     description?: string;
     organizationId?: string;
+    type?: string;
+    screenshotsEnabled?: boolean;
     // Add other fields as necessary
 }
 
@@ -27,6 +29,14 @@ export interface IProject {
 export interface Project extends IProject {
     id: string;
     organization: Organization
+    membersCount?: number;
+    totalHours?: number;
+    totalSpent?: number;
+    members?: {
+        name: string;
+        avatar?: string;
+        email: string;
+    }[];
     createdAt: string;
     updatedAt: string;
 }
@@ -34,7 +44,6 @@ export interface Project extends IProject {
 export interface ProjectDetails extends Project {
     staffCount: number;
     managerCount: number;
-    membersCount: number;
 }
 
 export enum ProjectMemberRole {

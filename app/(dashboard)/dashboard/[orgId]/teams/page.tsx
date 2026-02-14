@@ -264,8 +264,6 @@ export default function TeamsPage() {
             <div className="px-6">
                 <div className="flex items-start justify-between mb-8">
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Team</h2>
-                        <p className="text-slate-500 text-sm mt-1">View and manage your team members.</p>
                     </div>
 
                     <div className="flex items-center gap-3">

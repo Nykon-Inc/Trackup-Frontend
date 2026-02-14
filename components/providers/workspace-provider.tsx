@@ -33,15 +33,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     // Fetch User's Organizations
     const { data: organizations, isLoading: isLoadingOrgs } = useGetMyOrganizations(account?.id);
 
-    // Fetch Projects for the active Org
-    const { data: projectsData, isLoading: isLoadingProjects } = useGetProjects({
-        organizationId: orgId || "",
-        query: {
-            page: 1,
-            limit: 10
-        }
-    });
-
     useEffect(() => {
         if (organizations && orgId) {
             const org = organizations.find((o) => o.organization.id === orgId);
@@ -58,9 +49,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
                 activeProjectId: projectId || null,
                 activeOrg,
                 activeProject,
-                isLoading: isLoadingOrgs || isLoadingProjects,
+                isLoading: isLoadingOrgs,
                 organizations: organizations || [],
-                projects: projectsData?.results || [],
+                projects: [],
             }}
         >
             {children}
