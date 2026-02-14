@@ -4,6 +4,7 @@ export interface CreateProjectPayload {
     name: string;
     description?: string;
     organizationId?: string;
+    hubstaffProjectId?: string;
     type?: string;
     screenshotsEnabled?: boolean;
     // Add other fields as necessary
@@ -24,6 +25,8 @@ export interface IProject {
     description: string;
     organizationId: string;
     status: ProjectStatus;
+    projectType: "analytics" | "trackup";
+    hubstaffProjectId?: string;
 }
 
 export interface Project extends IProject {

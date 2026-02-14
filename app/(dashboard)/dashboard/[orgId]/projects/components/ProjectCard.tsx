@@ -3,7 +3,7 @@
 import { Project } from "@/interfaces/projects.interfaces";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreVertical, Clock, DollarSign, Users } from "lucide-react";
+import { MoreVertical, Clock, DollarSign, Users, BarChart3, LayoutDashboard } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ProjectCardProps {
     project: Project;
@@ -19,6 +20,7 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project, onClick }: ProjectCardProps) {
+    const isAnalytics = !!project.hubstaffProjectId;
     const members = project.members || [];
     const membersCount = project.membersCount || members.length || 0;
     const totalHours = project.totalHours || 0;
@@ -31,9 +33,26 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
         >
             <CardContent className="p-5">
                 <div className="flex justify-between items-start">
-                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-1">
-                        {project.name}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className={cn(
+                                        "p-1.5 rounded-lg shrink-0",
+                                        isAnalytics ? "bg-amber-50 text-amber-600" : "bg-primary/5 text-primary"
+                                    )}>
+                                        {isAnalytics ? <BarChart3 className="h-4 w-4" /> : <LayoutDashboard className="h-4 w-4" />}
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p className="text-[10px] font-medium">{isAnalytics ? "Analytics Project" : "Trackup Project"}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-1 leading-none">
+                            {project.name}
+                        </h3>
+                    </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-slate-400">
