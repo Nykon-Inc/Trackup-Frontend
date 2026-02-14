@@ -68,6 +68,8 @@ export function CreateAnalyticsProjectModal({ open, onOpenChange }: CreateAnalyt
         },
     });
 
+    const isHubstaffConnected = !!activeOrg?.organization?.isHubstaffConnected;
+
     const [hubstaffSearch, setHubstaffSearch] = useState("");
 
     // Reset search when modal closes
@@ -75,15 +77,13 @@ export function CreateAnalyticsProjectModal({ open, onOpenChange }: CreateAnalyt
         if (!open) setHubstaffSearch("");
     }, [open]);
 
-    const { data: hubstaffProjects, isLoading: isLoadingHubstaff } = useGetHubstaffProjects(activeOrgId || "");
+    const { data: hubstaffProjects, isLoading: isLoadingHubstaff } = useGetHubstaffProjects(activeOrgId || "", isHubstaffConnected);
 
     const filteredProjects = useMemo(() => {
         const list = Array.isArray(hubstaffProjects) ? hubstaffProjects : [];
         if (!hubstaffSearch) return list;
         return list.filter((p: any) => p.name.toLowerCase().includes(hubstaffSearch.toLowerCase()));
     }, [hubstaffProjects, hubstaffSearch]);
-
-    const isHubstaffConnected = activeOrg?.organization?.isHubstaffConnected;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

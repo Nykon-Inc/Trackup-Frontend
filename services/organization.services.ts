@@ -213,7 +213,7 @@ export const useExchangeHubstaffToken = () => {
     });
 };
 
-export const useGetHubstaffProjects = (organizationId: string) => {
+export const useGetHubstaffProjects = (organizationId: string, enabled: boolean = true) => {
     return useQuery({
         queryKey: ["hubstaff-projects", organizationId],
         queryFn: async () => {
@@ -222,7 +222,7 @@ export const useGetHubstaffProjects = (organizationId: string) => {
             });
             return data;
         },
-        enabled: !!organizationId,
+        enabled: !!organizationId && enabled,
     });
 };
 
