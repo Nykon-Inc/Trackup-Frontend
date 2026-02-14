@@ -213,7 +213,7 @@ export default function Staff({ project }: { project: Project }) {
                     loading={isLoading}
                     hover
                     compact
-                    onRowClick={(row) => router.push(`/dashboard/projects/${project.id}/staff/${row.userId}`)}
+                    onRowClick={(row) => router.push(`/dashboard/${activeOrgId}/projects/${project.id}/staff/${row.userId}`)}
                     rowClassName={"cursor-pointer"}
                     bordered={false}
                     className="border-0 shadow-none"
