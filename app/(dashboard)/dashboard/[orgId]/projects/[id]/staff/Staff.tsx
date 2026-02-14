@@ -22,6 +22,7 @@ import { MoreHorizontal } from "lucide-react";
 import { StaffFilters } from '../StaffFilters';
 import { useRouter } from 'next/navigation';
 import { useRowLoading } from '@/hooks/useRowLoading';
+import { useWorkspace } from '@/components/providers/workspace-provider';
 
 export default function Staff({ project }: { project: Project }) {
     const router = useRouter();
@@ -49,9 +50,11 @@ export default function Staff({ project }: { project: Project }) {
         status: statusFilter === "all" ? undefined : statusFilter,
     };
 
+    const { activeOrgId } = useWorkspace();
+
     const { isLoading: checkIsLoading, start, stop } = useRowLoading()
 
-    const { data: projectMembersData, isLoading } = useGetProjectMembers(project.id, query);
+    const { data: projectMembersData, isLoading } = useGetProjectMembers(project.id, activeOrgId!, query);
     const { mutate: resendInviteUser } = useResendInviteUser()
 
     const handleResendInvite = useCallback(({ email, role }: { email: string, role: ProjectMemberRole }) => {
