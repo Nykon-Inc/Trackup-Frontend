@@ -168,12 +168,12 @@ export const useResendInviteUser = () => {
         },
     });
 };
-export const useGetProjectMembers = (projectId: string, query?: GetProjectMembersQuery) => {
+export const useGetProjectMembers = (projectId: string, organizationId: string, query?: GetProjectMembersQuery) => {
     return useQuery({
         queryKey: ["project-members", projectId, query],
         queryFn: async () => {
             const data = await http.get({
-                url: `${routes.projects.index}/${projectId}/${query?.status === "invited" ? "invitations" : "members"}`,
+                url: `${routes.organization.index}/${organizationId}/projects/${projectId}/${query?.status === "invited" ? "invitations" : "members"}`,
                 query,
             });
             return data as GetProjectMembersResponse;
