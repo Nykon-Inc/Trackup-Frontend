@@ -3,7 +3,7 @@ import { MetricCard, SparkLine } from "./metric-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoreVertical, Info, ChevronRight, Image as ImageIcon, Users, FolderOpen, UserCircle2 } from "lucide-react";
+import { MoreVertical, Info, ChevronRight, Image as ImageIcon, Users, FolderOpen, UserCircle2, LayoutPanelTop } from "lucide-react";
 import { EmptyState } from "./empty-state";
 import { Button } from "@/components/ui/button";
 import { IOwnerDashboard } from "@/interfaces/dashboard.interfaces";
@@ -341,6 +341,24 @@ export function OwnerWidgets({ data, isLoading, visibleWidgets, onVisibilityChan
                                         </div>
                                     </>
                                 )}
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Apps & URLs */}
+                    {isVisible("block_apps_urls") && (
+                        <Card className="rounded-md border shadow-sm p-1 gap-0">
+                            <CardHeader className="flex flex-row items-center justify-between p-4 py-3 border-b">
+                                <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">APPS & URLS</CardTitle>
+                                <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
+                            </CardHeader>
+                            <CardContent className="p-0 flex flex-col items-center justify-center min-h-[160px]">
+                                <EmptyState
+                                    icon={LayoutPanelTop}
+                                    title="No apps or URLs"
+                                    description="No application or website usage data recorded this week."
+                                    className="py-10"
+                                />
                             </CardContent>
                         </Card>
                     )}
