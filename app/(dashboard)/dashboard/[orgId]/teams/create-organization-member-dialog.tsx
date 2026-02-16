@@ -40,7 +40,7 @@ enum OrganizationMemberRole {
 const Step1Schema = Yup.object().shape({
     email: Yup.string().email("Invalid email").required("Email is required"),
     orgRole: Yup.string().required("Organization role is required"),
-    payRate: Yup.number().positive("Pay rate must be positive").required("Pay rate is required"),
+    payRate: Yup.number().positive("Pay rate must be positive").optional(),
     startDate: Yup.date().required("Start date is required"),
 });
 

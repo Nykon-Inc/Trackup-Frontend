@@ -58,8 +58,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 icon: ClipboardCheck,
             },
             {
-                title: "Earnings",
-                url: `/dashboard/${activeOrgId}/earnings`,
+                title: isMember ? "Earnings" : "Financials",
+                url: `/dashboard/${activeOrgId}/${isMember ? "earnings" : "financials"}`,
                 icon: DollarSign,
             },
             {
