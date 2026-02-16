@@ -29,6 +29,7 @@ export const OWNER_WIDGET_CONFIG = [
     { id: "block_worked_week_chart", label: "Worked This Week Chart", group: "Content Blocks" },
     { id: "block_projects_activity", label: "Projects Activity", group: "Content Blocks" },
     { id: "block_members_list", label: "Members List", group: "Content Blocks" },
+    { id: "block_apps_urls", label: "Apps & URLs", group: "Content Blocks" },
 ];
 
 interface OwnerWidgetsProps {
