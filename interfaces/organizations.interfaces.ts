@@ -84,6 +84,7 @@ export interface BulkInviteMember {
     email: string;
     role: 'manager' | 'member';
     birthday?: string;
+    payRate?: string;
     startDate?: string;
     projects?: {
         projectId: string;

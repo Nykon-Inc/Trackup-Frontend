@@ -3,7 +3,8 @@ import { MetricCard, SparkLine } from "./metric-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoreVertical, Info, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { MoreVertical, Info, ChevronRight, Image as ImageIcon, Briefcase, Clock, LayoutPanelTop } from "lucide-react";
+import { EmptyState } from "./empty-state";
 import { Button } from "@/components/ui/button";
 import { IMemberDashboard } from "@/interfaces/dashboard.interfaces";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
@@ -136,28 +137,39 @@ export function MemberWidgets({ data, isLoading, visibleWidgets, onVisibilityCha
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
                             </CardHeader>
                             <CardContent className="p-4">
-                                <div className="grid grid-cols-3 gap-3">
-                                    {data.blocks.recent_activity.slice(0, 6).map((activity) => (
-                                        <div key={activity.id} className="relative group aspect-video bg-muted/30 border rounded-sm flex flex-col items-center justify-center">
-                                            <Badge className={`absolute -top-2 -right-2 text-[10px] px-1.5 py-0 border-white h-5 bg-green-500 hover:bg-green-600`}>
-                                                {activity.score}%
-                                            </Badge>
-                                            {activity.screenshot_url ? (
-                                                <img src={activity.screenshot_url} alt="Activity" className="w-full h-full object-cover rounded-sm" />
-                                            ) : (
-                                                <>
-                                                    <ImageIcon className="h-8 w-8 text-muted-foreground/20 mb-1" />
-                                                    <span className="text-[10px] text-muted-foreground/50 font-medium">No screenshot</span>
-                                                </>
-                                            )}
+                                {data.blocks.recent_activity.length === 0 ? (
+                                    <EmptyState
+                                        icon={ImageIcon}
+                                        title="No recent activity"
+                                        description="You haven't recorded any activity yet. Start tracking time to see your progress here."
+                                        className="py-10"
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {data.blocks.recent_activity.slice(0, 6).map((activity) => (
+                                                <div key={activity.id} className="relative group aspect-video bg-muted/30 border rounded-sm flex flex-col items-center justify-center">
+                                                    <Badge className={`absolute -top-2 -right-2 text-[10px] px-1.5 py-0 border-white h-5 bg-green-500 hover:bg-green-600`}>
+                                                        {activity.score}%
+                                                    </Badge>
+                                                    {activity.screenshot_url ? (
+                                                        <img src={activity.screenshot_url} alt="Activity" className="w-full h-full object-cover rounded-sm" />
+                                                    ) : (
+                                                        <>
+                                                            <ImageIcon className="h-8 w-8 text-muted-foreground/20 mb-1" />
+                                                            <span className="text-[10px] text-muted-foreground/50 font-medium">No screenshot</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="mt-4 pt-2 border-t flex justify-center">
-                                    <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
-                                        View activity <ChevronRight className="h-3 w-3 ml-1" />
-                                    </Button>
-                                </div>
+                                        <div className="mt-4 pt-2 border-t flex justify-center">
+                                            <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
+                                                View activity <ChevronRight className="h-3 w-3 ml-1" />
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
                             </CardContent>
                         </Card>
                     )}
@@ -224,42 +236,53 @@ export function MemberWidgets({ data, isLoading, visibleWidgets, onVisibilityCha
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-xs text-left">
-                                        <thead>
-                                            <tr className="border-b text-muted-foreground">
-                                                <th className="font-semibold p-3 pl-4">Project</th>
-                                                <th className="font-semibold p-3">Date</th>
-                                                <th className="font-semibold p-3">Start time</th>
-                                                <th className="font-semibold p-3">Stop time</th>
-                                                <th className="font-semibold p-3 text-right pr-4">Duration</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {data.blocks.timesheet.map((entry) => (
-                                                <tr key={entry.id} className="border-b last:border-0 hover:bg-muted/30">
-                                                    <td className="p-3 pl-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-6 w-6 rounded-full bg-green-600 flex items-center justify-center text-[10px] text-white font-bold">
-                                                                {entry.project.charAt(0)}
-                                                            </div>
-                                                            <span className="font-medium text-foreground">{entry.project}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-3 text-muted-foreground">{entry.date}</td>
-                                                    <td className="p-3 text-muted-foreground">{entry.start}</td>
-                                                    <td className="p-3 text-muted-foreground">{entry.end}</td>
-                                                    <td className="p-3 text-right font-medium pr-4">{entry.duration}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div className="p-3 flex justify-center border-t">
-                                    <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
-                                        View daily timesheet <ChevronRight className="h-3 w-3 ml-1" />
-                                    </Button>
-                                </div>
+                                {data.blocks.timesheet.length === 0 ? (
+                                    <EmptyState
+                                        icon={Clock}
+                                        title="No timesheet entries"
+                                        description="You haven't tracked any time this week yet."
+                                        className="py-10"
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-xs text-left">
+                                                <thead>
+                                                    <tr className="border-b text-muted-foreground">
+                                                        <th className="font-semibold p-3 pl-4">Project</th>
+                                                        <th className="font-semibold p-3">Date</th>
+                                                        <th className="font-semibold p-3">Start time</th>
+                                                        <th className="font-semibold p-3">Stop time</th>
+                                                        <th className="font-semibold p-3 text-right pr-4">Duration</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {data.blocks.timesheet.map((entry) => (
+                                                        <tr key={entry.id} className="border-b last:border-0 hover:bg-muted/30">
+                                                            <td className="p-3 pl-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="h-6 w-6 rounded-full bg-green-600 flex items-center justify-center text-[10px] text-white font-bold">
+                                                                        {entry.project.charAt(0)}
+                                                                    </div>
+                                                                    <span className="font-medium text-foreground">{entry.project}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-3 text-muted-foreground">{entry.date}</td>
+                                                            <td className="p-3 text-muted-foreground">{entry.start}</td>
+                                                            <td className="p-3 text-muted-foreground">{entry.end}</td>
+                                                            <td className="p-3 text-right font-medium pr-4">{entry.duration}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div className="p-3 flex justify-center border-t">
+                                            <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
+                                                View daily timesheet <ChevronRight className="h-3 w-3 ml-1" />
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
                             </CardContent>
                         </Card>
                     )}
@@ -275,34 +298,45 @@ export function MemberWidgets({ data, isLoading, visibleWidgets, onVisibilityCha
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <div className="text-xs text-muted-foreground p-3 grid grid-cols-[1fr_auto] gap-4 font-semibold px-4 border-b">
-                                    <span>Project</span>
-                                    <span>Time</span>
-                                </div>
-                                <div>
-                                    {data.blocks.project_activity.map((proj) => (
-                                        <div key={proj.id} className="p-4 py-3 border-b last:border-0 hover:bg-muted/30">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="h-6 w-6 rounded-full bg-green-600 flex items-center justify-center text-[10px] text-white font-bold">
-                                                        {proj.name.charAt(0)}
-                                                    </div>
-                                                    <span className="text-sm font-medium text-blue-500 cursor-pointer hover:underline">{proj.name}</span>
-                                                    <Badge className="bg-green-500 hover:bg-green-600 text-[10px] border-none h-5 px-1.5">{proj.activity_score}%</Badge>
-                                                </div>
-                                                <span className="font-mono text-sm">{proj.time_spent}</span>
-                                            </div>
-                                            <div className="h-1.5 w-full bg-blue-100 rounded-full overflow-hidden">
-                                                <div className="h-full bg-blue-500" style={{ width: `${proj.activity_score}%` }}></div>
-                                            </div>
+                                {data.blocks.project_activity.length === 0 ? (
+                                    <EmptyState
+                                        icon={Briefcase}
+                                        title="No active projects"
+                                        description="You don't have any projects with recorded time this week."
+                                        className="py-10"
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="text-xs text-muted-foreground p-3 grid grid-cols-[1fr_auto] gap-4 font-semibold px-4 border-b">
+                                            <span>Project</span>
+                                            <span>Time</span>
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="p-3 flex justify-center border-t">
-                                    <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
-                                        View report <ChevronRight className="h-3 w-3 ml-1" />
-                                    </Button>
-                                </div>
+                                        <div>
+                                            {data.blocks.project_activity.map((proj) => (
+                                                <div key={proj.id} className="p-4 py-3 border-b last:border-0 hover:bg-muted/30">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-6 w-6 rounded-full bg-green-600 flex items-center justify-center text-[10px] text-white font-bold">
+                                                                {proj.name.charAt(0)}
+                                                            </div>
+                                                            <span className="text-sm font-medium text-blue-500 cursor-pointer hover:underline">{proj.name}</span>
+                                                            <Badge className="bg-green-500 hover:bg-green-600 text-[10px] border-none h-5 px-1.5">{proj.activity_score}%</Badge>
+                                                        </div>
+                                                        <span className="font-mono text-sm">{proj.time_spent}</span>
+                                                    </div>
+                                                    <div className="h-1.5 w-full bg-blue-100 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-blue-500" style={{ width: `${proj.activity_score}%` }}></div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="p-3 flex justify-center border-t">
+                                            <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
+                                                View report <ChevronRight className="h-3 w-3 ml-1" />
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
                             </CardContent>
                         </Card>
                     )}
@@ -314,12 +348,13 @@ export function MemberWidgets({ data, isLoading, visibleWidgets, onVisibilityCha
                                 <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">APPS & URLS</CardTitle>
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
                             </CardHeader>
-                            <CardContent className="p-8 flex flex-col items-center justify-center min-h-[160px]">
-                                {/* Placeholder Graphic */}
-                                <div className="w-24 h-16 bg-muted/20 border-2 border-dashed border-muted rounded-md mb-4 flex items-center justify-center">
-                                    <span className="text-muted-foreground/30 text-[10px]">No Data</span>
-                                </div>
-                                <p className="text-xs text-muted-foreground">No apps or URLs visited this week.</p>
+                            <CardContent className="p-0 flex flex-col items-center justify-center min-h-[160px]">
+                                <EmptyState
+                                    icon={LayoutPanelTop}
+                                    title="No apps or URLs"
+                                    description="No application or website usage data recorded this week."
+                                    className="py-10"
+                                />
                             </CardContent>
                         </Card>
                     )}

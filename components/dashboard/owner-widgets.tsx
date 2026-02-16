@@ -3,7 +3,8 @@ import { MetricCard, SparkLine } from "./metric-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoreVertical, Info, ChevronRight, Image as ImageIcon, Users } from "lucide-react";
+import { MoreVertical, Info, ChevronRight, Image as ImageIcon, Users, FolderOpen, UserCircle2 } from "lucide-react";
+import { EmptyState } from "./empty-state";
 import { Button } from "@/components/ui/button";
 import { IOwnerDashboard } from "@/interfaces/dashboard.interfaces";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
@@ -127,31 +128,42 @@ export function OwnerWidgets({ data, isLoading, visibleWidgets, onVisibilityChan
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
                             </CardHeader>
                             <CardContent className="p-4">
-                                <div className="grid grid-cols-3 gap-3">
-                                    {data.blocks.recent_team_activity.slice(0, 6).map((item) => (
-                                        <div key={item.id} className="relative group aspect-video bg-muted/30 border rounded-sm flex flex-col items-center justify-center overflow-hidden">
-                                            <Badge className={`absolute -top-2 -right-2 text-[10px] px-1.5 py-0 border-white h-5 z-10 ${item.score >= 80 ? 'bg-green-500 hover:bg-green-600' :
-                                                item.score >= 50 ? 'bg-yellow-500 hover:bg-yellow-600' :
-                                                    'bg-red-500 hover:bg-red-600'
-                                                }`}>
-                                                {item.score}%
-                                            </Badge>
-                                            {item.screenshot_url ? (
-                                                <img src={item.screenshot_url} alt="Activity" className="w-full h-full object-cover rounded-sm" />
-                                            ) : (
-                                                <ImageIcon className="h-8 w-8 text-muted-foreground/20 mb-1" />
-                                            )}
-                                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-[9px] text-white truncate text-center">
-                                                {item.user_name}
-                                            </div>
+                                {data.blocks.recent_team_activity.length === 0 ? (
+                                    <EmptyState
+                                        icon={ImageIcon}
+                                        title="No recent activity"
+                                        description="No screenshots or activity data recorded for your team recently."
+                                        className="py-10"
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {data.blocks.recent_team_activity.slice(0, 6).map((item) => (
+                                                <div key={item.id} className="relative group aspect-video bg-muted/30 border rounded-sm flex flex-col items-center justify-center overflow-hidden">
+                                                    <Badge className={`absolute -top-2 -right-2 text-[10px] px-1.5 py-0 border-white h-5 z-10 ${item.score >= 80 ? 'bg-green-500 hover:bg-green-600' :
+                                                        item.score >= 50 ? 'bg-yellow-500 hover:bg-yellow-600' :
+                                                            'bg-red-500 hover:bg-red-600'
+                                                        }`}>
+                                                        {item.score}%
+                                                    </Badge>
+                                                    {item.screenshot_url ? (
+                                                        <img src={item.screenshot_url} alt="Activity" className="w-full h-full object-cover rounded-sm" />
+                                                    ) : (
+                                                        <ImageIcon className="h-8 w-8 text-muted-foreground/20 mb-1" />
+                                                    )}
+                                                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-[9px] text-white truncate text-center">
+                                                        {item.user_name}
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="mt-4 pt-2 border-t flex justify-center">
-                                    <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
-                                        View all activity <ChevronRight className="h-3 w-3 ml-1" />
-                                    </Button>
-                                </div>
+                                        <div className="mt-4 pt-2 border-t flex justify-center">
+                                            <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
+                                                View all activity <ChevronRight className="h-3 w-3 ml-1" />
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
                             </CardContent>
                         </Card>
                     )}
@@ -216,38 +228,49 @@ export function OwnerWidgets({ data, isLoading, visibleWidgets, onVisibilityChan
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-xs text-left">
-                                        <thead>
-                                            <tr className="border-b text-muted-foreground">
-                                                <th className="font-semibold p-3 pl-4">Project</th>
-                                                <th className="font-semibold p-3 text-right">Hours</th>
-                                                <th className="font-semibold p-3 text-right pr-4">Budget Hours</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {data.blocks.projects_activity.map((proj) => (
-                                                <tr key={proj.id} className="border-b last:border-0 hover:bg-muted/30">
-                                                    <td className="p-3 pl-4">
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className="font-medium text-blue-500 hover:underline cursor-pointer">{proj.name}</span>
-                                                            <div className="h-1 w-24 bg-muted overflow-hidden rounded-full">
-                                                                <div className="h-full bg-green-500" style={{ width: `${proj.progress_percent}%` }}></div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-3 text-right font-medium">{proj.hours_spent}h</td>
-                                                    <td className="p-3 text-right text-muted-foreground pr-4">{proj.budget_hours}h</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div className="p-3 flex justify-center border-t">
-                                    <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
-                                        View all projects <ChevronRight className="h-3 w-3 ml-1" />
-                                    </Button>
-                                </div>
+                                {data.blocks.projects_activity.length === 0 ? (
+                                    <EmptyState
+                                        icon={FolderOpen}
+                                        title="No project activity"
+                                        description="You don't have any projects with active time tracking this week."
+                                        className="py-10"
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-xs text-left">
+                                                <thead>
+                                                    <tr className="border-b text-muted-foreground">
+                                                        <th className="font-semibold p-3 pl-4">Project</th>
+                                                        <th className="font-semibold p-3 text-right">Hours</th>
+                                                        <th className="font-semibold p-3 text-right pr-4">Budget Hours</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {data.blocks.projects_activity.map((proj) => (
+                                                        <tr key={proj.id} className="border-b last:border-0 hover:bg-muted/30">
+                                                            <td className="p-3 pl-4">
+                                                                <div className="flex flex-col gap-1">
+                                                                    <span className="font-medium text-blue-500 hover:underline cursor-pointer">{proj.name}</span>
+                                                                    <div className="h-1 w-24 bg-muted overflow-hidden rounded-full">
+                                                                        <div className="h-full bg-green-500" style={{ width: `${proj.progress_percent}%` }}></div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-3 text-right font-medium">{proj.hours_spent}h</td>
+                                                            <td className="p-3 text-right text-muted-foreground pr-4">{proj.budget_hours}h</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div className="p-3 flex justify-center border-t">
+                                            <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
+                                                View all projects <ChevronRight className="h-3 w-3 ml-1" />
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
                             </CardContent>
                         </Card>
                     )}
@@ -260,52 +283,63 @@ export function OwnerWidgets({ data, isLoading, visibleWidgets, onVisibilityChan
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-xs text-left">
-                                        <thead>
-                                            <tr className="border-b text-muted-foreground">
-                                                <th className="font-semibold p-3 pl-4">Name</th>
-                                                <th className="font-semibold p-3">Status</th>
-                                                <th className="font-semibold p-3 text-right">Activity</th>
-                                                <th className="font-semibold p-3 text-right pr-4">This Week</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {data.blocks.members_list.map((member) => (
-                                                <tr key={member.id} className="border-b last:border-0 hover:bg-muted/30">
-                                                    <td className="p-3 pl-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] text-slate-600 font-bold">
-                                                                {member.name.charAt(0)}
-                                                            </div>
-                                                            <span className="font-medium">{member.name}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <div className={`inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${member.status === "online" ? "bg-green-50 text-green-700 ring-green-600/20" :
-                                                            member.status === "idle" ? "bg-yellow-50 text-yellow-800 ring-yellow-600/20" :
-                                                                "bg-gray-50 text-gray-600 ring-gray-500/10"
-                                                            }`}>
-                                                            {member.status}
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-3 text-right">
-                                                        <Badge className={`text-[10px] border-none h-5 px-1.5 ${member.activity_score >= 80 ? 'bg-green-500 hover:bg-green-600' :
-                                                            member.activity_score >= 50 ? 'bg-yellow-500 hover:bg-yellow-600' :
-                                                                'bg-red-500 hover:bg-red-600'
-                                                            }`}>{member.activity_score}%</Badge>
-                                                    </td>
-                                                    <td className="p-3 text-right font-medium pr-4">{member.hours_this_week}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div className="p-3 flex justify-center border-t">
-                                    <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
-                                        View all members <ChevronRight className="h-3 w-3 ml-1" />
-                                    </Button>
-                                </div>
+                                {data.blocks.members_list.length === 0 ? (
+                                    <EmptyState
+                                        icon={UserCircle2}
+                                        title="No members"
+                                        description="You haven't added any team members to your organization yet."
+                                        className="py-10"
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-xs text-left">
+                                                <thead>
+                                                    <tr className="border-b text-muted-foreground">
+                                                        <th className="font-semibold p-3 pl-4">Name</th>
+                                                        <th className="font-semibold p-3">Status</th>
+                                                        <th className="font-semibold p-3 text-right">Activity</th>
+                                                        <th className="font-semibold p-3 text-right pr-4">This Week</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {data.blocks.members_list.map((member) => (
+                                                        <tr key={member.id} className="border-b last:border-0 hover:bg-muted/30">
+                                                            <td className="p-3 pl-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] text-slate-600 font-bold">
+                                                                        {member.name.charAt(0)}
+                                                                    </div>
+                                                                    <span className="font-medium">{member.name}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-3">
+                                                                <div className={`inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${member.status === "online" ? "bg-green-50 text-green-700 ring-green-600/20" :
+                                                                    member.status === "idle" ? "bg-yellow-50 text-yellow-800 ring-yellow-600/20" :
+                                                                        "bg-gray-50 text-gray-600 ring-gray-500/10"
+                                                                    }`}>
+                                                                    {member.status}
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-3 text-right">
+                                                                <Badge className={`text-[10px] border-none h-5 px-1.5 ${member.activity_score >= 80 ? 'bg-green-500 hover:bg-green-600' :
+                                                                    member.activity_score >= 50 ? 'bg-yellow-500 hover:bg-yellow-600' :
+                                                                        'bg-red-500 hover:bg-red-600'
+                                                                    }`}>{member.activity_score}%</Badge>
+                                                            </td>
+                                                            <td className="p-3 text-right font-medium pr-4">{member.hours_this_week}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div className="p-3 flex justify-center border-t">
+                                            <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
+                                                View all members <ChevronRight className="h-3 w-3 ml-1" />
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
                             </CardContent>
                         </Card>
                     )}

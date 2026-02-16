@@ -86,6 +86,7 @@ export function AddOrganizationMember() {
                 const memberData: BulkInviteMember = {
                     email: values.email,
                     role: values.orgRole as 'manager' | 'member',
+                    payRate: values.payRate,
                     birthday: values.birthday ? values.birthday.toISOString() : undefined,
                     startDate: values.startDate ? values.startDate.toISOString() : undefined,
                     projects: selectedProjects.map(p => ({
