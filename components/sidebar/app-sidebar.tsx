@@ -16,7 +16,7 @@ import {
     useSidebar,
 } from "@/components/ui/sidebar"
 import { useWorkspace } from "@/components/providers/workspace-provider"
-import { LayoutDashboard, Folder, Users, Settings, ChevronsUpDown, User, LogOut, DollarSign, ClipboardCheck, ClipboardList } from "lucide-react"
+import { LayoutDashboard, Folder, Users, Settings, ChevronsUpDown, User, LogOut, DollarSign, ClipboardCheck, ClipboardList, Palmtree } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import clsx from "clsx"
 import { OrgSwitcher } from "./org-switcher"
@@ -66,6 +66,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 title: "Reports",
                 url: `/dashboard/${activeOrgId}/reports`,
                 icon: ClipboardList,
+            },
+            {
+                title: "Paid Time Off",
+                url: `/dashboard/${activeOrgId}/pto`,
+                icon: Palmtree,
             },
             {
                 title: "Settings",
