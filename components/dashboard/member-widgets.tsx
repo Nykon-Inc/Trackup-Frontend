@@ -348,13 +348,46 @@ export function MemberWidgets({ data, isLoading, visibleWidgets, onVisibilityCha
                                 <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">APPS & URLS</CardTitle>
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-4 w-4 text-muted-foreground" /></Button>
                             </CardHeader>
-                            <CardContent className="p-0 flex flex-col items-center justify-center min-h-[160px]">
-                                <EmptyState
-                                    icon={LayoutPanelTop}
-                                    title="No apps or URLs"
-                                    description="No application or website usage data recorded this week."
-                                    className="py-10"
-                                />
+                            <CardContent className="p-0">
+                                {data.blocks.apps_urls.length === 0 ? (
+                                    <EmptyState
+                                        icon={LayoutPanelTop}
+                                        title="No apps or URLs"
+                                        description="No application or website usage data recorded this week."
+                                        className="py-10"
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-xs text-left">
+                                                <thead>
+                                                    <tr className="border-b text-muted-foreground">
+                                                        <th className="font-semibold p-3 pl-4">App / URL</th>
+                                                        <th className="font-semibold p-3 text-right pr-4">Hits</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {data.blocks.apps_urls.map((item, idx) => (
+                                                        <tr key={idx} className="border-b last:border-0 hover:bg-muted/30">
+                                                            <td className="p-3 pl-4">
+                                                                <div className="flex flex-col gap-0.5 max-w-[200px] md:max-w-xs">
+                                                                    <span className="font-medium truncate">{item.appName}</span>
+                                                                    <span className="text-[10px] text-muted-foreground truncate">{item.url}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-3 text-right font-medium pr-4">{item.hits}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div className="p-3 flex justify-center border-t">
+                                            <Button variant="link" className="text-blue-500 h-auto p-0 text-xs font-normal">
+                                                View all apps & urls <ChevronRight className="h-3 w-3 ml-1" />
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
                             </CardContent>
                         </Card>
                     )}

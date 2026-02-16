@@ -14,7 +14,9 @@ export interface IMemberDashboard {
         weekly_chart: IChartItem[];
         timesheet: ITimesheetItem[];
         project_activity: IProjectActivityItem[];
-        apps_urls: any[];
+        apps_urls: {
+            appName: string, url: string, hits: number
+        }[];
     };
 }
 
@@ -34,6 +36,9 @@ export interface IOwnerDashboard {
         worked_week_chart: IChartItem[];
         projects_activity: IProjectBudgetItem[];
         members_list: IMemberItem[];
+        apps_urls: {
+            appName: string, url: string, hits: number
+        }[];
     };
 }
 
