@@ -13,10 +13,22 @@ import {
     SidebarMenuItem,
     SidebarMenuButton,
     SidebarGroupLabel,
+    SidebarMenuSkeleton,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
+    SidebarProvider,
+    SidebarSeparator,
+    SidebarTrigger,
     useSidebar,
 } from "@/components/ui/sidebar"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import { useWorkspace } from "@/components/providers/workspace-provider"
-import { LayoutDashboard, Folder, Users, Settings, ChevronsUpDown, User, LogOut, DollarSign, ClipboardCheck, ClipboardList, Palmtree } from "lucide-react"
+import { LayoutDashboard, Folder, Users, Settings, ChevronsUpDown, User, LogOut, DollarSign, ClipboardCheck, ClipboardList, Palmtree, ChevronRight } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import clsx from "clsx"
 import { OrgSwitcher } from "./org-switcher"
@@ -25,6 +37,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { useAuthStore } from "@/stores/auth.store"
 import Link from "next/link"
 
+interface MenuItem {
+    title: string
+    url: string
+    icon: any
+    exact?: boolean
+    items?: {
+        title: string
+        url: string
+    }[]
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { activeOrgId, activeOrg } = useWorkspace()
     const { account } = useAuthStore()
@@ -32,10 +55,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { state } = useSidebar()
     const pathname = usePathname()
     const [profileOpen, setProfileOpen] = React.useState(false)
-    const activeMenuItems = React.useMemo(() => {
+    const activeMenuItems = React.useMemo<MenuItem[]>(() => {
         const isMember = activeOrg?.role === "member"
 
-        const items = [
+        const items: MenuItem[] = [
             {
                 title: "Dashboard",
                 url: `/dashboard/${activeOrgId}`,
@@ -48,7 +71,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 icon: Folder,
             },
             {
-                title: isMember ? "Activity" : "Teams",
+                title: isMember ? "Activity" : "Team Members",
                 url: `/dashboard/${activeOrgId}/${isMember ? "activity" : "teams"}`,
                 icon: Users,
             },
@@ -61,11 +84,53 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 title: isMember ? "Earnings" : "Financials",
                 url: `/dashboard/${activeOrgId}/${isMember ? "earnings" : "financials"}`,
                 icon: DollarSign,
+                items: isMember ? [
+                    {
+                        title: "Time Reports",
+                        url: `/dashboard/${activeOrgId}/reports/time`,
+                    },
+                    {
+                        title: "Activity Reports",
+                        url: `/dashboard/${activeOrgId}/reports/activity`,
+                    },
+                ] : [
+                    {
+                        title: "Manage Payroll",
+                        url: `/dashboard/${activeOrgId}/financials/payroll`,
+                    },
+                    {
+                        title: "Create Payments",
+                        url: `/dashboard/${activeOrgId}/financials/payments`,
+                    },
+                    {
+                        title: "Past Payments",
+                        url: `/dashboard/${activeOrgId}/financials/past-payments`,
+                    },
+                ],
             },
             {
                 title: "Reports",
                 url: `/dashboard/${activeOrgId}/reports`,
                 icon: ClipboardList,
+                items: isMember ? [
+                    {
+                        title: "Time & Activity",
+                        url: `/dashboard/${activeOrgId}/reports/time`,
+                    },
+                ] : [
+                    {
+                        title: "Time & Activity",
+                        url: `/dashboard/${activeOrgId}/reports/time`,
+                    },
+                    {
+                        title: "Audit Logs",
+                        url: `/dashboard/${activeOrgId}/reports/audit`,
+                    },
+                    {
+                        title: "Manual Time Edits",
+                        url: `/dashboard/${activeOrgId}/reports/manual-edits`,
+                    },
+                ],
             },
             {
                 title: "Paid Time Off",
@@ -96,21 +161,55 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 ? pathname === item.url
                                 : pathname?.startsWith(item.url);
 
+                            if (!item.items || item.items.length === 0) {
+                                return (
+                                    <SidebarMenuItem key={item.title}>
+                                        <SidebarMenuButton
+                                            asChild
+                                            isActive={isActive}
+                                            tooltip={item.title}
+                                            size="sm"
+                                            className="text-xs h-8 font-medium"
+                                        >
+                                            <Link href={item.url} className="text-sm text-muted-foreground h-9">
+                                                <item.icon className="h-3.5 w-3.5" />
+                                                <span>{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                )
+                            }
+
                             return (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton
-                                        asChild
-                                        isActive={isActive}
-                                        tooltip={item.title}
-                                        size="sm"
-                                        className="text-xs h-8 font-medium"
-                                    >
-                                        <Link href={item.url} className="text-sm text-muted-foreground h-9">
-                                            <item.icon className="h-3.5 w-3.5" />
-                                            <span>{item.title}</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
+                                <Collapsible
+                                    key={item.title}
+                                    asChild
+                                    defaultOpen={isActive}
+                                    className="group/collapsible"
+                                >
+                                    <SidebarMenuItem>
+                                        <CollapsibleTrigger asChild>
+                                            <SidebarMenuButton tooltip={item.title} size="sm" className="text-xs h-9 text-muted-foreground">
+                                                {item.icon && <item.icon className="h-3.5 w-3.5" />}
+                                                <span>{item.title}</span>
+                                                <ChevronRight className="ml-auto h-3.5 w-3.5 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                            </SidebarMenuButton>
+                                        </CollapsibleTrigger>
+                                        <CollapsibleContent>
+                                            <SidebarMenuSub>
+                                                {item.items.map((subItem) => (
+                                                    <SidebarMenuSubItem key={subItem.title}>
+                                                        <SidebarMenuSubButton className="text-xs" asChild isActive={pathname === subItem.url}>
+                                                            <Link href={subItem.url} className="text-sm text-muted-foreground">
+                                                                <span>{subItem.title}</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                ))}
+                                            </SidebarMenuSub>
+                                        </CollapsibleContent>
+                                    </SidebarMenuItem>
+                                </Collapsible>
                             )
                         })}
                     </SidebarMenu>
