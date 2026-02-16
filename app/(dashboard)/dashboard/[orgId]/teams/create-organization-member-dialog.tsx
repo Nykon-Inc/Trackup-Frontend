@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { useBulkInvite } from "@/services/organization.services";
 import { BulkInviteMember } from "@/interfaces/organizations.interfaces";
 import { toast } from "sonner";
+import { useAuthStore } from "@/stores/auth.store";
 
 // Organization member roles
 enum OrganizationMemberRole {
@@ -56,6 +57,7 @@ const STEPS: Step[] = [
 
 export function AddOrganizationMember() {
     const [open, setOpen] = useState(false);
+    const { account } = useAuthStore()
     const [currentStep, setCurrentStep] = useState("basic");
     const [selectedProjects, setSelectedProjects] = useState<ProjectAssignment[]>([]);
     const { activeOrgId } = useWorkspace();
@@ -63,6 +65,7 @@ export function AddOrganizationMember() {
 
     const { data: projectsData, isLoading: isLoadingProjects } = useGetProjects({
         organizationId: activeOrgId || "",
+        userId: account?.id || "",
     });
 
     const formik = useFormik({
