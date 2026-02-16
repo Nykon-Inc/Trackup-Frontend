@@ -26,51 +26,56 @@ import { useAuthStore } from "@/stores/auth.store"
 import Link from "next/link"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const { activeOrgId } = useWorkspace()
+    const { activeOrgId, activeOrg } = useWorkspace()
     const { account } = useAuthStore()
     const router = useRouter()
     const { state } = useSidebar()
     const pathname = usePathname()
     const [profileOpen, setProfileOpen] = React.useState(false)
+    const activeMenuItems = React.useMemo(() => {
+        const isMember = activeOrg?.role === "member"
 
-    const menuItems = [
-        {
-            title: "Dashboard",
-            url: `/dashboard/${activeOrgId}`,
-            icon: LayoutDashboard,
-            exact: true,
-        },
-        {
-            title: "Projects",
-            url: `/dashboard/${activeOrgId}/projects`,
-            icon: Folder,
-        },
-        {
-            title: "Teams",
-            url: `/dashboard/${activeOrgId}/teams`,
-            icon: Users,
-        },
-        {
-            title: "Insights",
-            url: `/dashboard/${activeOrgId}/insights`,
-            icon: ClipboardCheck,
-        },
-        {
-            title: "Earnings",
-            url: `/dashboard/${activeOrgId}/earnings`,
-            icon: DollarSign,
-        },
-        {
-            title: "Reports",
-            url: `/dashboard/${activeOrgId}/reports`,
-            icon: ClipboardList,
-        },
-        {
-            title: "Settings",
-            url: `/dashboard/${activeOrgId}/settings`,
-            icon: Settings,
-        },
-    ]
+        const items = [
+            {
+                title: "Dashboard",
+                url: `/dashboard/${activeOrgId}`,
+                icon: LayoutDashboard,
+                exact: true,
+            },
+            {
+                title: isMember ? "Timesheets" : "Projects",
+                url: `/dashboard/${activeOrgId}/${isMember ? "timesheets" : "projects"}`,
+                icon: Folder,
+            },
+            {
+                title: isMember ? "Activity" : "Teams",
+                url: `/dashboard/${activeOrgId}/${isMember ? "activity" : "teams"}`,
+                icon: Users,
+            },
+            {
+                title: "Insights",
+                url: `/dashboard/${activeOrgId}/insights`,
+                icon: ClipboardCheck,
+            },
+            {
+                title: "Earnings",
+                url: `/dashboard/${activeOrgId}/earnings`,
+                icon: DollarSign,
+            },
+            {
+                title: "Reports",
+                url: `/dashboard/${activeOrgId}/reports`,
+                icon: ClipboardList,
+            },
+            {
+                title: "Settings",
+                url: `/dashboard/${activeOrgId}/settings`,
+                icon: Settings,
+            },
+        ]
+
+        return items
+    }, [activeOrgId, activeOrg?.role])
 
     return (
         <Sidebar collapsible="icon" {...props}>
@@ -81,7 +86,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarGroup>
                     <SidebarGroupLabel>Menu</SidebarGroupLabel>
                     <SidebarMenu>
-                        {menuItems.map((item) => {
+                        {activeMenuItems.map((item) => {
                             const isActive = item.exact
                                 ? pathname === item.url
                                 : pathname?.startsWith(item.url);
