@@ -82,10 +82,10 @@ export default function SelectOrganizationPage() {
                     {organizations.map((member) => (
                         <Card
                             key={member.organization.id}
-                            className="group cursor-pointer transition-all hover:border-primary hover:shadow-md"
+                            className="group cursor-pointer transition-all hover:border-primary hover:shadow-md p-1 gap-0"
                             onClick={() => handleSelectOrganization(member.organization.id)}
                         >
-                            <CardContent className="flex items-center justify-between p-6">
+                            <CardContent className="flex items-center justify-between p-3">
                                 <div className="flex items-center gap-4">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                                         <Building2 className="h-6 w-6" />
