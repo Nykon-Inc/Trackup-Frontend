@@ -87,37 +87,38 @@ export default function ProjectsPage() {
             <PageHeader
                 title="Projects"
                 breadcrumbs={[
-                    { label: "Dashboard", href: `/${activeOrgId}`, active: false },
-                    { label: "Projects", href: `/${activeOrgId}/projects`, active: true },
+                    { label: "Dashboard", href: `/dashboard/${activeOrgId}`, active: false },
+                    { label: "Projects", href: `/dashboard/${activeOrgId}/projects`, active: true },
                 ]}
                 rightElement={<div>
                 </div>}
             />
 
             <div className="px-4">
-                <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center gap-4">
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-2">
                         <Input
                             placeholder="Search projects by name..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="max-w-sm h-10"
+                            className="max-w-[240px] h-8 text-xs"
                         />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="gap-2 h-10">
-                                    <Filter className="h-4 w-4" />
-                                    Status
+                                <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
+                                    <Filter className="h-3.5 w-3.5" />
+                                    <span>Status</span>
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-[200px]">
-                                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                            <DropdownMenuContent align="end" className="w-[180px]">
+                                <DropdownMenuLabel className="text-xs">Filter by Status</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 {Object.values(ProjectStatus).map((status) => (
                                     <DropdownMenuCheckboxItem
                                         key={status}
                                         checked={statusFilter === status}
                                         onCheckedChange={() => toggleStatusFilter(status)}
+                                        className="text-xs"
                                     >
                                         {status}
                                     </DropdownMenuCheckboxItem>
@@ -132,23 +133,24 @@ export default function ProjectsPage() {
 
                 <div className="bg-card">
                     {isLoading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} className="h-[250px] w-full bg-slate-100 animate-pulse rounded-2xl" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="h-[180px] w-full bg-slate-100 animate-pulse rounded-xl" />
                             ))}
                         </div>
                     ) : filteredProjects.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <div className="bg-slate-50 p-4 rounded-full mb-4">
-                                <Filter className="h-8 w-8 text-slate-300" />
+                        <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="bg-slate-50 p-3 rounded-full mb-3">
+                                <Filter className="h-6 w-6 text-slate-300" />
                             </div>
-                            <h3 className="text-lg font-semibold text-slate-900">No projects found</h3>
-                            <p className="text-slate-500 max-w-sm mt-1">
+                            <h3 className="text-base font-semibold text-slate-900">No projects found</h3>
+                            <p className="text-slate-500 text-xs max-w-xs mt-1">
                                 We couldn't find any projects matching your current filters or search query.
                             </p>
                             <Button
                                 variant="outline"
-                                className="mt-6"
+                                size="sm"
+                                className="mt-4 h-8 text-xs"
                                 onClick={() => {
                                     setSearch("");
                                     setStatusFilter("");
@@ -158,7 +160,7 @@ export default function ProjectsPage() {
                             </Button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {filteredProjects.map((project) => (
                                 <ProjectCard
                                     key={project.id}
