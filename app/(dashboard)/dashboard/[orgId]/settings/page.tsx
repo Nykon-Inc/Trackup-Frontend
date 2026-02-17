@@ -42,6 +42,14 @@ export default function SettingsPage() {
                                 </li>
                                 <li>
                                     <Link
+                                        href={`/dashboard/${params?.orgId}/settings/integrations/hubstaff`}
+                                        className="flex items-center p-2 px-3 text-xs text-muted-foreground rounded-md font-medium hover:bg-muted hover:text-foreground transition-colors"
+                                    >
+                                        Hubstaff
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
                                         href={`/dashboard/${params?.orgId}/settings/integrations/wise`}
                                         className="flex items-center p-2 px-3 text-xs text-muted-foreground rounded-md font-medium hover:bg-muted hover:text-foreground transition-colors"
                                     >

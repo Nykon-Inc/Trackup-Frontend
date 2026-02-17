@@ -163,12 +163,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 url: `/dashboard/${activeOrgId}/pto`,
                 icon: Palmtree,
             },
-            {
+        ]
+
+        if (!isMember) {
+            items.push({
                 title: "Settings",
                 url: `/dashboard/${activeOrgId}/settings`,
                 icon: Settings,
-            },
-        ]
+            })
+        }
 
         return items
     }, [activeOrgId, activeOrg?.role])
