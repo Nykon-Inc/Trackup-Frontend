@@ -28,7 +28,7 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { useWorkspace } from "@/components/providers/workspace-provider"
-import { LayoutDashboard, Folder, Users, Settings, ChevronsUpDown, User, LogOut, DollarSign, ClipboardCheck, ClipboardList, Palmtree, ChevronRight } from "lucide-react"
+import { LayoutDashboard, Folder, Users, Settings, ChevronsUpDown, User, LogOut, DollarSign, ClipboardCheck, ClipboardList, Palmtree, ChevronRight, Activity, Clock } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import clsx from "clsx"
 import { OrgSwitcher } from "./org-switcher"
@@ -68,12 +68,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             {
                 title: isMember ? "Timesheets" : "Projects",
                 url: `/dashboard/${activeOrgId}/${isMember ? "timesheets" : "projects"}`,
-                icon: Folder,
+                icon: isMember ? Clock : Folder,
+                items: isMember ? [
+                    {
+                        title: "View & edit",
+                        url: `/dashboard/${activeOrgId}/timesheets/view-edit`,
+                    },
+                    {
+                        title: "Approvals",
+                        url: `/dashboard/${activeOrgId}/timesheets/approvals`,
+                    }
+                ] : [
+                ],
             },
             {
                 title: isMember ? "Activity" : "Team Members",
                 url: `/dashboard/${activeOrgId}/${isMember ? "activity" : "teams"}`,
-                icon: Users,
+                icon: isMember ? Activity : Users,
+                items: isMember ? [
+                    {
+                        title: "Activity",
+                        url: `/dashboard/${activeOrgId}/activity`,
+                    },
+                    {
+                        title: "Screenshots",
+                        url: `/dashboard/${activeOrgId}/screenshots`,
+                    },
+                    {
+                        title: "Apps & URLs",
+                        url: `/dashboard/${activeOrgId}/apps-urls`,
+                    },
+                ] : [
+                ],
             },
             {
                 title: "Insights",
@@ -119,7 +145,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     },
                 ] : [
                     {
-                        title: "Time & Activity",
+                        title: "Time & Activity Reports",
                         url: `/dashboard/${activeOrgId}/reports/time`,
                     },
                     {
