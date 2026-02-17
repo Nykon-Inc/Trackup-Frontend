@@ -30,6 +30,8 @@ export const routes = {
         hubstaffProjects: (id: string) => `/client/organizations/${id}/hubstaff/projects`,
         acceptInvitation: (id: string) => `/client/organizations/${id}/accept-invitation`,
         rejectInvitation: (id: string) => `/client/organizations/${id}/reject-invitation`,
+        pTOPolicy: (id: string) => `/client/organizations/${id}/pto-policies/`,
+        updatePTOPolicy: (id: string, ptoId: string) => `/client/organizations/${id}/pto-policies/${ptoId}`,
     },
     projects: {
         index: "/client/projects",
