@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Account, VerifyTokenResponseInterface } from "@/interfaces/auth.interfaces";
 import { useCreateProjectOnboarding } from "@/services/projects.services";
-import { Loader2, FileText, Users, CheckCircle } from "lucide-react";
+import { Loader2, FileText, Users, CheckCircle, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Stepper } from "@/components/ui/stepper";
 
@@ -37,7 +37,7 @@ export default function OnboardingPage() {
     const { mutate: selectOrganization, isPending: isSelecting } = useSelectOrganization();
 
     // States
-    const [view, setView] = useState<"loading" | "accept-invite" | "owner-setup" | "signup" | "error">("loading");
+    const [view, setView] = useState<"loading" | "accept-invite" | "owner-setup" | "signup" | "error" | "member-complete">("loading");
     const [onboardingData, setOnboardingData] = useState<VerifyTokenResponseInterface | null>(null);
     const [ownerStep, setOwnerStep] = useState<"password" | "project" | "members" | "complete">("password");
 
@@ -88,7 +88,6 @@ export default function OnboardingPage() {
     }, [token, verifyToken]);
 
     const handleAccept = () => {
-        debugger
         const orgId = onboardingData?.organizationId;
         if (!orgId) return;
         acceptOrgInvite({ organizationId: orgId, token: token! }, {
@@ -96,7 +95,7 @@ export default function OnboardingPage() {
                 selectOrganization({ organizationId: orgId }, {
                     onSuccess: () => {
                         toast.success("Invitation accepted!");
-                        router.push(`/dashboard/${orgId}`);
+                        setView("member-complete");
                     }
                 });
             },
@@ -204,6 +203,16 @@ export default function OnboardingPage() {
                         <SignupView
                             token={token!}
                             email={onboardingData?.email || ""}
+                            onComplete={() => setView("member-complete")}
+                        />
+                    </CardContent>
+                </Card>
+            ) : view === "member-complete" ? (
+                <Card className="w-full max-w-md mx-auto">
+                    <CardContent className="pt-6">
+                        <OnboardingSuccessView
+                            onComplete={() => router.push(`/dashboard/${onboardingData?.organizationId}`)}
+                            isCompleting={false}
                         />
                     </CardContent>
                 </Card>
@@ -212,7 +221,7 @@ export default function OnboardingPage() {
     );
 }
 
-function SignupView({ token, email }: { token: string, email: string }) {
+function SignupView({ token, email, onComplete }: { token: string, email: string, onComplete: () => void }) {
     const router = useRouter();
     const { mutate: registerInvitedUser, isPending } = useRegisterInvitedUser();
     const { mutate: selectOrganization, isPending: isSelecting } = useSelectOrganization();
@@ -242,7 +251,7 @@ function SignupView({ token, email }: { token: string, email: string }) {
                     selectOrganization({ organizationId: orgId }, {
                         onSuccess: () => {
                             toast.success("Account created successfully!");
-                            router.push(`/dashboard/${orgId}`);
+                            onComplete();
                         }
                     });
                 } else {
@@ -310,6 +319,39 @@ function SignupView({ token, email }: { token: string, email: string }) {
     );
 }
 
+function OnboardingSuccessView({ onComplete, isCompleting }: { onComplete: () => void, isCompleting: boolean }) {
+    return (
+        <div className="mx-auto flex max-w-[320px] flex-col justify-center gap-4 text-center">
+            <div className="flex justify-center mb-2">
+                <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
+                    <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+                </div>
+            </div>
+            <div className="space-y-1">
+                <h1 className="text-xl font-bold">You're all set!</h1>
+                <p className="text-sm text-muted-foreground">
+                    You have successfully joined the organization. Download the desktop app to start tracking your work.
+                </p>
+            </div>
+
+            <Button
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2 h-11"
+                asChild
+            >
+                <a href="/app-download/Trackup_0.1.0_aarch64.dmg" download>
+                    <Download className="h-4 w-4" />
+                    Download Desktop App
+                </a>
+            </Button>
+
+            <Button size="sm" onClick={onComplete} disabled={isCompleting} className="w-full h-11">
+                {isCompleting ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Go to Dashboard"}
+            </Button>
+        </div>
+    );
+}
+
 function OwnerOnboardingWizard({ token, user, organizationMembership, step, setStep }: { token: string, user: Account, organizationMembership: OrganizationMember, step: string, setStep: (s: any) => void }) {
     const router = useRouter();
     const { mutate: setupPassword, isPending: isSettingPassword } = useSetupPassword();
@@ -370,12 +412,10 @@ function OwnerOnboardingWizard({ token, user, organizationMembership, step, setS
 
     if (step === "complete") {
         return (
-            <div className="mx-auto flex max-w-[320px] flex-col justify-center gap-3 text-center">
-                <h1 className="text-lg font-semibold">You're all set!</h1>
-                <Button size="sm" onClick={handleComplete} disabled={isCompleting}>
-                    {isCompleting ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Go to Dashboard"}
-                </Button>
-            </div>
+            <OnboardingSuccessView
+                onComplete={handleComplete}
+                isCompleting={isCompleting}
+            />
         );
     }
 
