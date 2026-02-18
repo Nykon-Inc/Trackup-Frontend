@@ -1,15 +1,12 @@
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { format, parseISO } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { cn } from '@/lib/utils'
+import { DatePickerCalendar } from '@/components/ui/date-picker-calendar'
 
 export interface Policy {
     id: string
@@ -34,7 +31,7 @@ const validationSchema = Yup.object({
         .typeError('Must be a positive number')
         .positive('Must be a positive number')
         .required('Days allowed is required'),
-    effectiveDate: Yup.string().required('Effective date is required'),
+    effectiveDate: Yup.date().required('Effective date is required'),
     description: Yup.string(),
 })
 
@@ -44,7 +41,7 @@ export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
         initialValues: {
             name: policy?.name ?? '',
             maxDaysPerYear: policy?.maxDaysPerYear ?? '',
-            effectiveDate: policy?.effectiveDate ?? '',
+            effectiveDate: policy?.effectiveDate ? parseISO(policy.effectiveDate) : null as Date | null,
             description: policy?.description ?? '',
         },
         validationSchema,
@@ -53,7 +50,7 @@ export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
                 {
                     name: values.name,
                     maxDaysPerYear: Number(values.maxDaysPerYear),
-                    effectiveDate: values.effectiveDate,
+                    effectiveDate: values.effectiveDate ? format(values.effectiveDate, 'yyyy-MM-dd') : '',
                     description: values.description,
                     enabled: policy?.enabled ?? true,
                 },
@@ -66,15 +63,6 @@ export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
         formik.resetForm()
         onClose()
     }
-
-    const handleDateSelect = (date: Date | undefined) => {
-        formik.setFieldValue('effectiveDate', date ? format(date, 'yyyy-MM-dd') : '', true)
-        formik.setFieldTouched('effectiveDate', true, false)
-    }
-
-    const selectedDate = formik.values.effectiveDate
-        ? parseISO(formik.values.effectiveDate)
-        : undefined
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -112,31 +100,15 @@ export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
 
                         <div className="space-y-1">
                             <Label>Effective Date</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        className={cn(
-                                            'w-full justify-start text-left font-normal',
-                                            !selectedDate && 'text-muted-foreground'
-                                        )}
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={selectedDate}
-                                        onSelect={handleDateSelect}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
+                            <DatePickerCalendar
+                                selected={formik.values.effectiveDate || undefined}
+                                onSelect={(date: Date | undefined) => formik.setFieldValue('effectiveDate', date ?? null)}
+                                placeholder="Pick a date"
+                                classname='w-full'
+                                error={!!(formik.touched.effectiveDate && formik.errors.effectiveDate)}
+                            />
                             {formik.touched.effectiveDate && formik.errors.effectiveDate && (
-                                <p className="text-xs text-red-500">{formik.errors.effectiveDate}</p>
+                                <p className="text-xs text-red-500">{formik.errors.effectiveDate as string}</p>
                             )}
                         </div>
 
@@ -154,14 +126,9 @@ export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
                             Cancel
                         </Button>
                         <Button type="submit">
-                            {
-                                policy
-                                    ? formik.isSubmitting
-                                        ? "Saving..."
-                                        : "Save Policy"
-                                    : formik.isSubmitting
-                                        ? "Creating..."
-                                        : "Create New Policy"
+                            {policy
+                                ? formik.isSubmitting ? "Saving..." : "Save Policy"
+                                : formik.isSubmitting ? "Creating..." : "Create New Policy"
                             }
                         </Button>
                     </DialogFooter>

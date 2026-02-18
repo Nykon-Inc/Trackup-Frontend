@@ -1,17 +1,16 @@
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { CalendarIcon, InfoIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DatePickerCalendar } from '@/components/ui/date-picker-calendar';
 import { IPTOPolicy } from '@/interfaces/paid-time-offs.interfaces';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface PTORequestFormProps {
     policies: IPTOPolicy[]
@@ -31,12 +30,13 @@ interface PTORequestFormProps {
 
 const validationSchema = Yup.object({
     policyId: Yup.string().required('Please select a policy'),
-    startDate: Yup.string().required('Start date is required'),
-    endDate: Yup.string()
+    startDate: Yup.date().required('Start date is required').nullable(),
+    endDate: Yup.date()
         .required('End date is required')
+        .nullable()
         .test('is-after', 'End date must be after start date', function (value) {
             const { startDate } = this.parent;
-            return !startDate || !value || new Date(value) >= new Date(startDate);
+            return !startDate || !value || value >= startDate;
         }),
     reason: Yup.string(),
     isStartHalfDay: Yup.boolean(),
@@ -47,16 +47,26 @@ export function PTORequestForm({ policies, onSubmit, isSubmitting, isFormOpen, o
     const formik = useFormik({
         initialValues: {
             policyId: '',
-            startDate: '',
-            endDate: '',
+            startDate: null as Date | null,
+            endDate: null as Date | null,
             reason: '',
             isStartHalfDay: false,
             isEndHalfDay: false,
         },
         validationSchema,
         onSubmit: (values, { resetForm }) => {
-            const days = calculateDays(values.startDate, values.endDate, values.isStartHalfDay, values.isEndHalfDay);
-            onSubmit({ ...values, days }, resetForm);
+            const startStr = values.startDate ? format(values.startDate, 'yyyy-MM-dd') : '';
+            const endStr = values.endDate ? format(values.endDate, 'yyyy-MM-dd') : '';
+            const days = calculateDays(startStr, endStr, values.isStartHalfDay, values.isEndHalfDay);
+            onSubmit({
+                policyId: values.policyId,
+                startDate: startStr,
+                endDate: endStr,
+                days,
+                reason: values.reason,
+                isStartHalfDay: values.isStartHalfDay,
+                isEndHalfDay: values.isEndHalfDay,
+            }, resetForm);
         },
     });
 
@@ -71,56 +81,30 @@ export function PTORequestForm({ policies, onSubmit, isSubmitting, isFormOpen, o
         return days;
     };
 
-    const daysRequested = calculateDays(
-        formik.values.startDate,
-        formik.values.endDate,
-        formik.values.isStartHalfDay,
-        formik.values.isEndHalfDay,
-    );
+    const startStr = formik.values.startDate ? format(formik.values.startDate, 'yyyy-MM-dd') : '';
+    const endStr = formik.values.endDate ? format(formik.values.endDate, 'yyyy-MM-dd') : '';
+    const daysRequested = calculateDays(startStr, endStr, formik.values.isStartHalfDay, formik.values.isEndHalfDay);
     const selectedPolicyData = policies.find((p) => p.id === formik.values.policyId);
     const isOverBalance = false;
 
-    const handleDateSelect = (field: 'startDate' | 'endDate', date: Date | undefined) => {
-        const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
-        formik.setFieldValue(field, formattedDate, true);
-        formik.setFieldTouched(field, true, false);
-    };
-
     const renderDateField = (field: 'startDate' | 'endDate', label: string) => {
-        const val = formik.values[field];
-        const date = val ? parseISO(val) : undefined;
         const halfDayField = field === 'startDate' ? 'isStartHalfDay' : 'isEndHalfDay';
+        const value = formik.values[field];
 
         return (
             <div className="space-y-1">
                 <Label>{label}</Label>
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className={cn(
-                                'w-full justify-start text-left font-normal',
-                                !date && 'text-muted-foreground'
-                            )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, 'PPP') : 'Pick a date'}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={(d) => handleDateSelect(field, d)}
-                            initialFocus
-                        />
-                    </PopoverContent>
-                </Popover>
+                <DatePickerCalendar
+                    selected={value || undefined}
+                    onSelect={(date: Date | undefined) => formik.setFieldValue(field, date ?? null)}
+                    placeholder="Pick a date"
+                    error={!!(formik.touched[field] && formik.errors[field])}
+                    classname='w-full'
+                />
                 {formik.touched[field] && formik.errors[field] && (
-                    <p className="text-xs text-red-500">{formik.errors[field]}</p>
+                    <p className="text-xs text-red-500">{formik.errors[field] as string}</p>
                 )}
-                {date && (
+                {value && (
                     <div className="flex items-center gap-2 pt-0.5">
                         <Checkbox
                             id={halfDayField}
@@ -167,7 +151,7 @@ export function PTORequestForm({ policies, onSubmit, isSubmitting, isFormOpen, o
                             {selectedPolicyData && (
                                 <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                                     <InfoIcon className="h-4 w-4" />
-                                    <span>Available: <strong>{5} days</strong></span>
+                                    <span>Maximum days per year: <strong>{selectedPolicyData.maxDaysPerYear}</strong></span>
                                 </div>
                             )}
                         </div>

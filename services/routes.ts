@@ -34,6 +34,8 @@ export const routes = {
         updatePTOPolicy: (id: string, ptoId: string) => `/client/organizations/${id}/pto-policies/${ptoId}`,
         ptoRequests: (id: string) => `/client/organizations/${id}/paid-time-offs`,
         reviewPtoRequest: (id: string, requestId: string) => `/client/organizations/${id}/paid-time-offs/${requestId}/review`,
+        holidays: (id: string) => `/client/organizations/${id}/holidays`,
+        holiday: (id: string, holidayId: string) => `/client/organizations/${id}/holidays/${holidayId}`,
     },
     projects: {
         index: "/client/projects",

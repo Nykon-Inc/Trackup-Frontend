@@ -1,11 +1,12 @@
-import { FC, useState } from "react"
+import { FC } from "react"
 import { PolicyList } from "./policy-list"
-import { Loader2 } from "lucide-react"
 import { Policy, PolicyForm } from "./policy-form"
-import { useCreatePtoPolicy, useGetPtoPolicies, useUpdatePtoPolicy } from "@/services/paid-time-off.services"
+import { useCreatePtoPolicy, useUpdatePtoPolicy } from "@/services/paid-time-off.services"
+import { IPTOPolicy } from "@/interfaces/paid-time-offs.interfaces"
 
 
 type Props = {
+    policies: IPTOPolicy[]
     organizationId: string
     editPolicy: Policy | null
     setEditPolicy: React.Dispatch<React.SetStateAction<Policy | null>>
@@ -13,11 +14,10 @@ type Props = {
     setIsFormOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export const PtoPolicies: FC<Props> = ({ organizationId, editPolicy, setEditPolicy, isFormOpen, setIsFormOpen }) => {
+export const PtoPolicies: FC<Props> = ({ policies, organizationId, editPolicy, setEditPolicy, isFormOpen, setIsFormOpen }) => {
     const { mutate: createPolicy } = useCreatePtoPolicy()
     const { mutate: updatePolicy } = useUpdatePtoPolicy()
 
-    const { data: policies, isPending } = useGetPtoPolicies(organizationId)
 
     const closeForm = () => {
         setIsFormOpen(false)
@@ -42,13 +42,6 @@ export const PtoPolicies: FC<Props> = ({ organizationId, editPolicy, setEditPoli
 
     const handlePolicyToggle = (policy: Policy) => {
         updatePolicy({ enabled: !policy.enabled, organizationId, id: policy.id })
-    }
-
-    if (isPending) {
-        return <div className="flex justify-center items-center h-screen">
-
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
     }
 
     return (

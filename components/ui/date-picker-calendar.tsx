@@ -15,6 +15,7 @@ interface DatePickerCalendarProps {
     toYear?: number;
     disabled?: boolean;
     error?: boolean;
+    classname?: string;
 }
 
 type ViewMode = "days" | "months" | "years";
@@ -37,6 +38,7 @@ export function DatePickerCalendar({
     toYear = new Date().getFullYear() + 10,
     disabled = false,
     error = false,
+    classname,
 }: DatePickerCalendarProps) {
     const [open, setOpen] = React.useState(false);
     const [viewMode, setViewMode] = React.useState<ViewMode>("days");
@@ -221,6 +223,7 @@ export function DatePickerCalendar({
                     disabled={disabled}
                     className={cn(
                         "justify-start text-left font-normal",
+                        classname,
                         !selected && "text-muted-foreground",
                         error && "border-red-500"
                     )}

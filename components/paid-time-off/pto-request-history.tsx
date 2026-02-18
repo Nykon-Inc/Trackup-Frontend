@@ -1,132 +1,154 @@
-import { Card, CardHeader, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
-import { CalendarIcon, ClockIcon } from 'lucide-react'
+import Table, { TableColumn } from '@/components/ui/data-table'
 import { useGetOwnPtoRequests } from '@/services/paid-time-off.services'
-import { differenceInCalendarDays, parseISO } from 'date-fns'
+import TablePagination from '../ui/table-pagination'
+import { useState } from 'react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 
 
 export function RequestHistory({ organizationId }: { organizationId: string }) {
-    const { data: requests = [] } = useGetOwnPtoRequests(organizationId)
+    const { data: requests, isPending } = useGetOwnPtoRequests(organizationId)
+    const [page, setPage] = useState<number>(1);
+    const [rowsPerPage, setRowsPerPage] = useState(20);
 
-    if (requests.length === 0) {
-        return (
-            <Card>
-                <CardHeader>
-                    <h2 className="text-xl font-semibold text-foreground">
-                        Request History
-                    </h2>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-center py-8">
-                        <ClockIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">
-                            No requests yet. Submit your first time-off request above.
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
-        )
-    }
+    const handleChangePage = (
+        event: React.MouseEvent<HTMLButtonElement> | null,
+        newPage: number
+    ) => {
+        setPage(newPage);
+    };
+
+
+    const handleChangeRowsPerPage = (
+        event: React.ChangeEvent<HTMLSelectElement>
+    ) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(1);
+    };
+
+
+    const formatDate = (date: string) =>
+        new Date(date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        })
+
+    const columns: TableColumn[] = [
+        {
+            header: 'Policy',
+            key: 'policyId',
+            render: (value) => (
+                <span className="text-sm font-semibold text-foreground py-3">{value?.name}</span>
+            ),
+        },
+        {
+            header: 'Submitted',
+            key: 'createdAt',
+            render: (value) => (
+                <span className="text-xs text-muted-foreground">{formatDate(value)}</span>
+            ),
+        },
+        {
+            header: 'Start Date',
+            key: 'startDate',
+            render: (value) => (
+                <span className="text-xs font-medium text-foreground">{formatDate(value)}</span>
+            ),
+        },
+        {
+            header: 'End Date',
+            key: 'endDate',
+            render: (value) => (
+                <span className="text-xs font-medium text-foreground">{formatDate(value)}</span>
+            ),
+        },
+        {
+            header: 'Duration',
+            key: 'totalDays',
+            align: 'center',
+            render: (value) => (
+                <span className="text-xs font-medium text-foreground">
+                    {value} {value === 1 ? 'day' : 'days'}
+                </span>
+            ),
+        },
+        {
+            header: 'Reason',
+            key: 'reason',
+            render: (value) =>
+                value ? (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className="text-xs text-muted-foreground line-clamp-1 text-ellipsis cursor-default max-w-37.5 block">
+                                    {value}
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-75 text-xs">
+                                {value}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                ) : (
+                    <span className="text-muted-foreground/50">—</span>
+                ),
+        },
+        {
+            header: 'Status',
+            key: 'status',
+            align: 'center',
+            render: (value) => {
+                const badgeStyles: Record<string, string> = {
+                    approved: 'bg-green-500/15 text-green-700 border-green-200',
+                    rejected: 'bg-red-500/15 text-red-700 border-red-200',
+                    pending: 'bg-amber-500/15 text-amber-700 border-amber-200',
+                }
+                return (
+                    <Badge className={`text-xs px-1.5 py-0 ${badgeStyles[value] ?? ''}`}>
+                        {String(value).charAt(0).toUpperCase() + String(value).slice(1)}
+                    </Badge>
+                )
+            },
+        },
+    ]
+
     return (
-        <Card>
-            <CardHeader className="px-4 pb-2">
-                <h2 className="text-sm font-semibold text-foreground">Request History</h2>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-                <div className="space-y-2">
-                    {requests.map((request) => {
 
-                        const statusStyles = {
-                            approved: 'border-l-green-500',
-                            rejected: 'border-l-red-400',
-                            pending: 'border-l-amber-400',
-                        }
+        <div>
+            <div className="bg-white border rounded-lg overflow-hidden shadow-sm">
+                <Table
+                    data={requests?.results || []}
+                    loading={isPending}
+                    columns={columns}
+                    emptyMessage="No requests yet. Submit your first time-off request above."
+                    hover
+                    compact
+                    bordered={false}
+                    className='border-0'
+                    headerClassName="bg-transparent h-12 border-b border-slate-100 text-slate-400 font-normal text-xs uppercase tracking-wider whitespace-nowrap"
+                    rowClassName={"cursor-pointer border-b border-slate-50 last:border-0 hover:bg-slate-50/50"}
+                    sortable
+                    rowKey={(row) => row.id}
+                    minTableWidth='1100px'
+                />
 
-                        const badgeStyles = {
-                            approved: 'bg-green-500/15 text-green-700 border-green-200',
-                            rejected: 'bg-red-500/15 text-red-700 border-red-200',
-                            pending: 'bg-amber-500/15 text-amber-700 border-amber-200',
-                        }
 
-                        const status = request.status as 'approved' | 'rejected' | 'pending'
-
-                        return (
-                            <div
-                                key={request.id}
-                                className={`border border-border border-l-2 rounded-lg p-3 transition-colors hover:bg-muted/50 ${statusStyles[status]}`}
-                            >
-                                <div className="flex items-start justify-between mb-2">
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-foreground leading-tight">
-                                            {request.policyId.name}
-                                        </h3>
-                                        <p className="text-xs text-muted-foreground">
-                                            Submitted{' '}
-                                            {new Date(request.createdAt).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                year: 'numeric',
-                                            })}
-                                        </p>
-                                    </div>
-                                    <Badge className={`text-xs px-1.5 py-0 shrink-0 ${badgeStyles[status]}`}>
-                                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                                    </Badge>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-2 text-xs">
-                                    <div className="flex items-center gap-1.5">
-                                        <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                        <div>
-                                            <p className="text-muted-foreground">Start</p>
-                                            <p className="font-medium text-foreground">
-                                                {new Date(request.startDate).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    year: 'numeric',
-                                                })}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-1.5">
-                                        <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                        <div>
-                                            <p className="text-muted-foreground">End</p>
-                                            <p className="font-medium text-foreground">
-                                                {new Date(request.endDate).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    year: 'numeric',
-                                                })}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-1.5">
-                                        <ClockIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                        <div>
-                                            <p className="text-muted-foreground">Duration</p>
-                                            <p className="font-medium text-foreground">
-                                                {request.totalDays} {request.totalDays === 1 ? 'day' : 'days'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {request.reason && (
-                                    <div className="mt-2 pt-2 border-t border-border">
-                                        <p className="text-xs text-muted-foreground">
-                                            <span className="font-medium">Reason: </span>
-                                            {request.reason}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    })}
-                </div>
-            </CardContent>
-        </Card>
+                <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/20">
+                    <TablePagination
+                        component="div"
+                        count={requests?.totalResults || 0}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                        rowsPerPageOptions={[5, 10, 25, 50, 100]}
+                        showFirstButton
+                        showLastButton
+                        className="border-0 p-0"
+                    />
+                </div >
+            </div>
+        </div>
     )
 }
