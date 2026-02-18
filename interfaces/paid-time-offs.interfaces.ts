@@ -33,3 +33,8 @@ export interface IPTORequestPayload {
     isHalfStartDay: boolean
     isHalfEndDay: boolean
 }
+
+export enum PTOPOLICY_STATUS {
+    ACTIVE = 'active',
+    INACTIVE = 'inactive',
+}

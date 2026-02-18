@@ -1,8 +1,7 @@
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
-import { EditIcon, UsersIcon, CalendarIcon } from 'lucide-react'
+import { EditIcon, UsersIcon, CalendarIcon, ShieldIcon, ClockIcon } from 'lucide-react'
 import { Policy } from './policy-form'
 
 interface PolicyListProps {
@@ -29,80 +28,81 @@ export function PolicyList({
         )
     }
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {policies.map((policy) => (
-                <Card key={policy.id} className="overflow-hidden">
-                    <div className="h-1 w-full bg-linear-to-r from-green-500 to-emerald-400" />
-                    <CardHeader className="px-4 pt-3 pb-2">
-                        <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-semibold text-foreground truncate leading-tight mb-1">
+                <Card
+                    key={policy.id}
+                    className="group hover:shadow-0 transition-all duration-200 border-slate-200/60 rounded-xl overflow-hidden p-0 gap-0"
+                >
+                    <CardContent className="p-3.5">
+                        <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1 rounded-md shrink-0 bg-primary/5 text-primary">
+                                    <ShieldIcon className="h-3.5 w-3.5" />
+                                </div>
+                                <h3 className="text-base font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-1 leading-none">
                                     {policy.name}
                                 </h3>
-                                <Badge
-                                    variant={policy.enabled ? 'default' : 'secondary'}
-                                    className={policy.enabled ? 'bg-green-500/15 text-green-700 border-green-200 hover:bg-green-500/20 text-xs px-1.5 py-0' : 'text-xs px-1.5 py-0'}
-                                >
-                                    {policy.enabled ? 'Active' : 'Inactive'}
-                                </Badge>
                             </div>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 shrink-0 text-muted-foreground hover:text-green-600 hover:bg-green-500/10"
+                                className="h-6 w-6 -mr-1 text-slate-400 hover:text-slate-600"
                                 onClick={() => onEdit(policy)}
                                 aria-label={`Edit ${policy.name}`}
                             >
-                                <EditIcon className="h-3.5 w-3.5" />
+                                <EditIcon className="h-4 w-4" />
                             </Button>
                         </div>
-                    </CardHeader>
 
-                    <CardContent className="px-4 py-0">
-                        <div className="space-y-2">
-                            <div className="flex items-baseline justify-between">
-                                <span className="text-xs text-muted-foreground">Days Allowed</span>
-                                <span className="text-xl font-bold text-green-600">
-                                    {policy.maxDaysPerYear}
-                                </span>
+                        <p className="text-slate-500 text-xs mt-1.5 line-clamp-2 min-h-8 leading-relaxed">
+                            {policy.description || "No description provided for this policy."}
+                        </p>
+
+                        <div className="flex items-center gap-2 mt-2">
+                            <UsersIcon className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                            <span className="text-[11px] font-medium text-slate-400">
+                                {policy.userCount} {policy.userCount === 1 ? 'employee' : 'employees'}
+                            </span>
+                        </div>
+
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 grid grid-cols-2 gap-2">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                                    <CalendarIcon className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-900">{policy.maxDaysPerYear}d</p>
+                                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Days/Year</p>
+                                </div>
                             </div>
-
-                            <div className="flex items-baseline justify-between">
-                                <span className="text-xs text-muted-foreground">Effective</span>
-                                <span className="text-xs text-foreground">
-                                    {new Date(policy.effectiveDate).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: 'numeric',
-                                    })}
-                                </span>
-                            </div>
-
-                            {policy.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-2 pt-0.5">
-                                    {policy.description}
-                                </p>
-                            )}
-
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                                <UsersIcon className="h-3.5 w-3.5 shrink-0" />
-                                <span className="text-xs">
-                                    {policy.userCount} {policy.userCount === 1 ? 'employee' : 'employees'}
-                                </span>
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                                    <ClockIcon className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-900">
+                                        {new Date(policy.effectiveDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Effective</p>
+                                </div>
                             </div>
                         </div>
-                    </CardContent>
 
-                    <CardFooter className="px-4 py-3 mt-2 border-t bg-muted/30">
-                        <div className="flex items-center justify-between w-full">
-                            <span className="text-xs font-medium text-foreground">Enable Policy</span>
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                                <div className={`h-1.5 w-1.5 rounded-full ${policy.enabled ? 'bg-green-500' : 'bg-slate-300'}`} />
+                                <span className="text-[11px] font-medium text-slate-400">
+                                    {policy.enabled ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
                             <Switch
                                 checked={policy.enabled}
                                 onCheckedChange={() => onToggleActive(policy)}
-                                className="scale-90 data-[state=checked]:bg-green-500"
+                                className="scale-90 data-[state=checked]:bg-primary"
                             />
                         </div>
-                    </CardFooter>
+                    </CardContent>
                 </Card>
             ))}
         </div>

@@ -86,6 +86,14 @@ export default function SettingsPage() {
                                         Work breaks
                                     </Link>
                                 </li>
+                                <li>
+                                    <Link
+                                        href={`/dashboard/${params?.orgId}/settings/policies/holidays`}
+                                        className="flex items-center p-2 px-3 text-xs text-foreground bg-muted rounded-md font-medium hover:bg-muted/80 transition-colors"
+                                    >
+                                        Holidays
+                                    </Link>
+                                </li>
                             </ul>
                         </CardContent>
                     </Card>
