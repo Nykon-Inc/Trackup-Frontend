@@ -7,6 +7,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import TablePagination from '../ui/table-pagination'
 import { useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 
 const filterOptions = ['all', 'pending', 'approved', 'rejected'] as const
 type FilterOption = typeof filterOptions[number]
@@ -65,13 +66,29 @@ export function PTORequestTable({ orgId }: PTORequestTableProps) {
         setPage(1);
     };
 
+    const getInitials = (name: string) => {
+        if (!name) return "??";
+        return name.split(' ').map(n => n[0]).filter(Boolean).join('').toUpperCase();
+    };
+
 
     const columns: TableColumn[] = [
         {
             header: 'Employee',
             key: 'userId',
-            render: (value) => (
-                <span className="text-sm font-medium py-3">{value?.name}</span>
+            render: (member) => (
+                <div className="flex items-center gap-3 py-2">
+                    <Avatar className="h-10 w-10 border border-slate-100">
+                        <AvatarImage src={`https://i.pravatar.cc/150?u=${member.email}`} alt={member.name} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                            {getInitials(member.name)}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <p className="font-semibold text-sm leading-tight text-slate-900">{member.name}</p>
+                        <p className="text-xs text-muted-foreground leading-tight">{member.email}</p>
+                    </div>
+                </div>
             ),
         },
         {
