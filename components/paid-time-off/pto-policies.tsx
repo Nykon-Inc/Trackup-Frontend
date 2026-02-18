@@ -1,7 +1,7 @@
 import { FC } from "react"
 import { PolicyList } from "./policy-list"
 import { Policy, PolicyForm } from "./policy-form"
-import { useCreatePtoPolicy, useGetPtoPolicies, useUpdatePtoPolicy } from "@/services/paid-time-off.services"
+import { useCreatePtoPolicy, useUpdatePtoPolicy } from "@/services/paid-time-off.services"
 import { IPTOPolicy } from "@/interfaces/paid-time-offs.interfaces"
 
 

@@ -1,5 +1,4 @@
 import { useCreatePtoRequest, useGetPtoPolicies } from "@/services/paid-time-off.services"
-import { PolicyOverview } from "./policy-overview"
 import { RequestHistory } from "./pto-request-history"
 import { PTORequestForm } from "./pto-request.form"
 import { IPTORequestPayload } from "@/interfaces/paid-time-offs.interfaces"
@@ -12,7 +11,7 @@ type Props = {
 
 export const MemberPtoPage: React.FC<Props> = ({ orgId, isFormOpen, setIsFormOpen }) => {
     const { mutate: createRequest, isPending: isSubmitting } = useCreatePtoRequest(orgId)
-    const { data: policies } = useGetPtoPolicies(orgId, true)
+    const { data: policies } = useGetPtoPolicies({ organizationId: orgId, query: { status: "active" } })
 
     const handleSubmitRequest = (requestData: {
         policyId: string
@@ -36,10 +35,9 @@ export const MemberPtoPage: React.FC<Props> = ({ orgId, isFormOpen, setIsFormOpe
 
     return (
         <div>
-            <PolicyOverview policies={policies || []} />
             <div className="mb-8">
                 <PTORequestForm
-                    policies={policies || []}
+                    policies={policies?.results || []}
                     onSubmit={handleSubmitRequest}
                     isSubmitting={isSubmitting}
                     isFormOpen={isFormOpen}

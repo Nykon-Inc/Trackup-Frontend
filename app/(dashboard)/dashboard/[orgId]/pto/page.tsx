@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { PTORequestTable } from '@/components/paid-time-off/pto-requests-table'
 import { useWorkspace } from '@/components/providers/workspace-provider'
 import { MemberPtoPage } from '@/components/paid-time-off/member-pto-page'
+import { PageHeader } from '@/components/page-header'
+import { Loader2 } from 'lucide-react'
 
 export default function PTORequestPage({ params }: PageProps<"/dashboard/[orgId]/pto">) {
 
@@ -12,46 +14,50 @@ export default function PTORequestPage({ params }: PageProps<"/dashboard/[orgId]
 
     const [isFormOpen, setIsFormOpen] = useState(false)
 
-    if (!activeOrg) {
-        return <div>No organization selected</div>
-    }
-
     type validRoles = 'member' | 'manager' | 'owner'
     const role = activeOrg?.role as validRoles || 'member';
 
-    const labels: Record<validRoles, { heading: string; description: string }> = {
+    const labels: Record<validRoles, { heading: string }> = {
         member: {
             heading: "Request Time Off",
-            description: "Submit and track your PTO requests"
         },
         manager: {
             heading: "PTO Requests",
-            description: "Review and manage employee time-off requests"
         },
         owner: {
             heading: "PTO Requests",
-            description: "Review and manage employee time-off requests"
         }
 
     }
+    if (isWorkspaceLoading) return <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-6 w-6 animate-spin" />
+    </div>
 
     return (
         <section className="min-h-screen w-full bg-background">
-            <div className="px-4 sm:px-6 lg:px-8 py-8">
-                <div className="mb-8 flex justify-between">
-                    <div>
-                        <h2 className="text-xl font-bold text-foreground">{labels[role].heading}</h2>
-                        <p className="text-muted-foreground mt-2 text-sm">
-                            Submit and track your PTO requests
-                        </p>
-                    </div>
+            <PageHeader
+                title={labels[role].heading}
+                breadcrumbs={[
+                    { label: "dashboard", href: `/dashboard/${orgId}`, active: false },
+                    { label: "paid time off", href: `/dashboard/${orgId}/pto`, active: true },
+                ]}
+                rightElement={<div />}
+            />
 
-                    {role === 'member' && (
-                        <Button onClick={() => setIsFormOpen(true)}>+ Request Time Off</Button>
-                    )}
-                </div>
+
+            {role === 'member' && (
+                <Button
+                    size="sm"
+                    onClick={() => setIsFormOpen(true)}
+                    className='ml-auto block my-4'
+                >
+                    + Request Time Off
+                </Button>
+            )}
+            <div className="px-4 sm:px-6 lg:px-8 overflow-scroll">
+
                 {
-                    role === "manager"
+                    (role === "manager" || role === "owner")
                         ? <PTORequestTable orgId={orgId} />
                         : <MemberPtoPage orgId={orgId} isFormOpen={isFormOpen} setIsFormOpen={setIsFormOpen} />
                 }

@@ -23,7 +23,7 @@ export default function TimeOffPolicyPage({ params }: PageProps<"/dashboard/[org
     const debouncedSearch = useDebounce(search, 500);
     const [statusFilter, setStatusFilter] = useState<string>("all");
 
-    const { data: policies = [], isPending } = useGetPtoPolicies({
+    const { data: policies, isPending } = useGetPtoPolicies({
         organizationId: orgId,
         query: { search: debouncedSearch, page, limit: 10, status: statusFilter }
     });
@@ -73,11 +73,11 @@ export default function TimeOffPolicyPage({ params }: PageProps<"/dashboard/[org
                 {
                     isPending
                         ? <Loading />
-                        : policies.length === 0
+                        : (policies?.results || []).length === 0
                             ? <EmptyPolicy clearFilters={handleNewPolicy} />
                             : <PtoPolicies
                                 organizationId={orgId}
-                                policies={policies?.map(e => ({ ...e, userCount: 0 })) || []}
+                                policies={policies?.results?.map(e => ({ ...e, userCount: 0 })) || []}
                                 editPolicy={editPolicy}
                                 setEditPolicy={setEditPolicy}
                                 isFormOpen={isFormOpen}
