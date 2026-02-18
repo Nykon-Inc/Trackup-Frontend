@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Account, VerifyTokenResponseInterface } from "@/interfaces/auth.interfaces";
 import { useCreateProjectOnboarding } from "@/services/projects.services";
-import { Loader2, FileText, Users, CheckCircle, Download } from "lucide-react";
+import { Loader2, FileText, Users, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Stepper } from "@/components/ui/stepper";
 
@@ -334,16 +334,6 @@ function OnboardingSuccessView({ onComplete, isCompleting }: { onComplete: () =>
                 </p>
             </div>
 
-            <Button
-                variant="outline"
-                className="w-full flex items-center justify-center gap-2 h-11"
-                asChild
-            >
-                <a href="/app-download/Trackup_0.1.0_aarch64.dmg" download>
-                    <Download className="h-4 w-4" />
-                    Download Desktop App
-                </a>
-            </Button>
 
             <Button size="sm" onClick={onComplete} disabled={isCompleting} className="w-full h-11">
                 {isCompleting ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Go to Dashboard"}

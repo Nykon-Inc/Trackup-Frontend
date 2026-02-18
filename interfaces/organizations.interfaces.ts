@@ -37,6 +37,7 @@ export interface OrganizationMember {
     role: string;
     status: string;
     createdAt: string;
+    hourlyRate?: number;
     updatedAt: string;
     permissionOverrides: PermissionOverrides;
     organization: Organization;
@@ -67,7 +68,7 @@ export interface OrganizationInvitation {
     startDate?: Date;
     projectIds?: string[];
     organization: Organization;
-
+    hourlyRate?: number;
     createdAt: string;
     updatedAt: string;
     id: string;
