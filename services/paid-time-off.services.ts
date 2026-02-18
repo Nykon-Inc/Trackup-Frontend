@@ -42,13 +42,19 @@ export const useUpdatePtoPolicy = () => {
     })
 }
 
-export const useGetPtoPolicies = (organizationId: string, enabledOnly?: boolean) => {
+export const useGetPtoPolicies = (payload: { organizationId: string, query?: Record<string, any> }) => {
     return useQuery<IPTOPolicy[]>({
-        queryKey: ["pto-policies"],
+        queryKey: ["pto-policies", payload.organizationId, payload.query],
         queryFn: async () => {
             const data = await http.get({
-                url: routes.organization.pTOPolicy(organizationId),
-                query: enabledOnly ? { is_enabled: true } : undefined
+                url: routes.organization.pTOPolicy(payload.organizationId),
+                query: {
+                    ...payload.query,
+                    is_enabled:
+                        payload.query?.status !== "all"
+                            ? payload.query?.status === "active"
+                            : undefined,
+                },
             })
 
             return data.results as IPTOPolicy[]
