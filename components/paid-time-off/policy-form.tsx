@@ -68,8 +68,8 @@ export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
     }
 
     const handleDateSelect = (date: Date | undefined) => {
-        formik.setFieldValue('effectiveDate', date ? format(date, 'yyyy-MM-dd') : '')
-        formik.setFieldTouched('effectiveDate', true)
+        formik.setFieldValue('effectiveDate', date ? format(date, 'yyyy-MM-dd') : '', true)
+        formik.setFieldTouched('effectiveDate', true, false)
     }
 
     const selectedDate = formik.values.effectiveDate
