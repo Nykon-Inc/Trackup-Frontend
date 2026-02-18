@@ -21,10 +21,6 @@ export default function Home() {
           <Link href="/login">
             <Button size="lg" variant="outline">Log In</Button>
           </Link>
-          <Link href="/signup">
-            <Button size="lg">Get Started</Button>
-          </Link>
-
           <a href="/app-download/Trackup_0.1.0_aarch64.dmg" download>
             <Button
               variant="outline"
