@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
     Table,
     TableHeader,
@@ -9,158 +8,143 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckIcon, XIcon, CalendarIcon } from 'lucide-react'
+import { CheckIcon, XIcon } from 'lucide-react'
+import { useGetPTORequests, useUpdatePTORequest } from '@/services/paid-time-off.services'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 
-export interface PTORequest {
-    id: string
-    employeeName: string
-    policyName: string
-    startDate: string
-    endDate: string
-    days: number
-    status: 'pending' | 'approved' | 'rejected'
+const filterOptions = ['all', 'pending', 'approved', 'rejected'] as const
+type FilterOption = typeof filterOptions[number]
+
+const statusStyles = {
+    approved: 'bg-green-500/15 text-green-700 border-green-200',
+    rejected: 'bg-red-500/15 text-red-700 border-red-200',
+    pending: 'bg-amber-500/15 text-amber-700 border-amber-200',
 }
+
 interface PTORequestTableProps {
-    requests: PTORequest[]
-    onApprove: (requestId: string) => void
-    onReject: (requestId: string) => void
+    orgId: string
 }
-export function PTORequestTable({
-    requests,
-    onApprove,
-    onReject,
-}: PTORequestTableProps) {
-    const [filter, setFilter] = useState<
-        'all' | 'pending' | 'approved' | 'rejected'
-    >('all')
-    const filteredRequests = requests.filter((request) => {
-        if (filter === 'all') return true
-        return request.status === filter
-    })
-    if (requests.length === 0) {
-        return (
-            <div className="text-center py-12">
-                <CalendarIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                    No PTO requests
-                </h3>
-                <p className="text-muted-foreground">
-                    There are no PTO requests to review at this time.
-                </p>
-            </div>
-        )
+
+export function PTORequestTable({ orgId }: PTORequestTableProps) {
+    const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+
+    const filter = (searchParams.get('status') ?? 'all') as FilterOption
+
+    const setFilter = (option: FilterOption) => {
+        const params = new URLSearchParams(searchParams.toString())
+        if (option === 'all') {
+            params.delete('status')
+        } else {
+            params.set('status', option)
+        }
+        router.replace(`${pathname}?${params.toString()}`)
     }
+
+    const { data: requests = [] } = useGetPTORequests(orgId, filter)
+    const { mutate: updateRequest } = useUpdatePTORequest(orgId)
+
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-foreground">PTO Requests</h3>
-                <div className="flex gap-2">
-                    <Button
-                        variant={filter === 'all' ? 'default' : 'secondary'}
-                        onClick={() => setFilter('all')}
-                        className="text-sm"
-                    >
-                        All
-                    </Button>
-                    <Button
-                        variant={filter === 'pending' ? 'default' : 'secondary'}
-                        onClick={() => setFilter('pending')}
-                        className="text-sm"
-                    >
-                        Pending
-                    </Button>
-                    <Button
-                        variant={filter === 'approved' ? 'default' : 'secondary'}
-                        onClick={() => setFilter('approved')}
-                        className="text-sm"
-                    >
-                        Approved
-                    </Button>
-                    <Button
-                        variant={filter === 'rejected' ? 'default' : 'secondary'}
-                        onClick={() => setFilter('rejected')}
-                        className="text-sm"
-                    >
-                        Rejected
-                    </Button>
+                <h3 className="text-sm font-semibold text-foreground">PTO Requests</h3>
+                <div className="flex gap-1">
+                    {filterOptions.map((option) => (
+                        <Button
+                            key={option}
+                            variant={filter === option ? 'default' : 'ghost'}
+                            size="sm"
+                            className="text-xs h-7 px-2.5"
+                            onClick={() => setFilter(option)}
+                        >
+                            {option.charAt(0).toUpperCase() + option.slice(1)}
+                        </Button>
+                    ))}
                 </div>
             </div>
 
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Employee</TableHead>
-                        <TableHead>Policy</TableHead>
-                        <TableHead>Start Date</TableHead>
-                        <TableHead>End Date</TableHead>
-                        <TableHead>Days</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {filteredRequests.map((request) => (
-                        <TableRow key={request.id}>
-                            <TableCell className="font-medium">
-                                {request.employeeName}
-                            </TableCell>
-                            <TableCell>{request.policyName}</TableCell>
-                            <TableCell>
-                                {new Date(request.startDate).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                })}
-                            </TableCell>
-                            <TableCell>
-                                {new Date(request.endDate).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                })}
-                            </TableCell>
-                            <TableCell>{request.days}</TableCell>
-                            <TableCell>
-                                <Badge variant={request.status ? "default" : "secondary"}>
-                                    {request.status.charAt(0).toUpperCase() +
-                                        request.status.slice(1)}
-                                </Badge>
-                            </TableCell>
-                            <TableCell>
-                                {request.status === 'pending' ? (
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant="default"
-                                            className="p-2"
-                                            onClick={() => onApprove(request.id)}
-                                            aria-label={`Approve request for ${request.employeeName}`}
-                                        >
-                                            <CheckIcon className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            className="p-2"
-                                            onClick={() => onReject(request.id)}
-                                            aria-label={`Reject request for ${request.employeeName}`}
-                                        >
-                                            <XIcon className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <span className="text-sm text-muted-foreground">—</span>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-
-            {filteredRequests.length === 0 && (
-                <div className="text-center py-8">
-                    <p className="text-muted-foreground">
+            {requests.length === 0 ? (
+                <div className="text-center py-6">
+                    <p className="text-sm text-muted-foreground">
                         No {filter !== 'all' ? filter : ''} requests found.
                     </p>
                 </div>
+            ) : (
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="text-xs">Employee</TableHead>
+                            <TableHead className="text-xs">Policy</TableHead>
+                            <TableHead className="text-xs">Start Date</TableHead>
+                            <TableHead className="text-xs">End Date</TableHead>
+                            <TableHead className="text-xs">Days</TableHead>
+                            <TableHead className="text-xs">Status</TableHead>
+                            <TableHead className="text-xs">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {requests.map((request) => {
+                            const status = request.status as 'approved' | 'rejected' | 'pending'
+                            return (
+                                <TableRow key={request.id}>
+                                    <TableCell className="text-sm font-medium py-5">
+                                        {request.userId.name}
+                                    </TableCell>
+                                    <TableCell className="text-sm py-2">{request.policyId.name}</TableCell>
+                                    <TableCell className="text-sm py-2">
+                                        {new Date(request.startDate).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric',
+                                        })}
+                                    </TableCell>
+                                    <TableCell className="text-sm py-2">
+                                        {new Date(request.endDate).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric',
+                                        })}
+                                    </TableCell>
+                                    <TableCell className="text-sm py-2">
+                                        {request.totalDays}
+                                    </TableCell>
+                                    <TableCell className="py-2">
+                                        <Badge className={`text-xs px-1.5 py-0 ${statusStyles[status]}`}>
+                                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="py-2">
+                                        {request.status === 'pending' ? (
+                                            <div className="flex gap-1.5">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                                                    onClick={() => updateRequest({ status: 'approved', requestId: request.id })}
+                                                    aria-label={`Approve request for ${request.userId.name}`}
+                                                >
+                                                    <CheckIcon className="h-3.5 w-3.5" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                                    onClick={() => updateRequest({ status: 'rejected', requestId: request.id })}
+                                                    aria-label={`Reject request for ${request.userId.name}`}
+                                                >
+                                                    <XIcon className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <span className="text-sm text-muted-foreground">—</span>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
+                    </TableBody>
+                </Table>
             )}
         </div>
     )

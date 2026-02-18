@@ -32,6 +32,8 @@ export const routes = {
         rejectInvitation: (id: string) => `/client/organizations/${id}/reject-invitation`,
         pTOPolicy: (id: string) => `/client/organizations/${id}/pto-policies/`,
         updatePTOPolicy: (id: string, ptoId: string) => `/client/organizations/${id}/pto-policies/${ptoId}`,
+        ptoRequests: (id: string) => `/client/organizations/${id}/paid-time-offs`,
+        reviewPtoRequest: (id: string, requestId: string) => `/client/organizations/${id}/paid-time-offs/${requestId}/review`,
     },
     projects: {
         index: "/client/projects",

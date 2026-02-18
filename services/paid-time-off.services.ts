@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import http from "./base"
 import { routes } from "./routes"
-import { IPTOPolicy } from "@/interfaces/paid-time-offs.interfaces"
+import { IPTOPolicy, IPTORequest } from "@/interfaces/paid-time-offs.interfaces"
 import { queryClient } from "@/lib/react-query"
 import { toast } from "sonner"
 
@@ -42,15 +42,80 @@ export const useUpdatePtoPolicy = () => {
     })
 }
 
-export const useGetPtoPolicies = (organizationId: string) => {
+export const useGetPtoPolicies = (organizationId: string, enabledOnly?: boolean) => {
     return useQuery<IPTOPolicy[]>({
         queryKey: ["pto-policies"],
         queryFn: async () => {
             const data = await http.get({
                 url: routes.organization.pTOPolicy(organizationId),
+                query: enabledOnly ? { is_enabled: true } : undefined
+            })
+
+            return data.results as IPTOPolicy[]
+        },
+    })
+}
+
+/* PTO Requests */
+
+export const useCreatePtoRequest = (organizationId: string) => {
+    return useMutation({
+        mutationFn: async (payload: any) => {
+            return await http.post({
+                url: routes.organization.ptoRequests(organizationId),
+                body: payload,
+            })
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["pto-requests"] })
+            toast.success("Request submitted");
+        },
+        onError: (error) => {
+            toast.error("Failed to submit request");
+        }
+
+    })
+}
+export const useGetPTORequests = (organizationId: string, status?: 'all' | 'pending' | 'approved' | 'rejected') => {
+    return useQuery<IPTORequest[]>({
+        queryKey: ["pto-requests", organizationId, status],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.ptoRequests(organizationId),
+                query: { ...(status && status !== 'all' && { status }) },
+            })
+            return data.results
+        },
+    });
+}
+export const useGetOwnPtoRequests = (organizationId: string) => {
+    return useQuery<IPTORequest[]>({
+        queryKey: ["pto-requests"],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.ptoRequests(organizationId) + "/me",
             })
 
             return data.results
         },
+    })
+}
+
+export const useUpdatePTORequest = (organizationId: string) => {
+    return useMutation({
+        mutationFn: async (payload: { status: string, requestId: string }) => {
+            return await http.patch({
+                url: routes.organization.reviewPtoRequest(organizationId, payload.requestId),
+                body: payload,
+            })
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["pto-requests"] })
+            toast.success("Request updated");
+        },
+        onError: (error) => {
+            toast.error("Failed to update request");
+        }
+
     })
 }
