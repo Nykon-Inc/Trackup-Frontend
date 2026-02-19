@@ -1,3 +1,6 @@
+import { OrganizationMember, OrganizationInvitation } from "./organizations.interfaces";
+import { IProject, ProjectMembership } from "./projects.interfaces";
+
 export interface LoginPayloadInterface {
     email: string;
     password: string;
@@ -6,6 +9,41 @@ export interface LoginPayloadInterface {
 export interface VerifyPayloadInterface {
     email: string;
     otp: string;
+}
+
+export interface VerifyOnboardingTokenPayloadInterface {
+    token: string;
+}
+
+export interface VerifyResetTokenPayloadInterface {
+    token: string;
+}
+
+export interface VerifyTokenResponseInterface {
+    flowType: 'signup' | 'setup' | 'acceptance';
+    email: string;
+    invitation?: OrganizationInvitation;
+    organizationId: string;
+    user: Account | null;
+    organizationMembership: OrganizationMember | null;
+    projectMembership?: ProjectMembership | null;
+}
+
+export interface SetupPasswordPayloadInterface {
+    token: string;
+    password?: string;
+}
+
+export interface AcceptInvitePayloadInterface {
+    token: string;
+    password?: string;
+    name?: string;
+}
+
+export interface RegisterInvitedUserPayloadInterface {
+    name: string;
+    password: string;
+    token: string;
 }
 
 export interface LoginResultInterface {
@@ -25,11 +63,15 @@ export interface ForgotPasswordPayloadInterface {
 
 export interface ResetPasswordPayloadInterface {
     password: string;
-    code: string;
+    token: string;
 }
 
 export interface LogoutPayloadInterface {
     refreshToken: string;
+}
+
+export interface SelectOrganizationPayloadInterface {
+    organizationId: string;
 }
 
 export interface Organization {

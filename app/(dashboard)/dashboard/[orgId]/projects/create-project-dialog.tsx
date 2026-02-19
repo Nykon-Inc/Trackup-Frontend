@@ -41,6 +41,9 @@ export function CreateProjectDialog() {
             description: "",
         },
         validationSchema: CreateProjectSchema,
+        validateOnMount: false,
+        validateOnChange: true,
+        validateOnBlur: true,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             if (!activeOrgId) return;
             try {
@@ -56,10 +59,18 @@ export function CreateProjectDialog() {
         },
     });
 
+    const handleOpenChange = (newOpen: boolean) => {
+        setOpen(newOpen);
+        if (!newOpen) {
+            // Reset form when dialog closes
+            formik.resetForm();
+        }
+    };
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button size="icon" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button size="icon" type="button" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
                     <Plus className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
@@ -70,7 +81,7 @@ export function CreateProjectDialog() {
                         Add a new project to your organization. Click save when you're done.
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={formik.handleSubmit}>
+                <form onSubmit={formik.handleSubmit} className="contents">
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">

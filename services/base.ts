@@ -32,7 +32,6 @@ class HttpFacade {
     }
 
     private async setupRequirements() {
-
         let isRefreshing = false;
         let refreshPromise: Promise<string> | null = null;
         let failedQueue: {
@@ -170,35 +169,50 @@ class HttpFacade {
             async (error) => {
                 const { response } = error;
                 const originalRequest = error.config;
-                if (response && response.data) {
-                    if (response.data.code === 110) {
+
+                if (response) {
+                    // Debugging logs
+                    // console.log("Interceptor Error:", {
+                    //     status: response.status,
+                    //     url: originalRequest?.url,
+                    //     code: response.data?.code
+                    // });
+
+                    if (response.data?.code === 110) {
                         // token revoked, log user out
-                        if (typeof window !== undefined) {
+                        if (typeof window !== "undefined") {
                             window.location.href = "/logout?code=access_revoked";
                         } else {
                             redirect("/logout");
                         }
-                    } else if (response.data.code === 401 && !originalRequest._retry) {
-                        // expired access token
-                        originalRequest._retry = true;
-                        try {
-                            const newToken = await refreshTokenWithQueue();
-                            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                            return this.http(originalRequest);
-                        } catch (error) {
-                            // Handle token refresh error
-                            if (typeof window !== undefined) {
-                                window.location.href = "/logout?code=access_revoked";
-                            } else {
-                                redirect("/logout");
+                    } else if (
+                        (response.status === 401 || response.data?.code === 401) &&
+                        !originalRequest._retry
+                    ) {
+                        // Check if this is a login request
+                        const isLoginRequest = originalRequest.url?.includes("/auth/login");
+
+                        if (!isLoginRequest) {
+                            // expired access token
+                            originalRequest._retry = true;
+                            try {
+                                const newToken = await refreshTokenWithQueue();
+                                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                                return this.http(originalRequest);
+                            } catch (error) {
+                                // Handle token refresh error
+                                if (typeof window !== "undefined") {
+                                    window.location.href = "/logout?code=access_revoked";
+                                } else {
+                                    redirect("/logout");
+                                }
+                                console.error("Error refreshing token:", error);
                             }
-                            // For example, log the user out or redirect to login page
-                            console.error("Error refreshing token:", error);
-                            // Redirect to login page or log the user out
                         }
                     }
-                    return Promise.reject(response.data);
+                    return Promise.reject(error);
                 }
+                return Promise.reject(error);
             },
         );
 

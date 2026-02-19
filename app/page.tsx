@@ -2,6 +2,8 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
+import { IoLogoApple } from "react-icons/io5";
+import { FaWindows } from "react-icons/fa6";
 
 export default function Home() {
   return (
@@ -19,9 +21,25 @@ export default function Home() {
           <Link href="/login">
             <Button size="lg" variant="outline">Log In</Button>
           </Link>
-          <Link href="/signup">
-            <Button size="lg">Get Started</Button>
-          </Link>
+          <a href="/app-download/Trackup_0.1.0_aarch64.dmg" download>
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2 h-11"
+            >
+              <IoLogoApple className="h-4 w-4" />
+              Download Mac OS App
+            </Button>
+          </a>
+
+          <a href="/app-download/Trackup_0.1.0_x64-setup.exe" download>
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2 h-11"
+            >
+              <FaWindows className="h-4 w-4" />
+              Download Windows OS App
+            </Button>
+          </a>
         </div>
       </div>
     </div>

@@ -9,20 +9,59 @@ import {
     ResetPasswordPayloadInterface,
     LogoutPayloadInterface,
     VerifyPayloadInterface,
+    VerifyOnboardingTokenPayloadInterface,
+    VerifyResetTokenPayloadInterface,
+    VerifyTokenResponseInterface,
+    AcceptInvitePayloadInterface,
+    SetupPasswordPayloadInterface,
+    SelectOrganizationPayloadInterface,
+    RegisterInvitedUserPayloadInterface,
 } from "@/interfaces/auth.interfaces";
 import { cookieKey, useAuthStore } from "@/stores/auth.store";
-import { InvitationData } from "@/interfaces/users.interfaces";
+import { queryClient } from "@/lib/react-query";
 
-export const useLogin = () => {
+export const useSelectOrganization = () => {
     const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
 
     return useMutation({
-        mutationFn: async (payload: LoginPayloadInterface) => {
+        mutationFn: async (payload: SelectOrganizationPayloadInterface) => {
             const data = await http.post({
-                url: routes.auth.login,
+                url: routes.auth.selectOrganization,
                 body: payload,
             });
             return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            setAccount(data.account);
+            setAccess(data.credentials);
+            if (data.account.accountType === "client" && data.organization) {
+                setOrganization(data.organization);
+            }
+            if (data.account.accountType === "internal" && data.permissions) {
+                setPermissions(data.permissions);
+                setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+                    path: "/",
+                });
+            }
+            setCookie(null, cookieKey, data.credentials.access.token, {
+                path: "/",
+            });
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
+        },
+    });
+};
+
+export const useLogin = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    //...
+
+
+    return useMutation({
+        mutationFn: async (payload: LoginPayloadInterface) => {
+            return http.post({
+                url: routes.auth.login,
+                body: payload,
+            });
         },
         onSuccess: (data) => {
             setAccount(data.account);
@@ -124,29 +163,151 @@ export const useLogout = () => {
     });
 };
 
-
-export const useValidateInvitation = (params: { token: string; type: string }) => {
-    return useQuery({
-        queryKey: ["validate-invitation", params],
-        queryFn: async () => {
-            const data = await http.get({
-                url: routes.auth.invitation,
-                query: params,
+export const useVerifyOnboardingToken = () => {
+    return useMutation({
+        mutationFn: async (payload: VerifyOnboardingTokenPayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.verifyOnboardingToken,
+                body: payload,
             });
-            return data as InvitationData;
+            return data as VerifyTokenResponseInterface;
         },
-        enabled: !!params.token && !!params.type,
-        retry: false,
     });
 };
 
-export const useRejectInvitation = () => {
+export const useVerifyResetToken = () => {
     return useMutation({
-        mutationFn: async (payload: { token: string, type: string }) => {
-            return await http.post({
-                url: routes.auth.rejectInvitation,
+        mutationFn: async (payload: VerifyResetTokenPayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.verifyResetToken,
                 body: payload,
             });
+            return data as VerifyTokenResponseInterface;
+        },
+    });
+};
+
+export const useAcceptInvite = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    return useMutation({
+        mutationFn: async (payload: AcceptInvitePayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.acceptInvite,
+                body: payload,
+            });
+            return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            setAccount(data.account);
+            setAccess(data.credentials);
+            if (data.account.accountType === "client" && data.organization) {
+                setOrganization(data.organization);
+            }
+            if (data.account.accountType === "internal" && data.permissions) {
+                setPermissions(data.permissions);
+                setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+                    path: "/",
+                });
+            }
+            setCookie(null, cookieKey, data.credentials.access.token, {
+                path: "/",
+            });
+        },
+    });
+};
+
+export const useSetupPassword = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    return useMutation({
+        mutationFn: async (payload: SetupPasswordPayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.setupPassword,
+                body: payload,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${payload.token}`,
+                },
+            });
+            return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            // setAccount(data.account);
+            // setAccess(data.credentials);
+            // if (data.account.accountType === "client" && data.organization) {
+            //     setOrganization(data.organization);
+            // }
+            // if (data.account.accountType === "internal" && data.permissions) {
+            //     setPermissions(data.permissions);
+            //     setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+            //         path: "/",
+            //     });
+            // }
+            // setCookie(null, cookieKey, data.credentials.access.token, {
+            //     path: "/",
+            // });
+        },
+    });
+};
+
+export const useCompleteRegistration = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    return useMutation({
+        mutationFn: async (payload: { token: string }) => {
+            const data = await http.post({
+                url: routes.auth.verifyRegistration,
+                body: {},
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${payload.token}`,
+                },
+            });
+            return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            setAccount(data.account);
+            setAccess(data.credentials);
+            if (data.account.accountType === "client" && data.organization) {
+                setOrganization(data.organization);
+            }
+            if (data.account.accountType === "internal" && data.permissions) {
+                setPermissions(data.permissions);
+                setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+                    path: "/",
+                });
+            }
+            setCookie(null, cookieKey, data.credentials.access.token, {
+                path: "/",
+            });
+        },
+    });
+};
+
+export const useRegisterInvitedUser = () => {
+    const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
+    return useMutation({
+        mutationFn: async (payload: RegisterInvitedUserPayloadInterface) => {
+            const data = await http.post({
+                url: routes.auth.registerInvitedUser,
+                body: payload,
+            });
+            return data as LoginResultInterface;
+        },
+        onSuccess: (data) => {
+            setAccount(data.account);
+            setAccess(data.credentials);
+            if (data.account.accountType === "client" && data.organization) {
+                setOrganization(data.organization);
+            }
+            if (data.account.accountType === "internal" && data.permissions) {
+                setPermissions(data.permissions);
+                setCookie(null, "PERMISSIONS", JSON.stringify(data.permissions), {
+                    path: "/",
+                });
+            }
+            setCookie(null, cookieKey, data.credentials.access.token, {
+                path: "/",
+            });
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
         },
     });
 };

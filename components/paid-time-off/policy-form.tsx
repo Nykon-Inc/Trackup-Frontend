@@ -1,0 +1,139 @@
+import { useFormik } from 'formik'
+import * as Yup from 'yup'
+import { format, parseISO } from 'date-fns'
+import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { DatePickerCalendar } from '@/components/ui/date-picker-calendar'
+
+export interface Policy {
+    id: string
+    name: string
+    maxDaysPerYear: number
+    effectiveDate: string
+    description: string
+    enabled: boolean
+    userCount: number
+}
+
+interface PolicyFormProps {
+    open: boolean
+    onClose: () => void
+    onSave: (policy: Omit<Policy, 'id' | 'userCount'>, resetForm: () => void) => void
+    policy?: Policy | null
+}
+
+const validationSchema = Yup.object({
+    name: Yup.string().trim().required('Policy name is required'),
+    maxDaysPerYear: Yup.number()
+        .typeError('Must be a positive number')
+        .positive('Must be a positive number')
+        .required('Days allowed is required'),
+    effectiveDate: Yup.date().required('Effective date is required'),
+    description: Yup.string(),
+})
+
+export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
+    const formik = useFormik({
+        enableReinitialize: true,
+        initialValues: {
+            name: policy?.name ?? '',
+            maxDaysPerYear: policy?.maxDaysPerYear ?? '',
+            effectiveDate: policy?.effectiveDate ? parseISO(policy.effectiveDate) : null as Date | null,
+            description: policy?.description ?? '',
+        },
+        validationSchema,
+        onSubmit: (values, { resetForm }) => {
+            onSave(
+                {
+                    name: values.name,
+                    maxDaysPerYear: Number(values.maxDaysPerYear),
+                    effectiveDate: values.effectiveDate ? format(values.effectiveDate, 'yyyy-MM-dd') : '',
+                    description: values.description,
+                    enabled: policy?.enabled ?? true,
+                },
+                resetForm
+            )
+        },
+    })
+
+    const handleClose = () => {
+        formik.resetForm()
+        onClose()
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={handleClose}>
+            <DialogContent>
+                <DialogTitle>
+                    {policy ? 'Edit Policy' : 'Create New Policy'}
+                </DialogTitle>
+                <form onSubmit={formik.handleSubmit}>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="name">Policy Name</Label>
+                            <Input
+                                id="name"
+                                {...formik.getFieldProps('name')}
+                                placeholder="e.g., Annual Leave"
+                            />
+                            {formik.touched.name && formik.errors.name && (
+                                <p className="text-xs text-red-500">{formik.errors.name}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label htmlFor="maxDaysPerYear">Days Allowed per Year</Label>
+                            <Input
+                                id="maxDaysPerYear"
+                                type="number"
+                                {...formik.getFieldProps('maxDaysPerYear')}
+                                placeholder="e.g., 20"
+                                min="0"
+                            />
+                            {formik.touched.maxDaysPerYear && formik.errors.maxDaysPerYear && (
+                                <p className="text-xs text-red-500">{formik.errors.maxDaysPerYear}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label>Effective Date</Label>
+                            <DatePickerCalendar
+                                selected={formik.values.effectiveDate || undefined}
+                                onSelect={(date: Date | undefined) => formik.setFieldValue('effectiveDate', date ?? null)}
+                                placeholder="Pick a date"
+                                classname='w-full'
+                                error={!!(formik.touched.effectiveDate && formik.errors.effectiveDate)}
+                            />
+                            {formik.touched.effectiveDate && formik.errors.effectiveDate && (
+                                <p className="text-xs text-red-500">{formik.errors.effectiveDate as string}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                                id="description"
+                                {...formik.getFieldProps('description')}
+                                placeholder="Brief description of the policy..."
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="mt-3">
+                        <Button type="button" variant="outline" onClick={handleClose}>
+                            Cancel
+                        </Button>
+                        <Button type="submit">
+                            {policy
+                                ? formik.isSubmitting ? "Saving..." : "Save Policy"
+                                : formik.isSubmitting ? "Creating..." : "Create New Policy"
+                            }
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}

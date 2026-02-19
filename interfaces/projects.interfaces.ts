@@ -4,6 +4,9 @@ export interface CreateProjectPayload {
     name: string;
     description?: string;
     organizationId?: string;
+    hubstaffProjectId?: string;
+    type?: string;
+    screenshotsEnabled?: boolean;
     // Add other fields as necessary
 }
 
@@ -22,11 +25,21 @@ export interface IProject {
     description: string;
     organizationId: string;
     status: ProjectStatus;
+    projectType: "analytics" | "trackup";
+    hubstaffProjectId?: string;
 }
 
 export interface Project extends IProject {
     id: string;
     organization: Organization
+    membersCount?: number;
+    totalHours?: number;
+    totalSpent?: number;
+    members?: {
+        name: string;
+        avatar?: string;
+        email: string;
+    }[];
     createdAt: string;
     updatedAt: string;
 }
@@ -34,7 +47,6 @@ export interface Project extends IProject {
 export interface ProjectDetails extends Project {
     staffCount: number;
     managerCount: number;
-    membersCount: number;
 }
 
 export enum ProjectMemberRole {
@@ -64,6 +76,10 @@ export interface ProjectMember {
         email: string;
         avatar?: string;
     };
+}
+
+export interface ProjectMembership extends ProjectMember {
+    project: Project;
 }
 
 export interface GetProjectMembersQuery {

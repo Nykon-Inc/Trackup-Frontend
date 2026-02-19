@@ -15,10 +15,31 @@ import { invalidateActivityLogs } from "@/services/activity-logs";
 
 export const useCreateProject = () => {
     return useMutation({
-        mutationFn: async (payload: CreateProjectPayload) => {
+        mutationFn: async ({ organizationId, ...payload }: CreateProjectPayload) => {
             const data = await http.post({
-                url: routes.projects.index,
+                url: `${routes.organization.index}/${organizationId}/projects`,
                 body: payload,
+            });
+            return data as Project;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["projects"] });
+            invalidateActivityLogs();
+        },
+    });
+};
+
+
+export const useCreateProjectOnboarding = () => {
+    return useMutation({
+        mutationFn: async ({ token, organizationId, ...payload }: CreateProjectPayload & { token: string }) => {
+            const data = await http.post({
+                url: `${routes.organization.index}/${organizationId}/projects`,
+                body: payload,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
             });
             return data as Project;
         },
@@ -72,29 +93,30 @@ export const useGetInternalProject = (projectId: string) => {
     });
 };
 
-export const useGetProjects = (query?: Record<string, any>) => {
+export const useGetProjects = (payload: { organizationId: string, userId: string, query?: Record<string, any> }) => {
     return useQuery({
-        queryKey: ["projects", query],
+        queryKey: ["projects", payload.organizationId, payload.userId, payload.query],
         queryFn: async () => {
             const data = await http.get({
-                url: routes.projects.index,
-                query,
+                url: `${routes.organization.index}/${payload.organizationId}/projects`,
+                query: payload.query,
             });
             return data as GetProjectsResponse;
         },
+        enabled: !!payload.organizationId,
     });
 };
 
-export const useGetProject = (projectId: string) => {
+export const useGetProject = (payload: { organizationId: string, projectId: string }) => {
     return useQuery({
-        queryKey: ["project", projectId],
+        queryKey: ["project", payload.projectId],
         queryFn: async () => {
             const data = await http.get({
-                url: `${routes.projects.index}/${projectId}`,
+                url: `${routes.organization.index}/${payload.organizationId}/projects/${payload.projectId}`,
             });
             return data as ProjectDetails;
         },
-        enabled: !!projectId,
+        enabled: !!payload.projectId,
     });
 };
 
@@ -110,6 +132,22 @@ export const useInviteUser = (projectId: string) => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["project", projectId] });
             queryClient.invalidateQueries({ queryKey: ["project-members", projectId, { status: "invited" }] });
+        },
+    });
+};
+
+export const useInviteMembersToProject = () => {
+    return useMutation({
+        mutationFn: async (payload: { projectId: string; members: InviteUserPayload[], organizationId: string }) => {
+            const data = await http.post({
+                url: `${routes.organization.index}/${payload.organizationId}/projects/${payload.projectId}${routes.projects.invite}`,
+                body: { members: payload.members },
+            });
+            return data;
+        },
+        onSuccess: (_, { projectId }) => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+            queryClient.invalidateQueries({ queryKey: ["project-members", projectId] });
         },
     });
 };
@@ -130,12 +168,12 @@ export const useResendInviteUser = () => {
         },
     });
 };
-export const useGetProjectMembers = (projectId: string, query?: GetProjectMembersQuery) => {
+export const useGetProjectMembers = (projectId: string, organizationId: string, query?: GetProjectMembersQuery) => {
     return useQuery({
         queryKey: ["project-members", projectId, query],
         queryFn: async () => {
             const data = await http.get({
-                url: `${routes.projects.index}/${projectId}/${query?.status === "invited" ? "invitations" : "members"}`,
+                url: `${routes.organization.index}/${organizationId}/projects/${projectId}/${query?.status === "invited" ? "invitations" : "members"}`,
                 query,
             });
             return data as GetProjectMembersResponse;
