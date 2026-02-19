@@ -9,6 +9,10 @@ import { Project } from "@/interfaces/projects.interfaces";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CreateProjectForm } from "@/components/forms/projects/create-project-form";
 
 interface ProjectsListProps {
     organizationId?: string;
@@ -78,6 +82,27 @@ export function ProjectsList({ organizationId, basePath = "/internal/projects" }
                         }}
                     />
                 </div>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" /> Create Project
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Create Project</DialogTitle>
+                        </DialogHeader>
+                        <CreateProjectForm
+                            createProjectForOrganizationId={organizationId}
+                            onClose={() => {
+                                // Close logic handled by Dialog's own state or we can control it if we want strict control
+                                // For now, let's just trigger a click on the close button or refetch
+                                // Ideally we should control the dialog state:
+                                document.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'Escape' }));
+                            }}
+                        />
+                    </DialogContent>
+                </Dialog>
             </div>
 
             <Table
