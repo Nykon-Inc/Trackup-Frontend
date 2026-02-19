@@ -28,23 +28,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const menuItems = [
         {
             title: "Dashboard",
-            url: `/${activeOrgId}`,
+            url: `/dashboard/${activeOrgId}`,
             icon: LayoutDashboard,
             exact: true,
         },
         {
             title: "Projects",
-            url: `/${activeOrgId}/projects`,
+            url: `/dashboard/${activeOrgId}/projects`,
             icon: Folder,
         },
         {
             title: "Team",
-            url: `/${activeOrgId}/users`,
+            url: `/dashboard/${activeOrgId}/users`,
             icon: Users,
         },
         {
             title: "Settings",
-            url: `/${activeOrgId}/settings`,
+            url: `/dashboard/${activeOrgId}/settings`,
             icon: Settings,
         },
     ]
@@ -53,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
                 <OrgSwitcher />
-                <ProjectSwitcher />
+                {/* <ProjectSwitcher /> */}
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
