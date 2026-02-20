@@ -121,14 +121,3 @@ export const useUpdateInternalUser = () => {
         },
     });
 };
-
-export const useCreateUser = () => {
-    return useMutation({
-        mutationFn: async (data: any) => {
-            return await http.post({
-                url: routes.users.createUser,
-                body: data,
-            });
-        },
-    });
-};

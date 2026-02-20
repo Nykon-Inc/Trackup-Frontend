@@ -286,6 +286,7 @@ const Table = <T extends Record<string, any>>({
         return `${totalWidth}px`;
     }, [columns, hasPixelWidths]);
 
+    console.log(calculatedMinWidth)
 
     // Container styles: border/rounding + optional max height for internal scroll
     // IMPORTANT: overflow classes must come AFTER className to override any conflicting overflow settings

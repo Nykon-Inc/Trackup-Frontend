@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import http from "@/services/base";
 import { routes } from "@/services/routes";
-import { OrganizationMember, GetInternalOrganizationsParams, Organization } from "@/interfaces/organizations.interfaces";
+import { OrganizationMember, GetInternalOrganizationsParams } from "@/interfaces/organizations.interfaces";
 import { invalidateActivityLogs } from "@/services/activity-logs";
 import { BulkInvitePayload } from "@/interfaces/organizations.interfaces";
 import { queryClient } from "@/lib/react-query";
@@ -108,27 +108,6 @@ export const useBulkInvite = () => {
             const data = await http.post({
                 url: routes.organization.bulkInvite(payload.organizationId),
                 body: { members: payload.members },
-            });
-            return data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["organization-members"] });
-            queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
-        }
-    });
-};
-
-export const useInviteUserToOrganization = (organizationId: string) => {
-    return useMutation({
-        mutationFn: async (payload: { members: { email: string; role: string }[] }) => {
-            const members = payload.members.map((member) => ({
-                email: member.email,
-                role: member.role === "manager" ? "manager" : "member",
-            }));
-
-            const data = await http.post({
-                url: routes.organization.bulkInvite(organizationId),
-                body: { members },
             });
             return data;
         },
