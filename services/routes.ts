@@ -42,11 +42,9 @@ export const routes = {
         invite: "/invite", // Used as suffix
         me: "/projects/me",
         meInternal: "/internal/projects",
-        
     },
     users: {
-        index: "/client/users",
-        createUser: "/client/users",
+        index: "/users",
         meInternal: "/internal/users/me",
         meClient: "/client/users/me",
         internal: "/internal/users",

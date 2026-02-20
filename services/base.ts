@@ -254,8 +254,7 @@ class HttpFacade {
     post = async ({ url, body, headers = {}, query = {} }: IPost) => {
         let py = { ...body };
         const queryString = qs.stringify({ ...query });
-        const fullUrl = queryString ? `${url}?${queryString}` : url;
-        const response = await this.http.post(fullUrl, py, {
+        const response = await this.http.post(`${url + "?" + queryString}`, py, {
             headers,
         });
         return response.data;
@@ -277,8 +276,7 @@ class HttpFacade {
     get = async ({ url, query = {}, body = {}, headers = {} }: IGet) => {
         let py = { ...query };
         const queryString = qs.stringify(py);
-        const fullUrl = queryString ? `${url}?${queryString}` : url;
-        const response = await this.http.get(fullUrl, {
+        const response = await this.http.get(`${url + "?" + queryString}`, {
             headers,
         });
         return response.data;
@@ -287,8 +285,7 @@ class HttpFacade {
     getBlob = async ({ url, query = {}, headers = {} }: IGet) => {
         let py = { ...query };
         const queryString = qs.stringify(py);
-        const fullUrl = queryString ? `${url}?${queryString}` : url;
-        const response = await this.http.get(fullUrl, {
+        const response = await this.http.get(`${url + "?" + queryString}`, {
             headers,
             responseType: "blob",
         });
