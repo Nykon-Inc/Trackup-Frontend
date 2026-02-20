@@ -161,31 +161,11 @@ export default function ProjectDetailsPage() {
                     {/* tabs definitions */}
                     <div className="px-0">
                         <div className="flex gap-2 h-12  items-center">
-                            {tabItems.map((e) => {
-                                const isActive = currentTab === e.value;
-                                return (
-                                    <button
-                                        key={e.value}
-                                        onClick={() => handleTabChange(e.value)}
-                                        className={clsx(
-                                            "h-9 flex cursor-pointer items-center px-4 text-sm border-b-2 transition-all duration-300 ease-in-out font-medium",
-                                            isActive
-                                                ? "border-primary text-primary"
-                                                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted/50"
-                                        )}
-                                    >
-                                        {e.icon && <e.icon className="h-4 w-4 mr-2" />}
-                                        {e.label}
-                                    </button>
-                                );
-                            })}
-
                         </div>
                     </div>
 
                     <div key={currentTab} className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out py-2">
-                        {currentTab === "staff" && <Staff project={project} />}
-                        {currentTab === "configurations" && <div className="text-muted-foreground p-8 text-center bg-muted/5 rounded-lg border border-dashed">Configurations content coming soon</div>}
+                        <Staff project={project} />
                     </div>
                 </div>
             </div>

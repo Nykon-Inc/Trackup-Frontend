@@ -70,5 +70,9 @@ export const routes = {
     },
     rbac: {
         roles: "/internal/rbac/roles",
+    },
+    ai: {
+        staff: "/client/ai/staff",
+        org: "/client/ai/org",
     }
 }
