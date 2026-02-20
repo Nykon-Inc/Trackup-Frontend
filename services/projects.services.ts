@@ -120,21 +120,18 @@ export const useGetProject = (payload: { organizationId: string, projectId: stri
     });
 };
 
-export const useInviteUser = (projectId: string, organizationId?: string) => {
+export const useInviteUser = (projectId: string) => {
     return useMutation({
         mutationFn: async (payload: { members: InviteUserPayload[] }) => {
-            const url = organizationId
-                ? `${routes.organization.index}/${organizationId}/projects/${projectId}${routes.projects.invite}`
-                : `${routes.projects.index}/${projectId}${routes.projects.invite}`;
             const data = await http.post({
-                url,
+                url: `${routes.projects.index}/${projectId}${routes.projects.invite}`,
                 body: payload,
             });
             return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["project", projectId] });
-            queryClient.invalidateQueries({ queryKey: ["project-members", projectId] });
+            queryClient.invalidateQueries({ queryKey: ["project-members", projectId, { status: "invited" }] });
         },
     });
 };
@@ -158,19 +155,16 @@ export const useInviteMembersToProject = () => {
 
 export const useResendInviteUser = () => {
     return useMutation({
-        mutationFn: async ({ projectId, organizationId, ...payload }: { members: InviteUserPayload[], projectId: string, organizationId?: string }) => {
-            const url = organizationId
-                ? `${routes.organization.index}/${organizationId}/projects/${projectId}${routes.projects.invite}`
-                : `${routes.projects.index}/${projectId}${routes.projects.invite}`;
+        mutationFn: async ({ projectId, ...payload }: { members: InviteUserPayload[], projectId: string }) => {
             const data = await http.post({
-                url,
+                url: `${routes.projects.index}/${projectId}${routes.projects.invite}`,
                 body: payload,
             });
             return data;
         },
         onSuccess: (_, { projectId }) => {
             queryClient.invalidateQueries({ queryKey: ["project", projectId] });
-            queryClient.invalidateQueries({ queryKey: ["project-members", projectId] });
+            queryClient.invalidateQueries({ queryKey: ["project-members", projectId, { status: "invited" }] });
         },
     });
 };
