@@ -15,7 +15,6 @@ import { format } from "date-fns";
 import OrgtableActions from "@/components/internal/organizations/OrgtableActions";
 
 export default function InternalOrganizationsPage() {
-    const router = useRouter();
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [search, setSearch] = useState("");

@@ -3,12 +3,12 @@
 import React, { useState } from "react";
 import Table, { TableColumn } from "@/components/ui/data-table";
 import { DebouncedSearch } from "@/components/ui/debounced-search";
-import { useGetOrganizationUsers } from "@/services/organization.services";
 import { OrganizationMember } from "@/interfaces/organizations.interfaces";
 import TablePagination from "@/components/ui/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { AddStaffMember } from "@/app/(dashboard)/dashboard/[orgId]/users/add-staff-member-dialog";
+import { useGetOrganizationMembers } from "@/services/organization.services";
+import { AddStaffMember } from "@/app/(dashboard)/dashboard/[orgId]/teams/add-staff-member-dialog";
 
 interface OrganizationUsersListProps {
     organizationId: string;
@@ -19,21 +19,23 @@ export function OrganizationUsersList({ organizationId }: OrganizationUsersListP
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [search, setSearch] = useState("");
 
-    const { data, isLoading } = useGetOrganizationUsers({
+    const { data, isLoading } = useGetOrganizationMembers({
         organizationId,
-        page,
-        limit: rowsPerPage,
-        search,
+        query: {
+            page,
+            limit: rowsPerPage,
+            search,
+        },
     });
 
-    const columns: TableColumn<any>[] = [
+    const columns: TableColumn<OrganizationMember>[] = [
         {
             header: "User",
             key: "user",
-            render: (_: any, row: any) => (
+            render: (_value, row) => (
                 <div className="flex flex-col">
-                    <span className="font-medium text-foreground">{row.name || "Unknown"}</span>
-                    <span className="text-xs text-muted-foreground">{row.email || "-"}</span>
+                    <span className="font-medium text-foreground">{row.user?.name || "Unknown"}</span>
+                    <span className="text-xs text-muted-foreground">{row.user?.email || "-"}</span>
                 </div>
             ),
         },
@@ -54,7 +56,7 @@ export function OrganizationUsersList({ organizationId }: OrganizationUsersListP
     ];
 
 
-    const totalResults = (data as any)?.totalResults || 0;
+    const totalResults = (data as { totalResults?: number } | undefined)?.totalResults || 0;
 
     return (
         <div className="flex flex-col gap-4">
@@ -73,7 +75,7 @@ export function OrganizationUsersList({ organizationId }: OrganizationUsersListP
             </div>
 
             <Table
-                data={(data as any)?.results || []}
+                data={(data as { results?: OrganizationMember[] } | undefined)?.results || []}
                 columns={columns}
                 emptyMessage="No users found."
                 loading={isLoading}

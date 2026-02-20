@@ -151,6 +151,14 @@ export function AddStaffMember({ projectId, organizationId }: { projectId?: stri
         formik.setFieldValue("users", newUsers);
     };
 
+    const getUserEmailError = (index: number): string | undefined => {
+        if (!Array.isArray(formik.errors.users)) return undefined;
+        const userError = formik.errors.users[index];
+        if (!userError || typeof userError !== "object") return undefined;
+        const maybeEmail = (userError as { email?: unknown }).email;
+        return typeof maybeEmail === "string" ? maybeEmail : undefined;
+    };
+
     return (
         <Dialog
             open={open}
@@ -325,16 +333,16 @@ export function AddStaffMember({ projectId, organizationId }: { projectId?: stri
                                             className={
                                                 formik.touched.users?.[index]?.email &&
                                                     Array.isArray(formik.errors.users) &&
-                                                    typeof formik.errors.users[index]?.email === "string"
+                                                    typeof getUserEmailError(index) === "string"
                                                     ? "border-red-500"
                                                     : ""
                                             }
                                         />
                                         {formik.touched.users?.[index]?.email &&
                                             Array.isArray(formik.errors.users) &&
-                                            typeof formik.errors.users[index]?.email === "string" && (
+                                            typeof getUserEmailError(index) === "string" && (
                                                 <p className="text-xs text-red-500">
-                                                    {formik.errors.users[index]?.email}
+                                                    {getUserEmailError(index)}
                                                 </p>
                                             )}
                                         </div>

@@ -58,6 +58,19 @@ export const useGetInternalOrganizations = (params: GetInternalOrganizationsPara
         },
     });
 };
+
+export const useGetInternalOrganization = (organizationId: string) => {
+    return useQuery({
+        queryKey: ["internal-organization", organizationId],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.internalDetail(organizationId),
+            });
+            return data as Organization;
+        },
+        enabled: !!organizationId,
+    });
+};
 export const useDisableOrganization = () => {
     return useMutation({
         mutationFn: async (id: string) => {

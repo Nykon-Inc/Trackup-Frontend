@@ -7,27 +7,61 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { acceptInviteSchema } from "@/validators/auth";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useValidateInvitation, useRejectInvitation } from "@/services/auth.services";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 
-import { useCreateUser } from "@/services/users";
-import { InvitationData } from "@/interfaces/users.interfaces";
-// ... existing imports
+import {
+    useRegisterInvitedUser,
+    useSelectOrganization,
+    useVerifyOnboardingToken,
+} from "@/services/auth.services";
+import { useAcceptInvitation, useRejectInvitation } from "@/services/organization.services";
+import type { VerifyTokenResponseInterface } from "@/interfaces/auth.interfaces";
 
 export default function AcceptInvitePage() {
     const searchParams = useSearchParams();
     const token = searchParams.get("token") || "";
-    const type = searchParams.get("type") || "project";
     const [step, setStep] = useState<"decision" | "register">("decision");
 
-    const { data: inviteData, isLoading, isRefetching, isError, error } = useValidateInvitation({ token, type });
-    const { mutateAsync: rejectInvitation, isPending: isRejecting } = useRejectInvitation();
-    const { mutateAsync: createUser, isPending: isCreating } = useCreateUser();
+    const [inviteData, setInviteData] = useState<VerifyTokenResponseInterface | null>(null);
+    const [verifyError, setVerifyError] = useState<string | null>(null);
 
-    const invitationData = inviteData as InvitationData;
+    const { mutate: verifyToken, isPending: isVerifying } = useVerifyOnboardingToken();
+    const { mutate: registerInvitedUser, isPending: isRegistering } = useRegisterInvitedUser();
+    const { mutate: selectOrganization, isPending: isSelectingOrg } = useSelectOrganization();
+    const { mutate: acceptOrgInvite, isPending: isAccepting } = useAcceptInvitation();
+    const { mutate: rejectOrgInvite, isPending: isRejecting } = useRejectInvitation();
+
+    const organizationId = inviteData?.organizationId;
+
+    useEffect(() => {
+        if (!token) {
+            setVerifyError("Missing invitation token");
+            return;
+        }
+
+        verifyToken(
+            { token },
+            {
+                onSuccess: (data) => {
+                    setInviteData(data);
+                    setVerifyError(null);
+                },
+                onError: (err: unknown) => {
+                    const apiError = err as { response?: { data?: { message?: string } } };
+                    setVerifyError(apiError?.response?.data?.message || "Invalid or expired invitation token.");
+                },
+            }
+        );
+    }, [token, verifyToken]);
+
+    const inviterName = useMemo(() => {
+        const projectName = inviteData?.projectMembership?.project?.name;
+        const orgName = inviteData?.organizationMembership?.organization?.name || inviteData?.invitation?.organization?.name;
+        return projectName || orgName || "Acme Inc";
+    }, [inviteData]);
 
     const formik = useFormik({
         initialValues: {
@@ -37,34 +71,56 @@ export default function AcceptInvitePage() {
         },
         validationSchema: acceptInviteSchema,
         onSubmit: async (values) => {
-            if (!invitationData) return;
+            if (!token) return;
 
-            try {
-                await createUser({
-                    name: values.name,
-                    email: invitationData.email,
-                    password: values.password,
-                    role: invitationData.role || "member", // Fallback if role is missing
-                });
-                toast.success("Account created successfully. Please login.");
-                window.location.href = "/login";
-            } catch (error: any) {
-                toast.error((error as any)?.response?.data?.message || "Failed to create account.");
-            }
+            registerInvitedUser(
+                { token, name: values.name, password: values.password },
+                {
+                    onSuccess: (data) => {
+                        const orgId = data.organization?.id || organizationId;
+                        if (orgId) {
+                            selectOrganization(
+                                { organizationId: orgId },
+                                {
+                                    onSuccess: () => {
+                                        toast.success("Account created successfully!");
+                                        window.location.href = `/dashboard/${orgId}`;
+                                    },
+                                    onError: () => {
+                                        window.location.href = "/auth/select-organization";
+                                    },
+                                }
+                            );
+                        } else {
+                            window.location.href = "/auth/select-organization";
+                        }
+                    },
+                    onError: (err: unknown) => {
+                        const apiError = err as { response?: { data?: { message?: string } } };
+                        toast.error(apiError?.response?.data?.message || "Failed to create account");
+                    },
+                }
+            );
         },
     });
 
     const handleReject = async () => {
-        try {
-            await rejectInvitation({ token, type });
-            toast.success("Invitation rejected");
-            window.location.href = "/login";
-        } catch (error) {
-            toast.error("Failed to reject invitation");
-        }
+        if (!organizationId || !token) return;
+        rejectOrgInvite(
+            { organizationId, token },
+            {
+                onSuccess: () => {
+                    toast.success("Invitation rejected");
+                    window.location.href = "/login";
+                },
+                onError: () => {
+                    toast.error("Failed to reject invitation");
+                },
+            }
+        );
     };
 
-    if (isLoading || isRefetching) {
+    if (isVerifying) {
         // ... existing skeleton code
         return (
             <Card>
@@ -82,7 +138,7 @@ export default function AcceptInvitePage() {
         );
     }
 
-    if (isError) {
+    if (verifyError) {
         // ... existing error code
         return (
             <Card>
@@ -96,7 +152,7 @@ export default function AcceptInvitePage() {
                         <div className="space-y-1">
                             <h5 className="font-medium leading-none tracking-tight">Error</h5>
                             <div className="text-sm opacity-90">
-                                {(error as any)?.response?.data?.message || "Invalid or expired invitation token."}
+                                {verifyError}
                             </div>
                         </div>
                     </div>
@@ -108,8 +164,9 @@ export default function AcceptInvitePage() {
         );
     }
 
-
-    const inviterName = invitationData?.organization?.name || invitationData?.project?.name || "Acme Inc";
+    if (!inviteData) {
+        return null;
+    }
 
     if (step === "decision") {
         return (
@@ -126,8 +183,40 @@ export default function AcceptInvitePage() {
                     </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2">
-                    <Button className="w-full" onClick={() => setStep("register")}>
-                        Accept Invitation
+                    <Button
+                        className="w-full"
+                        onClick={() => {
+                            if (inviteData.flowType === "signup") {
+                                setStep("register");
+                                return;
+                            }
+                            if (!organizationId || !token) return;
+                            acceptOrgInvite(
+                                { organizationId, token },
+                                {
+                                    onSuccess: () => {
+                                        selectOrganization(
+                                            { organizationId },
+                                            {
+                                                onSuccess: () => {
+                                                    toast.success("Invitation accepted!");
+                                                    window.location.href = `/dashboard/${organizationId}`;
+                                                },
+                                                onError: () => {
+                                                    window.location.href = "/auth/select-organization";
+                                                },
+                                            }
+                                        );
+                                    },
+                                    onError: () => {
+                                        toast.error("Failed to accept invitation");
+                                    },
+                                }
+                            );
+                        }}
+                        disabled={isAccepting || isSelectingOrg}
+                    >
+                        {(isAccepting || isSelectingOrg) ? "Accepting..." : "Accept Invitation"}
                     </Button>
                     <Button
                         variant="outline"
@@ -155,7 +244,7 @@ export default function AcceptInvitePage() {
                     {/* ... form fields */}
                     <div className="grid gap-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" value={invitationData?.email || "invited@example.com"} disabled />
+                        <Input id="email" type="email" value={inviteData?.email || "invited@example.com"} disabled />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="name">Full Name</Label>
@@ -201,8 +290,8 @@ export default function AcceptInvitePage() {
                         >
                             Back
                         </Button>
-                        <Button type="submit" className="w-full" disabled={isCreating}>
-                            {isCreating ? "Creating Account..." : "Complete Setup"}
+                        <Button type="submit" className="w-full" disabled={isRegistering || isSelectingOrg}>
+                            {(isRegistering || isSelectingOrg) ? "Creating Account..." : "Complete Setup"}
                         </Button>
                     </div>
                 </CardContent>
