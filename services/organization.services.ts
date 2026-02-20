@@ -134,6 +134,29 @@ export const useBulkInviteOnboarding = () => {
     });
 };
 
+
+export const useInviteUserToOrganization = (organizationId: string) => {
+    return useMutation({
+        mutationFn: async (payload: { members: { email: string; role: string }[] }) => {
+            const members = payload.members.map((member) => ({
+                email: member.email,
+                role: member.role === "manager" ? "manager" : "member",
+            }));
+
+            const data = await http.post({
+                url: routes.organization.bulkInvite(organizationId),
+                body: { members },
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["organization-members"] });
+            queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
+        }
+    });
+};
+
+
 export const useAcceptInvitation = () => {
     const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();
     return useMutation({

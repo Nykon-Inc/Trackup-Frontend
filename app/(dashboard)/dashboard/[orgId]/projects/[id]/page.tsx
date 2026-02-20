@@ -2,8 +2,7 @@
 
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation"
 import { useGetProject } from "@/services/projects.services"
-import { Users, Clock, UserCheck, Settings } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, Settings, ArrowLeft, Download } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/page-header"
 import clsx from "clsx"
@@ -11,6 +10,7 @@ import Staff from "./staff/Staff"
 import { Button } from "@/components/ui/button"
 import { AddStaffMember } from "../../teams/add-staff-member-dialog"
 import { useWorkspace } from "@/components/providers/workspace-provider"
+import { MetricCard } from "@/components/dashboard/metric-card"
 
 export default function ProjectDetailsPage() {
     const params = useParams()
@@ -18,6 +18,7 @@ export default function ProjectDetailsPage() {
     const searchParams = useSearchParams()
     const pathname = usePathname()
     const id = params?.id as string
+    const orgId = params?.orgId as string
     const { activeOrgId } = useWorkspace();
 
     const currentTab = searchParams.get("tab") || "staff"
@@ -30,9 +31,14 @@ export default function ProjectDetailsPage() {
         router.push(`${pathname}?${params.toString()}`)
     }
 
+    const handleBackToProjects = () => {
+        const targetOrgId = activeOrgId || orgId;
+        router.push(targetOrgId ? `/dashboard/${targetOrgId}/projects` : "/dashboard/projects")
+    }
+
     if (isLoading) {
         return (
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full space-y-4">
                 <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b px-4">
                     <div className="flex items-center gap-2">
                         <Skeleton className="h-8 w-8 rounded-md" />
@@ -43,41 +49,41 @@ export default function ProjectDetailsPage() {
                         </div>
                     </div>
                 </div>
-                <div className="px-0">
-                    <div className="w-full h-16 border-b bg-card flex items-center justify-between px-6">
-                        <div className="flex items-center gap-3">
-                            <Skeleton className="h-8 w-8 rounded-full" />
-                            <div className="flex flex-col gap-1">
-                                <Skeleton className="h-5 w-8" />
-                                <Skeleton className="h-3 w-16" />
+
+                <div className="px-6">
+                    <div className="pt-4 mb-6">
+                        <div className="flex items-center justify-between">
+                            <Skeleton className="h-4 w-28" />
+
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="h-9 w-32 rounded-md" />
+                                <Skeleton className="h-9 w-44 rounded-md" />
                             </div>
                         </div>
-                        <div className="h-8 w-px bg-border" />
-                        <div className="flex items-center gap-3">
-                            <Skeleton className="h-8 w-8 rounded-full" />
-                            <div className="flex flex-col gap-1">
-                                <Skeleton className="h-5 w-8" />
-                                <Skeleton className="h-3 w-16" />
-                            </div>
-                        </div>
-                        <div className="h-8 w-px bg-border" />
-                        <div className="flex items-center gap-3">
-                            <Skeleton className="h-8 w-8 rounded-full" />
-                            <div className="flex flex-col gap-1">
-                                <Skeleton className="h-5 w-12" />
-                                <Skeleton className="h-3 w-20" />
-                            </div>
+
+                        <div className="mt-4">
+                            <Skeleton className="h-7 w-64" />
+                            <Skeleton className="h-4 w-96 mt-2" />
                         </div>
                     </div>
-                    <div className="px-0">
-                        <div className="flex gap-2 h-12 px-2 items-center">
-                            <Skeleton className="h-8 w-24" />
-                            <Skeleton className="h-8 w-24" />
-                        </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Skeleton className="h-[92px] w-full rounded-md" />
+                        <Skeleton className="h-[92px] w-full rounded-md" />
+                        <Skeleton className="h-[92px] w-full rounded-md" />
                     </div>
-                    <div className="px-4 py-2 space-y-4">
-                        <Skeleton className="h-32 w-full rounded-lg" />
-                        <Skeleton className="h-64 w-full rounded-lg" />
+
+                    <div className="mt-6">
+                        <div className="px-0">
+                            <div className="flex gap-2 h-12 px-2 items-center">
+                                <Skeleton className="h-8 w-28" />
+                                <Skeleton className="h-8 w-28" />
+                            </div>
+                        </div>
+                        <div className="px-4 py-2 space-y-4">
+                            <Skeleton className="h-32 w-full rounded-lg" />
+                            <Skeleton className="h-64 w-full rounded-lg" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -102,69 +108,49 @@ export default function ProjectDetailsPage() {
     ]
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full space-y-4">
             <PageHeader
                 title={project.name || "Project"}
                 breadcrumbs={[
-                    { label: "Dashboard", href: "/dashboard", active: false },
-                    { label: "Projects", href: "/dashboard/projects", active: false },
-                    { label: project.name, href: `/dashboard/projects/${project.id}`, active: true },
+                    { label: "Dashboard", href: orgId ? `/dashboard/${orgId}` : "/dashboard", active: false },
+                    { label: "Projects", href: orgId ? `/dashboard/${orgId}/projects` : "/dashboard/projects", active: false },
+                    { label: project.name, href: orgId ? `/dashboard/${orgId}/projects/${project.id}` : `/dashboard/projects/${project.id}`, active: true },
                 ]}
-                rightElement={<div>
-                    <AddStaffMember projectId={project.id} />
-                </div>}
             />
-            <div className="px-0">
-                <div className="w-full h-16 border-b bg-card flex items-center justify-between px-6">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                            <Users className="h-4 w-4 text-primary" />
+            <div className="px-6">
+                <div className="pt-1 mb-6">
+                    <div className="flex items-center justify-between">
+                        <div className="mt-4">
+                            <h2 className="text-2xl font-semibold tracking-tight">{project.name || "Project"}</h2>
+                            <p className="text-sm text-muted-foreground">Internal dashboard for business intelligence and reporting</p>
                         </div>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-lg font-bold">{project.membersCount}</h3>
-                            <p className="text-xs text-muted-foreground">Total Staff</p>
-                        </div>
-                    </div>
-                    <div className="h-8 w-px bg-border" />
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                            <UserCheck className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-lg font-bold">{project.managerCount}</h3>
-                            <p className="text-xs text-muted-foreground">Managers</p>
-                        </div>
-                    </div>
-                    <div className="h-8 w-px bg-border" />
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                            <UserCheck className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-lg font-bold">{project.staffCount}</h3>
-                            <p className="text-xs text-muted-foreground">Staff</p>
-                        </div>
-                    </div>
-                    <div className="h-8 w-px bg-border" />
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                            <Clock className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-lg font-bold">1,234h</h3>
-                            <p className="text-xs text-muted-foreground">Hours Logged</p>
+
+                        <div className="flex items-center gap-3">
+                            <AddStaffMember projectId={project.id} organizationId={activeOrgId || orgId} />
+                            <Button variant="outline" size="sm">
+                                <Download className="h-4 w-4 mr-2" />
+                                Export Project Report
+                            </Button>
                         </div>
                     </div>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <MetricCard
+                        title="Assigned Staff"
+                        value={(project.membersCount ?? 0).toString()}
+                    />
+                    <MetricCard
+                        title="Total Hours Worked"
+                        value="108.5h"
+                    />
+                    <MetricCard
+                        title="Estimated Payroll"
+                        value="$5,925"
+                    />
+                </div>
 
                 <div>
-                    {/* tabs definitions */}
-                    <div className="px-0">
-                        <div className="flex gap-2 h-12  items-center">
-                        </div>
-                    </div>
-
-                    <div key={currentTab} className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out py-2">
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out py-2">
                         <Staff project={project} />
                     </div>
                 </div>
