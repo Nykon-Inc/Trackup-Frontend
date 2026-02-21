@@ -1,7 +1,7 @@
 "use client"
 
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation"
-import { useGetProject } from "@/services/projects.services"
+import { useGetProject, useGetProjectStats } from "@/services/projects.services"
 import { Users, Settings, ArrowLeft, Download } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/page-header"
@@ -24,6 +24,7 @@ export default function ProjectDetailsPage() {
     const currentTab = searchParams.get("tab") || "staff"
 
     const { data: project, isLoading } = useGetProject({ organizationId: activeOrgId || "", projectId: id })
+    const { data: projectStats } = useGetProjectStats({ organizationId: activeOrgId || orgId || "", projectId: id })
 
     const handleTabChange = (value: string) => {
         const params = new URLSearchParams(searchParams.toString())
@@ -94,6 +95,10 @@ export default function ProjectDetailsPage() {
         return <div className="p-8">Project not found</div>
     }
 
+    const assignedStaff = projectStats?.membersAssigned ?? project.membersCount ?? 0
+    const totalHoursWorked = projectStats?.totalHoursWorked ?? project.totalHours ?? 0
+    const estimatedPayroll = projectStats?.totalPayment ?? project.totalSpent ?? 0
+
     const tabItems = [
         {
             value: "staff",
@@ -137,15 +142,15 @@ export default function ProjectDetailsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <MetricCard
                         title="Assigned Staff"
-                        value={(project.membersCount ?? 0).toString()}
+                        value={assignedStaff.toString()}
                     />
                     <MetricCard
                         title="Total Hours Worked"
-                        value="108.5h"
+                        value={`${Number(totalHoursWorked).toFixed(1)}h`}
                     />
                     <MetricCard
                         title="Estimated Payroll"
-                        value="$5,925"
+                        value={`$${Number(estimatedPayroll).toLocaleString()}`}
                     />
                 </div>
 

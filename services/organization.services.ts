@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import http from "@/services/base";
 import { routes } from "@/services/routes";
-import { OrganizationMember, GetInternalOrganizationsParams } from "@/interfaces/organizations.interfaces";
+import { Organization, OrganizationMember, GetInternalOrganizationsParams } from "@/interfaces/organizations.interfaces";
 import { invalidateActivityLogs } from "@/services/activity-logs";
 import { BulkInvitePayload } from "@/interfaces/organizations.interfaces";
 import { queryClient } from "@/lib/react-query";
@@ -56,6 +56,19 @@ export const useGetInternalOrganizations = (params: GetInternalOrganizationsPara
             });
             return data;
         },
+    });
+};
+
+export const useGetInternalOrganization = (organizationId: string) => {
+    return useQuery({
+        queryKey: ["internal-organization", organizationId],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.internalDetail(organizationId),
+            });
+            return data as Organization;
+        },
+        enabled: !!organizationId,
     });
 };
 export const useDisableOrganization = () => {

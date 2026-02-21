@@ -7,7 +7,6 @@ import TablePagination from "@/components/ui/table-pagination";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { DateTime } from "luxon";
 
 import { useAuthStore } from "@/stores/auth.store";
 import {
@@ -23,6 +22,37 @@ import { StaffFilters } from '../StaffFilters';
 import { useRouter } from 'next/navigation';
 import { useRowLoading } from '@/hooks/useRowLoading';
 import { useWorkspace } from '@/components/providers/workspace-provider';
+
+type ProjectMemberRow = ProjectMember & {
+    displayName: string;
+    jobTitle?: string;
+    payRate?: number;
+    hoursWorked?: number;
+    earnings?: number;
+}
+
+function formatMoney(n?: number) {
+    if (typeof n !== "number" || Number.isNaN(n)) return "--"
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n)
+}
+
+function formatHours(n?: number) {
+    if (typeof n !== "number" || Number.isNaN(n)) return "--"
+    return `${n.toFixed(1)}h`
+}
+
+function getFallbackJobTitle(role: ProjectMemberRole) {
+    switch (role) {
+        case ProjectMemberRole.OWNER:
+            return "Owner"
+        case ProjectMemberRole.MANAGER:
+            return "Manager"
+        case ProjectMemberRole.VIEWER:
+            return "Viewer"
+        default:
+            return "Member"
+    }
+}
 
 export default function Staff({ project }: { project: Project }) {
     const router = useRouter();
@@ -68,7 +98,21 @@ export default function Staff({ project }: { project: Project }) {
         })
         stop(email)
     }, [])
-    const members = projectMembersData?.results || [];
+    const members = (projectMembersData?.results || []).map((m): ProjectMemberRow => {
+        const payRate = m.hourlyRate;
+        const hoursWorked = m.totalHoursWorked;
+        const earnings = m.amountEarned ?? (payRate !== undefined && hoursWorked !== undefined ? payRate * hoursWorked : undefined);
+        const jobTitle = m.jobTitle || getFallbackJobTitle(m.role);
+
+        return {
+            ...m,
+            displayName: m.user?.name || "Unknown",
+            jobTitle,
+            payRate,
+            hoursWorked,
+            earnings,
+        };
+    });
     const totalResults = projectMembersData?.totalResults || 0;
 
     const handleChangePage = (
@@ -90,12 +134,13 @@ export default function Staff({ project }: { project: Project }) {
         setStatusFilter("all");
     }
 
-    const columns: TableColumn<ProjectMember>[] = [
+    const columns: TableColumn<ProjectMemberRow>[] = [
         {
-            header: "Member",
-            key: "user",
-            width: "250px",
-            render: (_, member) => {
+            header: "Name",
+            key: "displayName",
+            sortable: true,
+            width: "320px",
+            render: (_value, member) => {
                 const isMe = member.userId === account?.id;
                 return (
                     <div className="flex items-center gap-3">
@@ -119,46 +164,49 @@ export default function Staff({ project }: { project: Project }) {
             }
         },
         {
-            header: "Role",
-            key: "role",
-            width: "120px",
-            render: (role) => (
-                <Badge variant="outline" className="capitalize font-normal">
-                    {role as string}
-                </Badge>
+            header: "Job Title",
+            key: "jobTitle",
+            width: "240px",
+            render: (jobTitle) => (
+                <span className="text-muted-foreground text-sm">{jobTitle as string}</span>
             )
         },
         {
-            header: "Status",
-            key: "status",
-            width: "100px",
-            render: (status) => (
-                <Badge
-                    variant="secondary"
-                    className={`capitalize font-normal border ${status === 'active'
-                        ? "bg-emerald-500/15 text-emerald-700 border-emerald-500/20"
-                        : "bg-slate-500/15 text-slate-700 border-slate-500/20"
-                        }`}
-                >
-                    {status as string}
-                </Badge>
+            header: "Pay Rate",
+            key: "payRate",
+            width: "140px",
+            align: "right",
+            render: (payRate) => {
+                if (typeof payRate !== "number") return <span className="text-muted-foreground">--</span>
+                return <span className="text-sm font-medium">${payRate}/hr</span>
+            }
+        },
+        {
+            header: "Hours Worked",
+            key: "hoursWorked",
+            sortable: true,
+            width: "160px",
+            align: "right",
+            render: (hoursWorked) => (
+                <span className="text-sm font-medium">{formatHours(hoursWorked as number | undefined)}</span>
             )
         },
         {
-            header: "Joined Date",
-            key: "createdAt",
-            width: "150px",
-            render: (date) => (
-                <span className="text-sm text-muted-foreground">
-                    {DateTime.fromISO(date as string).toFormat("MM/dd/yyyy")}
-                </span>
+            header: "Earnings",
+            key: "earnings",
+            sortable: true,
+            width: "160px",
+            align: "right",
+            render: (earnings) => (
+                <span className="text-sm font-medium">{formatMoney(earnings as number | undefined)}</span>
             )
         },
         {
             header: "",
             key: "actions",
-            width: "50px",
-            render: (_, member) => {
+            width: "60px",
+            align: "right",
+            render: (_value, member) => {
                 const isMe = member.userId === account?.id;
                 if (isMe) return null;
 
@@ -171,10 +219,12 @@ export default function Staff({ project }: { project: Project }) {
                                     <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-[160px]">
+                            <DropdownMenuContent align="end" className="w-[180px]">
                                 {member.status === "invited" ? (
                                     <DropdownMenuItem onClick={() => handleResendInvite({ email: member.user?.email, role: member.role })}>Resend invitation</DropdownMenuItem>
-                                ) : (<DropdownMenuItem>Edit member</DropdownMenuItem>)}
+                                ) : (
+                                    <DropdownMenuItem>Edit member</DropdownMenuItem>
+                                )}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="text-destructive focus:text-destructive">
                                     Remove member
@@ -213,11 +263,14 @@ export default function Staff({ project }: { project: Project }) {
                     loading={isLoading}
                     hover
                     compact
+                    sortable
+                    defaultSortKey="displayName"
+                    defaultSortOrder="asc"
                     onRowClick={(row) => router.push(`/dashboard/${activeOrgId}/projects/${project.id}/staff/${row.userId}`)}
                     rowClassName={"cursor-pointer"}
                     bordered={false}
                     className="border-0 shadow-none"
-                    headerClassName="bg-muted/50 h-10 border-b border-border"
+                    headerClassName="bg-transparent normal-case tracking-normal text-sm font-medium text-foreground border-b border-border/60"
                     emptyMessage="No members found."
                     rowKey={(row) => row.id}
                 />

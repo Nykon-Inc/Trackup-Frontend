@@ -10,6 +10,9 @@ import {
     ProjectDetails,
     GetProjectMembersResponse,
     GetProjectMembersQuery,
+    ProjectStatsResponse,
+    ProjectMemberProfileResponse,
+    UpdateProjectMemberProfilePayload,
 } from "@/interfaces/projects.interfaces";
 import { invalidateActivityLogs } from "@/services/activity-logs";
 
@@ -120,6 +123,19 @@ export const useGetProject = (payload: { organizationId: string, projectId: stri
     });
 };
 
+export const useGetProjectStats = (payload: { organizationId: string; projectId: string }) => {
+    return useQuery({
+        queryKey: ["project-stats", payload.organizationId, payload.projectId],
+        queryFn: async () => {
+            const data = await http.get({
+                url: `/client/organizations/${payload.organizationId}/projects/${payload.projectId}/stats`,
+            });
+            return data as ProjectStatsResponse;
+        },
+        enabled: !!payload.organizationId && !!payload.projectId,
+    });
+};
+
 export const useInviteUser = (projectId: string, organizationId?: string) => {
     return useMutation({
         mutationFn: async (payload: { members: InviteUserPayload[] }) => {
@@ -183,5 +199,51 @@ export const useGetProjectMembers = (projectId: string, organizationId: string, 
             return data as GetProjectMembersResponse;
         },
         enabled: !!projectId,
+    });
+};
+
+export const useGetProjectMemberProfile = (payload: {
+    organizationId: string;
+    projectId: string;
+    userId: string;
+    startDate?: string;
+    endDate?: string;
+}) => {
+    return useQuery({
+        queryKey: ["project-member-profile", payload],
+        queryFn: async () => {
+            const data = await http.get({
+                url: `${routes.organization.index}/${payload.organizationId}/projects/${payload.projectId}/members/${payload.userId}/profile`,
+                query: {
+                    startDate: payload.startDate,
+                    endDate: payload.endDate,
+                },
+            });
+            return data as ProjectMemberProfileResponse;
+        },
+        enabled: !!payload.organizationId && !!payload.projectId && !!payload.userId,
+    });
+};
+
+export const useUpdateProjectMemberProfile = () => {
+    return useMutation({
+        mutationFn: async (payload: {
+            organizationId: string;
+            projectId: string;
+            userId: string;
+            body: UpdateProjectMemberProfilePayload;
+        }) => {
+            const data = await http.patch({
+                url: `${routes.organization.index}/${payload.organizationId}/projects/${payload.projectId}/members/${payload.userId}/profile`,
+                body: payload.body,
+            });
+            return data as ProjectMemberProfileResponse;
+        },
+        onSuccess: (_, payload) => {
+            queryClient.invalidateQueries({ queryKey: ["project-member-profile"] });
+            queryClient.invalidateQueries({ queryKey: ["project-members", payload.projectId] });
+            queryClient.invalidateQueries({ queryKey: ["project", payload.projectId] });
+            queryClient.invalidateQueries({ queryKey: ["project-stats", payload.organizationId, payload.projectId] });
+        },
     });
 };

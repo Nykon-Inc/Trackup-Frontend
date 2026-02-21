@@ -1,4 +1,5 @@
 import { Organization } from "./organizations.interfaces";
+import { GetAggregatedSessionsResponse } from "./sessions.interfaces";
 
 export interface CreateProjectPayload {
     name: string;
@@ -56,6 +57,16 @@ export enum ProjectMemberRole {
     VIEWER = 'viewer'
 }
 
+export enum WorkDay {
+    MON = 'Mon',
+    TUE = 'Tue',
+    WED = 'Wed',
+    THU = 'Thu',
+    FRI = 'Fri',
+    SAT = 'Sat',
+    SUN = 'Sun',
+}
+
 export interface GetProjectsResponse {
     results: Project[];
     page: number;
@@ -68,7 +79,17 @@ export interface ProjectMember {
     userId: string;
     projectId: string;
     role: ProjectMemberRole;
+    jobTitle?: string;
     status: string;
+    hourlyRate?: number;
+    totalHoursWorked?: number;
+    amountEarned?: number;
+    weeklyLimitHours?: number | null;
+    dailyLimitHours?: number | null;
+    requiredBreaks?: boolean;
+    expectedWeeklyHours?: number | null;
+    expectedWorkDays?: WorkDay[];
+    notes?: string;
     createdAt: string;
     user: {
         id: string;
@@ -97,4 +118,45 @@ export interface GetProjectMembersResponse {
     limit: number;
     totalPages: number;
     totalResults: number;
+}
+
+export interface ProjectStatsResponse {
+    projectId: string;
+    membersAssigned: number;
+    totalHoursWorked: number;
+    totalPayment: number;
+}
+
+export interface ProjectMemberProfileResponse {
+    project: {
+        id: string;
+        name: string;
+        organizationId: string;
+    };
+    member: ProjectMember;
+    employment: {
+        startDate?: string | null;
+        birthday?: string | null;
+    };
+    rangeMetrics: {
+        totalHoursWorked: number;
+        amountEarned: number;
+        avgActivityRate: number;
+    };
+    rawActivity: {
+        aggregatedSessions: GetAggregatedSessionsResponse;
+    };
+}
+
+export interface UpdateProjectMemberProfilePayload {
+    role?: ProjectMemberRole;
+    hourlyRate?: number;
+    weeklyLimitHours?: number | null;
+    dailyLimitHours?: number | null;
+    requiredBreaks?: boolean;
+    expectedWeeklyHours?: number | null;
+    expectedWorkDays?: WorkDay[];
+    notes?: string;
+    startDate?: string | null;
+    birthday?: string | null;
 }
