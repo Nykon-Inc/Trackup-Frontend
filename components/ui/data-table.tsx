@@ -289,14 +289,18 @@ const Table = <T extends Record<string, any>>({
     console.log(calculatedMinWidth)
 
     // Container styles: border/rounding + optional max height for internal scroll
-    // IMPORTANT: overflow classes must come AFTER className to override any conflicting overflow settings
+    // Use explicit horizontal overflow to confine horizontal scrolling to this container.
+    const overflowClasses = maxHeight
+        ? "overflow-x-auto overflow-y-auto"
+        : "overflow-x-auto";
+
     const tableContainerClasses = twMerge(
-        "relative w-full rounded-md bg-card shadow-sm",
+        "relative w-full min-w-0 rounded-md bg-card shadow-sm",
         maxHeight && "max-h-[var(--max-height)]",
         bordered && "border border-border rounded-lg",
         className, // Apply user className first
-        // Override with required overflow behavior (this comes last to ensure precedence)
-        "overflow-auto",
+        // Explicit overflow classes to ensure horizontal scroll is handled inside this container
+        overflowClasses,
         // Ensure the container respects parent width
         "w-full max-w-full"
     );
@@ -304,9 +308,10 @@ const Table = <T extends Record<string, any>>({
     // Base table styles: determine layout based on column widths
     const tableClasses = twMerge(
         "text-sm text-left text-foreground",
-        hasFixedWidths ? "table-fixed w-full" : "table-auto w-full",
+        hasFixedWidths ? "table-fixed" : "table-auto",
         compact ? "text-xs" : "text-sm",
-        tableClassName
+        tableClassName,
+        "min-w-full"
     );
 
     // Header row styles: optional sticky for scrollable tables
@@ -348,8 +353,11 @@ const Table = <T extends Record<string, any>>({
             <table
                 className={tableClasses}
                 style={{
+                    ...(minTableWidth ? { minWidth: minTableWidth } : {}),
                     ...(calculatedMinWidth ? { minWidth: calculatedMinWidth } : {}),
-                    width: "100%",
+                    // When we have an explicit calculated/min width, allow the table to size to content
+                    // so the container's horizontal scrollbar appears. Otherwise stretch to container.
+                    width: calculatedMinWidth || minTableWidth ? "max-content" : "100%",
                 }}
             >
                 {/* Table Header */}

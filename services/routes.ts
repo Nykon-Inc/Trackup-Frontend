@@ -1,3 +1,5 @@
+import { time } from "console";
+
 export const routes = {
     auth: {
         login: "/auth/login",
@@ -72,5 +74,12 @@ export const routes = {
     ai: {
         staff: "/client/ai/staff",
         org: "/client/ai/org",
-    }
+    },
+    timesheets: {
+        memberTimesheets: (params?: any) => `/timesheets/member${params ? `?${new URLSearchParams(params)}` : ""}`,
+        internalTimesheets: "/internal/timesheets",
+        timesheetDetail: (id: string) => `/internal/timesheets/${id}`,
+        approveTimesheet: (id: string) => `/internal/timesheets/${id}/approve`,
+        rejectTimesheet: (id: string) => `/internal/timesheets/${id}/reject`,
+    },
 }
