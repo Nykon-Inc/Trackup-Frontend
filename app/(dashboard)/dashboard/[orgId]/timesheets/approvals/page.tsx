@@ -123,65 +123,8 @@ export default function ViewEditTimesheetsPage() {
     : (timesheetsData as any)?.results || [];
 
   return (
-    // <div className="flex flex-col h-full min-w-0">
-    //   <PageHeader
-    //     title="Timesheet Approvals"
-    //     breadcrumbs={[
-    //       {
-    //         label: "Dashboard",
-    //         href: `/dashboard/${params?.orgId}`,
-    //         active: false,
-    //       },
-    //       {
-    //         label: "Timesheets",
-    //         href: `/dashboard/${params?.orgId}/timesheets`,
-    //         active: false,
-    //       },
-    //       {
-    //         label: "Approvals",
-    //         href: `/dashboard/${params?.orgId}/timesheets/approvals`,
-    //         active: true,
-    //       },
-    //     ]}
-    //   />
-
-    //   <div className="flex-1 min-w-0 flex flex-col p-4">
-    //     {/* Search + Date (fixed within this panel) */}
-    //     <div className="flex items-center justify-between flex-shrink-0">
-    //       <DebouncedSearch
-    //         onSearch={(val) => setSearch(val)}
-    //         placeholder="Search users..."
-    //         wrapperClassName="max-w-sm"
-    //       />
-
-    //       <DatePickerWithRange
-    //         date={dateRange}
-    //         setDate={(range: any) => setDateRange(range)}
-    //         className="w-[300px]"
-    //       />
-    //     </div>
-
-    //     {/* Table: occupies remaining space and scrolls only inside its border */}
-    //     <div className="flex-1 min-w-0 mt-4">
-    //       <div className="h-full w-full overflow-hidden rounded-lg border bg-card">
-    //         <div className="min-w-full h-full overflow-auto">
-    //           <div className="min-w-full">
-    //             <Table
-    //               data={timesheets}
-    //               columns={columns}
-    //               loading={isLoading}
-    //               emptyMessage="No timesheets found"
-    //             />
-    //           </div>
-    //         </div>
-    //       </div>
-    //     </div>
-
-    //   </div>
-    // </div>
-
-    <div className="space-y-4">
-            <PageHeader
+    <div className="flex flex-col h-full min-w-0">
+      <PageHeader
         title="Timesheet Approvals"
         breadcrumbs={[
           {
@@ -202,18 +145,39 @@ export default function ViewEditTimesheetsPage() {
         ]}
       />
 
-            <div className="px-6">
+      <div className="flex-1 min-w-0 flex flex-col p-4">
+        {/* Search + Date (fixed within this panel) */}
+        <div className="flex items-center justify-between flex-shrink-0">
+          <DebouncedSearch
+            onSearch={(val) => setSearch(val)}
+            placeholder="Search users..."
+            wrapperClassName="max-w-sm"
+          />
 
+          <DatePickerWithRange
+            date={dateRange}
+            setDate={(range: any) => setDateRange(range)}
+            className="w-[300px]"
+          />
+        </div>
 
-                <div className="bg-white border rounded-lg overflow-hidden shadow-sm">
-                    <Table
+        {/* Table: occupies remaining space and scrolls only inside its border */}
+        <div className="flex-1 min-w-0 mt-4">
+          <div className="h-full w-full overflow-hidden rounded-lg border bg-card">
+            <div className="min-w-full h-full overflow-auto">
+              <div className="min-w-full">
+                <Table
                   data={timesheets}
                   columns={columns}
                   loading={isLoading}
                   emptyMessage="No timesheets found"
                 />
-                </div>
+              </div>
             </div>
+          </div>
         </div>
+
+      </div>
+    </div>
   );
 }
