@@ -11,13 +11,12 @@ import { MetricCard } from "@/components/dashboard/metric-card"
 import {
     Cake,
     CalendarDays,
-    ChevronDown,
     DollarSign,
     FolderKanban,
     Mail,
     X,
 } from "lucide-react"
-import type { ProjectDetails, ProjectMember } from "@/interfaces/projects.interfaces"
+import type { ProjectMember } from "@/interfaces/projects.interfaces"
 import type { AggregatedSession } from "@/interfaces/sessions.interfaces"
 import { RemoveFromProjectModal } from "@/components/projects/staff-profile/modals/remove-from-project-modal"
 import { toast } from "sonner"
@@ -29,13 +28,17 @@ export function OverviewTab({
     date,
     setDate,
     project,
+    employmentStartDate,
+    employmentBirthday,
 }: {
     member: ProjectMember | undefined
     aggregatedSessions: AggregatedSession[]
     sessionsLoading: boolean
     date: DateRange | undefined
     setDate: (d: DateRange | undefined) => void
-    project: ProjectDetails | undefined
+    project: { id: string; name: string } | undefined
+    employmentStartDate?: string
+    employmentBirthday?: string
 }) {
     const [removeOpen, setRemoveOpen] = useState(false)
 
@@ -43,8 +46,8 @@ export function OverviewTab({
         return aggregatedSessions.reduce((sum, s) => sum + (s.duration || 0), 0)
     }, [aggregatedSessions])
 
-    const payRate = 52 // placeholder - not in API yet
-    const earnings = (totalHours * payRate).toFixed(0)
+    const payRate = member?.hourlyRate ?? 0
+    const earnings = member?.amountEarned ?? totalHours * payRate
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -73,7 +76,7 @@ export function OverviewTab({
                         <div>
                             <p className="text-xs text-muted-foreground">Start Date</p>
                             <p className="text-sm">
-                                {member?.createdAt ? format(new Date(member.createdAt), "MMMM do, yyyy") : "-"}
+                                {employmentStartDate ? format(new Date(employmentStartDate), "MMMM do, yyyy") : "-"}
                             </p>
                         </div>
                     </div>
@@ -81,7 +84,7 @@ export function OverviewTab({
                         <Cake className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                         <div>
                             <p className="text-xs text-muted-foreground">Birthday</p>
-                            <p className="text-sm">-</p>
+                            <p className="text-sm">{employmentBirthday ? format(new Date(employmentBirthday), "MMMM do, yyyy") : "-"}</p>
                         </div>
                     </div>
                 </CardContent>
@@ -98,15 +101,6 @@ export function OverviewTab({
                                 <p className="text-xs text-muted-foreground mt-0.5">Summary for the selected date range</p>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 text-xs gap-1.5"
-                                    onClick={() => toast.message("Project filter coming soon")}
-                                >
-                                    All Projects
-                                    <ChevronDown className="h-3.5 w-3.5" />
-                                </Button>
                                 <DatePickerWithRange date={date} setDate={setDate} />
                             </div>
                         </div>
@@ -119,11 +113,11 @@ export function OverviewTab({
                             />
                             <MetricCard
                                 title="Pay Rate"
-                                value={`$${payRate}`}
+                                value={payRate ? `$${payRate}/hr` : "--"}
                             />
                             <MetricCard
                                 title="Earnings"
-                                value={sessionsLoading ? "--" : `$${Number(earnings).toLocaleString()}`}
+                                value={sessionsLoading ? "--" : `$${Number(earnings || 0).toLocaleString()}`}
                             />
                         </div>
                     </CardContent>
@@ -159,7 +153,7 @@ export function OverviewTab({
                                         </div>
                                     ) : (
                                         <p className="text-xs text-muted-foreground mt-0.5">
-                                            {`${totalHours.toFixed(1)}h • $${Number(earnings).toLocaleString()}`}
+                                            {`${totalHours.toFixed(1)}h • $${Number(earnings || 0).toLocaleString()}`}
                                         </p>
                                     )}
                                 </div>

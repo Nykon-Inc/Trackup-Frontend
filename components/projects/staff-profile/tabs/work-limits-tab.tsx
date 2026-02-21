@@ -8,26 +8,65 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Switch } from "@/components/ui/switch"
 import { Clock, Info, Save, CalendarDays } from "lucide-react"
-import type { ProjectMember } from "@/interfaces/projects.interfaces"
+import type { ProjectMember, UpdateProjectMemberProfilePayload, WorkDay } from "@/interfaces/projects.interfaces"
 import { toast } from "sonner"
 
-type Weekday = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun"
-const ALL_DAYS: Weekday[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+const ALL_DAYS: WorkDay[] = [
+    "Mon" as WorkDay,
+    "Tue" as WorkDay,
+    "Wed" as WorkDay,
+    "Thu" as WorkDay,
+    "Fri" as WorkDay,
+    "Sat" as WorkDay,
+    "Sun" as WorkDay,
+]
 
-export function WorkLimitsTab({ member }: { member: ProjectMember | undefined }) {
-    const [activeDays, setActiveDays] = useState<Weekday[]>(["Mon", "Tue", "Wed", "Thu", "Fri"])
-    const [weeklyLimit, setWeeklyLimit] = useState("40")
-    const [dailyLimit, setDailyLimit] = useState("8")
-    const [expectedWeeklyHours, setExpectedWeeklyHours] = useState("")
-    const [isSaving, setIsSaving] = useState(false)
-    const [requireBreaks, setRequireBreaks] = useState(false)
+export function WorkLimitsTab({
+    member,
+    initialValues,
+    onSave,
+    isSaving,
+}: {
+    member: ProjectMember | undefined
+    initialValues?: {
+        expectedWorkDays: WorkDay[]
+        weeklyLimitHours: number | null
+        dailyLimitHours: number | null
+        expectedWeeklyHours: number | null
+        requiredBreaks: boolean
+    }
+    onSave?: (payload: UpdateProjectMemberProfilePayload) => Promise<void> | void
+    isSaving?: boolean
+}) {
+    const [activeDays, setActiveDays] = useState<WorkDay[]>(initialValues?.expectedWorkDays || ["Mon" as WorkDay, "Tue" as WorkDay, "Wed" as WorkDay, "Thu" as WorkDay, "Fri" as WorkDay])
+    const [weeklyLimit, setWeeklyLimit] = useState(initialValues?.weeklyLimitHours?.toString() || "")
+    const [dailyLimit, setDailyLimit] = useState(initialValues?.dailyLimitHours?.toString() || "")
+    const [expectedWeeklyHours, setExpectedWeeklyHours] = useState(initialValues?.expectedWeeklyHours?.toString() || "")
+    const [requireBreaks, setRequireBreaks] = useState(initialValues?.requiredBreaks || false)
 
     const initialRef = useRef({
-        activeDays: ["Mon", "Tue", "Wed", "Thu", "Fri"] as Weekday[],
-        weeklyLimit: "40",
-        dailyLimit: "8",
-        expectedWeeklyHours: "",
+        activeDays: initialValues?.expectedWorkDays || (["Mon", "Tue", "Wed", "Thu", "Fri"] as WorkDay[]),
+        weeklyLimit: initialValues?.weeklyLimitHours?.toString() || "",
+        dailyLimit: initialValues?.dailyLimitHours?.toString() || "",
+        expectedWeeklyHours: initialValues?.expectedWeeklyHours?.toString() || "",
+        requireBreaks: initialValues?.requiredBreaks || false,
     })
+
+    React.useEffect(() => {
+        if (!initialValues) return
+        setActiveDays(initialValues.expectedWorkDays)
+        setWeeklyLimit(initialValues.weeklyLimitHours?.toString() || "")
+        setDailyLimit(initialValues.dailyLimitHours?.toString() || "")
+        setExpectedWeeklyHours(initialValues.expectedWeeklyHours?.toString() || "")
+        setRequireBreaks(initialValues.requiredBreaks)
+        initialRef.current = {
+            activeDays: initialValues.expectedWorkDays,
+            weeklyLimit: initialValues.weeklyLimitHours?.toString() || "",
+            dailyLimit: initialValues.dailyLimitHours?.toString() || "",
+            expectedWeeklyHours: initialValues.expectedWeeklyHours?.toString() || "",
+            requireBreaks: initialValues.requiredBreaks,
+        }
+    }, [initialValues])
 
     const isDirty = useMemo(() => {
         const a = activeDays.join(",")
@@ -36,16 +75,17 @@ export function WorkLimitsTab({ member }: { member: ProjectMember | undefined })
             a !== b ||
             weeklyLimit !== initialRef.current.weeklyLimit ||
             dailyLimit !== initialRef.current.dailyLimit ||
-            expectedWeeklyHours !== initialRef.current.expectedWeeklyHours
+            expectedWeeklyHours !== initialRef.current.expectedWeeklyHours ||
+            requireBreaks !== initialRef.current.requireBreaks
         )
-    }, [activeDays, weeklyLimit, dailyLimit, expectedWeeklyHours])
+    }, [activeDays, weeklyLimit, dailyLimit, expectedWeeklyHours, requireBreaks])
 
-    const toggleDay = (day: Weekday) => {
+    const toggleDay = (day: WorkDay) => {
         setActiveDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]))
     }
 
     const expectedDaysLabel = useMemo(() => {
-        const hasWeekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"].every((d) => activeDays.includes(d as Weekday))
+        const hasWeekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"].every((d) => activeDays.includes(d as WorkDay))
         if (hasWeekdays && activeDays.length === 5) return "Mon - Fri"
         return activeDays.join(" - ")
     }, [activeDays])
@@ -209,6 +249,7 @@ export function WorkLimitsTab({ member }: { member: ProjectMember | undefined })
                                 setWeeklyLimit(initialRef.current.weeklyLimit)
                                 setDailyLimit(initialRef.current.dailyLimit)
                                 setExpectedWeeklyHours(initialRef.current.expectedWeeklyHours)
+                                setRequireBreaks(initialRef.current.requireBreaks)
                                 toast.message("Changes reset")
                             }}
                         >
@@ -219,19 +260,23 @@ export function WorkLimitsTab({ member }: { member: ProjectMember | undefined })
                             disabled={isSaving}
                             className="gap-2 bg-foreground text-background hover:bg-foreground/90"
                             onClick={async () => {
-                                setIsSaving(true)
-                                try {
-                                    // Backend update not wired yet.
-                                    initialRef.current = {
-                                        activeDays,
-                                        weeklyLimit,
-                                        dailyLimit,
-                                        expectedWeeklyHours,
-                                    }
-                                    toast.success("Work limits saved")
-                                } finally {
-                                    setIsSaving(false)
+                                if (onSave) {
+                                    await onSave({
+                                        expectedWorkDays: activeDays,
+                                        weeklyLimitHours: weeklyLimit ? Number(weeklyLimit) : null,
+                                        dailyLimitHours: dailyLimit ? Number(dailyLimit) : null,
+                                        expectedWeeklyHours: expectedWeeklyHours ? Number(expectedWeeklyHours) : null,
+                                        requiredBreaks: requireBreaks,
+                                    })
                                 }
+                                initialRef.current = {
+                                    activeDays,
+                                    weeklyLimit,
+                                    dailyLimit,
+                                    expectedWeeklyHours,
+                                    requireBreaks,
+                                }
+                                toast.success("Work limits saved")
                             }}
                         >
                             <Save className="h-4 w-4" />

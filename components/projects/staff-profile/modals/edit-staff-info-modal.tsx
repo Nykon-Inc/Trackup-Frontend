@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { DatePickerCalendar } from "@/components/ui/date-picker-calendar"
 import { toast } from "sonner"
+import { ProjectMemberRole } from "@/interfaces/projects.interfaces"
 
 function toDate(value?: string) {
     if (!value) return undefined
@@ -31,6 +32,8 @@ export function EditStaffInfoModal({
     startDate,
     birthday,
     notes,
+    onSave,
+    isSaving,
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -40,6 +43,15 @@ export function EditStaffInfoModal({
     startDate?: string
     birthday?: string
     notes?: string
+    onSave?: (payload: {
+        fullName: string
+        jobTitle: string
+        payRate?: number
+        startDate?: string | null
+        birthday?: string | null
+        notes?: string
+    }) => Promise<void> | void
+    isSaving?: boolean
 }) {
     const [name, setName] = useState(staffName)
     const [title, setTitle] = useState(jobTitle)
@@ -81,12 +93,17 @@ export function EditStaffInfoModal({
 
                         <div className="grid gap-2">
                             <Label htmlFor="staff-title">Job Title</Label>
-                            <Input
+                            <select
                                 id="staff-title"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                placeholder="Data Analyst"
-                            />
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            >
+                                <option value={ProjectMemberRole.MEMBER}>Member</option>
+                                <option value={ProjectMemberRole.MANAGER}>Manager</option>
+                                <option value={ProjectMemberRole.VIEWER}>Viewer</option>
+                                <option value={ProjectMemberRole.OWNER}>Owner</option>
+                            </select>
                         </div>
                     </div>
 
@@ -144,21 +161,25 @@ export function EditStaffInfoModal({
                     </Button>
                     <Button
                         type="button"
-                        onClick={() => {
-                            // Backend update not wired yet.
-                            console.log("Edit staff info", {
-                                name,
-                                title,
-                                rate,
-                                startDate: start?.toISOString(),
-                                birthday: bday?.toISOString(),
-                                note,
-                            })
-                            toast.success("Changes saved")
+                        disabled={isSaving}
+                        onClick={async () => {
+                            const payload = {
+                                fullName: name,
+                                jobTitle: title,
+                                payRate: rate ? Number(rate) : undefined,
+                                startDate: start ? start.toISOString() : null,
+                                birthday: bday ? bday.toISOString() : null,
+                                notes: note,
+                            }
+                            if (onSave) {
+                                await onSave(payload)
+                            } else {
+                                toast.success("Changes saved")
+                            }
                             onOpenChange(false)
                         }}
                     >
-                        Save Changes
+                        {isSaving ? "Saving..." : "Save Changes"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

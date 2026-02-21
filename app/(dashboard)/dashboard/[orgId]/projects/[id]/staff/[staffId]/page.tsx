@@ -2,9 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useGetAggregatedSessions } from '@/services/sessions.services'
-import { useGetProjectMembers } from '@/services/projects.services'
-import { useGetProject } from '@/services/projects.services'
+import { useGetProjectMemberProfile, useUpdateProjectMemberProfile } from '@/services/projects.services'
 import { useWorkspace } from '@/components/providers/workspace-provider'
 import { DateRange } from 'react-day-picker'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -18,6 +16,8 @@ import { EditStaffInfoModal } from '@/components/projects/staff-profile/modals/e
 import { toast } from 'sonner'
 import { subDays } from 'date-fns'
 import clsx from 'clsx'
+import { ProjectMemberRole, WorkDay } from '@/interfaces/projects.interfaces'
+import { GetAggregatedSessionsResponse } from '@/interfaces/sessions.interfaces'
 
 // ─────────────────────────────────────────────
 // Sub-tab IDs
@@ -82,24 +82,6 @@ export default function StaffProfilePage() {
         to: new Date(),
     })
 
-    // Fetch project details (for project tabs and assignments)
-    const { data: project, isLoading: projectLoading } = useGetProject({
-        organizationId: activeOrgId || '',
-        projectId: id,
-    })
-
-    // Fetch all project members to find this staff member
-    const { data: projectMembersData, isLoading: membersLoading } = useGetProjectMembers(
-        id,
-        activeOrgId || '',
-        { limit: 100 }
-    )
-    const member = useMemo(
-        () => projectMembersData?.results?.find((m) => m.userId === staffId),
-        [projectMembersData, staffId]
-    )
-
-    // Fetch aggregated sessions
     const sessionQuery = useMemo(() => {
         const from = date?.from
         const to = date?.to || date?.from
@@ -111,11 +93,20 @@ export default function StaffProfilePage() {
         }
     }, [staffId, id, date])
 
-    const { data: aggregatedSessions, isLoading: sessionsLoading } = useGetAggregatedSessions(sessionQuery)
+    const { data: profileData, isLoading, refetch: refetchProfile } = useGetProjectMemberProfile({
+        organizationId: activeOrgId || orgId || '',
+        projectId: id,
+        userId: staffId,
+        startDate: sessionQuery.startDate,
+        endDate: sessionQuery.endDate,
+    })
 
-    const sessions = aggregatedSessions || []
+    const { mutateAsync: updateProfile, isPending: isSavingProfile } = useUpdateProjectMemberProfile()
 
-    const isLoading = projectLoading || membersLoading
+    const sessions: GetAggregatedSessionsResponse = profileData?.rawActivity?.aggregatedSessions || []
+    const member = profileData?.member
+    const project = profileData?.project
+    const sessionsLoading = isLoading
 
     // ── Back navigation ──────────────────────────────────
     const handleBack = () => {
@@ -127,7 +118,7 @@ export default function StaffProfilePage() {
     }
 
     const staffName = member?.user?.name || 'Staff Member'
-    const staffRole = member?.role || 'Member'
+    const staffRole = member?.jobTitle || member?.role || 'Member'
     const staffAvatar = member?.user?.avatar
     const projectName = project?.name || 'Project'
     const projectHrefId = project?.id || id
@@ -158,11 +149,28 @@ export default function StaffProfilePage() {
                 open={editInfoOpen}
                 onOpenChange={setEditInfoOpen}
                 staffName={staffName}
-                jobTitle={String(staffRole)}
-                payRate={52}
-                startDate={member?.createdAt}
-                birthday={"1994-12-03"}
-                notes={""}
+                jobTitle={String(member?.role || ProjectMemberRole.MEMBER)}
+                payRate={member?.hourlyRate}
+                startDate={profileData?.employment?.startDate || undefined}
+                birthday={profileData?.employment?.birthday || undefined}
+                notes={member?.notes || ""}
+                isSaving={isSavingProfile}
+                onSave={async (payload) => {
+                    await updateProfile({
+                        organizationId: activeOrgId || orgId || '',
+                        projectId: id,
+                        userId: staffId,
+                        body: {
+                            role: payload.jobTitle as ProjectMemberRole,
+                            hourlyRate: payload.payRate,
+                            startDate: payload.startDate,
+                            birthday: payload.birthday,
+                            notes: payload.notes,
+                        },
+                    })
+                    await refetchProfile()
+                    toast.success("Staff profile updated")
+                }}
             />
 
             {/* ── Sub-tabs + Content ─────────────────────────── */}
@@ -198,6 +206,8 @@ export default function StaffProfilePage() {
                             date={date}
                             setDate={setDate}
                             project={project}
+                            employmentStartDate={profileData?.employment?.startDate || undefined}
+                            employmentBirthday={profileData?.employment?.birthday || undefined}
                         />
                     )}
                     {activeSubTab === 'insights' && (
@@ -207,7 +217,27 @@ export default function StaffProfilePage() {
                         />
                     )}
                     {activeSubTab === 'work-limits' && (
-                        <WorkLimitsTab member={member} />
+                        <WorkLimitsTab
+                            member={member}
+                            initialValues={{
+                                expectedWorkDays: (member?.expectedWorkDays || [WorkDay.MON, WorkDay.TUE, WorkDay.WED, WorkDay.THU, WorkDay.FRI]) as WorkDay[],
+                                weeklyLimitHours: member?.weeklyLimitHours ?? null,
+                                dailyLimitHours: member?.dailyLimitHours ?? null,
+                                expectedWeeklyHours: member?.expectedWeeklyHours ?? null,
+                                requiredBreaks: member?.requiredBreaks ?? false,
+                            }}
+                            onSave={async (payload) => {
+                                await updateProfile({
+                                    organizationId: activeOrgId || orgId || '',
+                                    projectId: id,
+                                    userId: staffId,
+                                    body: payload,
+                                })
+                                await refetchProfile()
+                                toast.success("Work limits saved")
+                            }}
+                            isSaving={isSavingProfile}
+                        />
                     )}
                 </div>
             </div>

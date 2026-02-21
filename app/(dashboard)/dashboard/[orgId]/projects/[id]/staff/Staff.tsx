@@ -99,27 +99,10 @@ export default function Staff({ project }: { project: Project }) {
         stop(email)
     }, [])
     const members = (projectMembersData?.results || []).map((m): ProjectMemberRow => {
-        const anyM = m as unknown as Record<string, any>;
-        const anyU = (m.user || {}) as unknown as Record<string, any>;
-
-        const payRate =
-            (typeof anyM.payRate === "number" ? anyM.payRate : undefined) ??
-            (typeof anyM.hourlyRate === "number" ? anyM.hourlyRate : undefined) ??
-            (typeof anyU.payRate === "number" ? anyU.payRate : undefined) ??
-            (typeof anyU.hourlyRate === "number" ? anyU.hourlyRate : undefined);
-
-        const hoursWorked =
-            (typeof anyM.hoursWorked === "number" ? anyM.hoursWorked : undefined) ??
-            (typeof anyM.totalHours === "number" ? anyM.totalHours : undefined);
-
-        const earnings =
-            (typeof anyM.earnings === "number" ? anyM.earnings : undefined) ??
-            (payRate !== undefined && hoursWorked !== undefined ? payRate * hoursWorked : undefined);
-
-        const jobTitle =
-            (typeof anyM.jobTitle === "string" ? anyM.jobTitle : undefined) ??
-            (typeof anyU.jobTitle === "string" ? anyU.jobTitle : undefined) ??
-            getFallbackJobTitle(m.role);
+        const payRate = m.hourlyRate;
+        const hoursWorked = m.totalHoursWorked;
+        const earnings = m.amountEarned ?? (payRate !== undefined && hoursWorked !== undefined ? payRate * hoursWorked : undefined);
+        const jobTitle = m.jobTitle || getFallbackJobTitle(m.role);
 
         return {
             ...m,

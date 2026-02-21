@@ -40,7 +40,7 @@ export function StaffProfileHero({
                 <div className="flex items-center gap-3 min-w-0">
                     <button
                         onClick={onBack}
-                        className="flex items-center justify-center h-8 w-8 rounded-md border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                        className="flex items-center justify-center h-8 w-8  text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
                     >
                         <ArrowLeft className="h-4 w-4" />
                     </button>
