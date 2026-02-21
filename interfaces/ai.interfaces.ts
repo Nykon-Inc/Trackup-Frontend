@@ -35,10 +35,19 @@ export interface IStaffHourlyInsight {
     };
     aiResult: {
         hourly_summary: string;
-        patterns_observed: string[];
+        primary_activity: string;
+        screenshots_reviewed: number;
+        activity_pattern: string;
+        work_summary: string[];
+        time_allocation: {
+            activity: string;
+            percentage: number;
+        }[];
+        review_score: number;
+        review_evidence: string[];
         review_priority: "low" | "medium" | "high";
         confidence: number;
-        notes_for_reviewer: string;
+        patterns_observed: string[];
     };
 }
 

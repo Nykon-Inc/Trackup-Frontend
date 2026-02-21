@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 interface Tab {
     value: string;
     label: string;
+    icon?: React.ReactNode;
 }
 
 interface CustomTabsProps {
@@ -69,32 +70,30 @@ export function CustomTabs({
     return (
         <div
             className={cn(
-                "flex p-1 bg-[#f5f5f7] dark:bg-muted/50 rounded-xl w-fit items-center",
+                "inline-flex items-center p-1 bg-[#f5f5f7] dark:bg-muted/50 rounded-xl",
                 className
             )}
         >
             {tabs.map((tab) => {
                 const isActive = activeTab === tab.value;
                 return (
-                    <button
+                    <motion.button
                         key={tab.value}
                         onClick={() => handleTabClick(tab.value)}
+                        initial={false}
+                        animate={{
+                            backgroundColor: isActive ? "white" : "transparent",
+                        }}
                         className={cn(
-                            "relative px-4 py-1.5 text-sm font-medium transition-colors outline-none",
+                            "flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-lg transition-colors outline-none",
                             isActive
-                                ? "text-[#1d1d1f] dark:text-foreground"
+                                ? "text-[#1d1d1f] dark:text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.1)] dark:bg-background"
                                 : "text-[#86868b] hover:text-[#1d1d1f] dark:text-muted-foreground dark:hover:text-foreground"
                         )}
                     >
-                        {isActive && (
-                            <motion.div
-                                layoutId="activeTabBackground"
-                                className="absolute inset-0 bg-white dark:bg-background rounded-lg shadow-[0_1px_4px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.04)] z-0"
-                                transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
-                            />
-                        )}
-                        <span className="relative z-10">{tab.label}</span>
-                    </button>
+                        {tab.icon && <span className="shrink-0">{tab.icon}</span>}
+                        <span>{tab.label}</span>
+                    </motion.button>
                 );
             })}
         </div>

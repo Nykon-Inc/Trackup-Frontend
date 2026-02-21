@@ -13,6 +13,8 @@ interface DatePickerCalendarProps {
     placeholder?: string;
     fromYear?: number;
     toYear?: number;
+    minDate?: Date;
+    maxDate?: Date;
     disabled?: boolean;
     error?: boolean;
     classname?: string;
@@ -36,6 +38,8 @@ export function DatePickerCalendar({
     placeholder = "Pick date",
     fromYear = 1900,
     toYear = new Date().getFullYear() + 10,
+    minDate,
+    maxDate,
     disabled = false,
     error = false,
     classname,
@@ -74,6 +78,13 @@ export function DatePickerCalendar({
 
     const handlePrevious = () => {
         if (viewMode === "days") {
+            const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
+            if (minDate && (prevMonthDate.getFullYear() < minDate.getFullYear() || (prevMonthDate.getFullYear() === minDate.getFullYear() && prevMonthDate.getMonth() < minDate.getMonth()))) {
+                // Check if there are ANY enabled days in the CURRENT month. 
+                // Actually, if we're at the beginning of the allowed range, we just don't go back.
+                if (currentYear <= minDate.getFullYear() && currentMonth <= minDate.getMonth()) return;
+            }
+
             if (currentMonth === 0) {
                 setCurrentMonth(11);
                 setCurrentYear(currentYear - 1);
@@ -81,14 +92,21 @@ export function DatePickerCalendar({
                 setCurrentMonth(currentMonth - 1);
             }
         } else if (viewMode === "months") {
+            if (minDate && currentYear <= minDate.getFullYear()) return;
             setCurrentYear(currentYear - 1);
         } else if (viewMode === "years") {
+            if (minDate && yearRangeStart <= minDate.getFullYear()) return;
             setYearRangeStart(yearRangeStart - 12);
         }
     };
 
     const handleNext = () => {
         if (viewMode === "days") {
+            const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
+            if (maxDate && (nextMonthDate.getFullYear() > maxDate.getFullYear() || (nextMonthDate.getFullYear() === maxDate.getFullYear() && nextMonthDate.getMonth() > maxDate.getMonth()))) {
+                if (currentYear >= maxDate.getFullYear() && currentMonth >= maxDate.getMonth()) return;
+            }
+
             if (currentMonth === 11) {
                 setCurrentMonth(0);
                 setCurrentYear(currentYear + 1);
@@ -96,8 +114,10 @@ export function DatePickerCalendar({
                 setCurrentMonth(currentMonth + 1);
             }
         } else if (viewMode === "months") {
+            if (maxDate && currentYear >= maxDate.getFullYear()) return;
             setCurrentYear(currentYear + 1);
         } else if (viewMode === "years") {
+            if (maxDate && yearRangeStart + 11 >= maxDate.getFullYear()) return;
             setYearRangeStart(yearRangeStart + 12);
         }
     };
@@ -122,6 +142,7 @@ export function DatePickerCalendar({
 
         // Add days of the month
         for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(currentYear, currentMonth, day);
             const isSelected = selected &&
                 selected.getDate() === day &&
                 selected.getMonth() === currentMonth &&
@@ -130,11 +151,15 @@ export function DatePickerCalendar({
                 new Date().getMonth() === currentMonth &&
                 new Date().getFullYear() === currentYear;
 
+            const isDateDisabled = (minDate && date < new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate())) ||
+                (maxDate && date > new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate()));
+
             days.push(
                 <Button
                     key={day}
                     variant="ghost"
                     size="sm"
+                    disabled={isDateDisabled}
                     onClick={() => handleDayClick(day)}
                     className={cn(
                         "h-8 w-8 p-0 font-normal",
@@ -158,10 +183,14 @@ export function DatePickerCalendar({
             const isCurrent = new Date().getMonth() === index &&
                 new Date().getFullYear() === currentYear;
 
+            const isMonthDisabled = (minDate && (currentYear < minDate.getFullYear() || (currentYear === minDate.getFullYear() && index < minDate.getMonth()))) ||
+                (maxDate && (currentYear > maxDate.getFullYear() || (currentYear === maxDate.getFullYear() && index > maxDate.getMonth())));
+
             return (
                 <Button
                     key={month}
                     variant="ghost"
+                    disabled={isMonthDisabled}
                     onClick={() => handleMonthClick(index)}
                     className={cn(
                         "h-16 font-normal",
@@ -187,10 +216,14 @@ export function DatePickerCalendar({
             const isSelected = selected && selected.getFullYear() === year;
             const isCurrent = new Date().getFullYear() === year;
 
+            const isYearDisabled = (minDate && year < minDate.getFullYear()) ||
+                (maxDate && year > maxDate.getFullYear());
+
             years.push(
                 <Button
                     key={year}
                     variant="ghost"
+                    disabled={isYearDisabled}
                     onClick={() => handleYearClick(year)}
                     className={cn(
                         "h-16 font-normal",

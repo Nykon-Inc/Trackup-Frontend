@@ -21,20 +21,45 @@ import {
     ChevronUp,
     FileText,
     Save,
+    Check,
 } from "lucide-react"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 import type { AggregatedSession } from "@/interfaces/sessions.interfaces"
+import { IStaffHourlyInsight } from "@/interfaces/ai.interfaces"
+import { DatePickerCalendar } from "@/components/ui/date-picker-calendar"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { CustomTabs } from "@/components/custom-tabs"
 
 export function InsightsTab({
     aggregatedSessions,
     sessionsLoading,
+    insightsData,
+    onDateChange,
+    selectedDate,
+    employmentStartDate
 }: {
     aggregatedSessions: AggregatedSession[]
-    sessionsLoading: boolean
+    sessionsLoading: boolean,
+    insightsData: IStaffHourlyInsight[] | undefined,
+    onDateChange: (date: Date) => void,
+    selectedDate: Date,
+    employmentStartDate: string | undefined
 }) {
     const [managerNote, setManagerNote] = useState("")
     const [showRawActivity, setShowRawActivity] = useState(true)
     const [rawActivityView, setRawActivityView] = useState<"screenshots" | "log">("screenshots")
     const [logFilter, setLogFilter] = useState<"all" | "active" | "idle">("all")
+    const [selectedInsightId, setSelectedInsightId] = useState<string | "today">("today")
 
     const screenshots = useMemo(() => {
         return aggregatedSessions.flatMap((s) => s.screenshots || []).slice(0, 8)
@@ -52,6 +77,33 @@ export function InsightsTab({
         }
         return eachDayOfInterval({ start: subDays(new Date(), 6), end: new Date() })
     }, [aggregatedSessions])
+
+    const hours = useMemo(() => {
+        if (!insightsData) return []
+        return insightsData.map((insight) => {
+            const start = new Date(insight.startTime)
+            const end = new Date(insight.endTime)
+            const startH = format(start, "h")
+            const startAA = format(start, "aa")
+            const endH = format(end, "h")
+            const endAA = format(end, "aa")
+
+            const label = startAA === endAA
+                ? `${startH}-${endH}${endAA}`
+                : `${startH}${startAA}-${endH}${endAA}`
+
+            return {
+                id: insight.id,
+                label
+            }
+        })
+    }, [insightsData])
+
+    const selectedLabel = useMemo(() => {
+        if (selectedInsightId === "today") return "Full Day"
+        const found = hours.find(h => h.id === selectedInsightId)
+        return found ? found.label : "Full Day"
+    }, [selectedInsightId, hours])
 
     const activityLog = useMemo(() => {
         const apps = ["CRM", "Gmail", "Slack", "Zoom", "Calendar", "Docs", "Idle"]
@@ -83,21 +135,85 @@ export function InsightsTab({
 
     const activityScore = Math.round(avgActivity)
 
+    const filteredInsights = useMemo(() => {
+        if (!insightsData) return []
+        if (selectedInsightId === "today") return insightsData
+        return insightsData.filter(i => i.id === selectedInsightId)
+    }, [insightsData, selectedInsightId])
+
+    const getInsightLabel = (insight: IStaffHourlyInsight) => {
+        const start = new Date(insight.startTime)
+        const end = new Date(insight.endTime)
+        const startH = format(start, "h")
+        const startAA = format(start, "aa")
+        const endH = format(end, "h")
+        const endAA = format(end, "aa")
+
+        return startAA === endAA
+            ? `${startH}-${endH}${endAA}`
+            : `${startH}${startAA}-${endH}${endAA}`
+    }
+
     return (
         <div className="space-y-4">
             <Card className="border border-border/60 shadow-sm rounded-xl">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-semibold">Tessa Insights</CardTitle>
                     <div className="flex items-center gap-2 flex-wrap mt-2">
-                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
-                            <CalendarDays className="h-3.5 w-3.5" />
-                            Today
-                            <ChevronDown className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
-                            All Projects
-                            <ChevronDown className="h-3.5 w-3.5" />
-                        </Button>
+                        <DatePickerCalendar
+                            onSelect={(date) => {
+                                onDateChange(date!)
+                                setSelectedInsightId("today")
+                            }}
+                            selected={selectedDate}
+                            maxDate={new Date()}
+                            minDate={employmentStartDate ? new Date(employmentStartDate) : undefined}
+                        />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 min-w-[150px] justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        {selectedLabel}
+                                    </div>
+                                    <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width) max-h-72 overflow-y-auto p-1.5">
+                                <DropdownMenuItem
+                                    onClick={() => setSelectedInsightId("today")}
+                                    className={clsx(
+                                        "flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-colors justify-start",
+                                        selectedInsightId === "today" ? "bg-[#D9C8B4] text-foreground font-medium" : "hover:bg-muted"
+                                    )}
+                                >
+                                    <div className="w-4 flex items-center justify-center">
+                                        {selectedInsightId === "today" && <Check className="h-4 w-4" />}
+                                    </div>
+                                    <span className="text-sm">Full Day</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="my-1.5" />
+                                <div className="space-y-1">
+                                    {hours.map((hour) => {
+                                        const isActive = selectedInsightId === hour.id
+                                        return (
+                                            <DropdownMenuItem
+                                                key={hour.id}
+                                                onClick={() => setSelectedInsightId(hour.id)}
+                                                className={clsx(
+                                                    "flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-colors justify-start",
+                                                    isActive ? "bg-[#D9C8B4] text-foreground font-medium" : "hover:bg-muted"
+                                                )}
+                                            >
+                                                <div className="w-4 flex items-center justify-center">
+                                                    {isActive && <Check className="h-4 w-4" />}
+                                                </div>
+                                                <span className="text-sm">{hour.label}</span>
+                                            </DropdownMenuItem>
+                                        )
+                                    })}
+                                </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         <Button size="sm" className="h-8 text-xs gap-1.5">
                             <FileText className="h-3.5 w-3.5" />
                             Reports
@@ -106,331 +222,317 @@ export function InsightsTab({
                 </CardHeader>
             </Card>
 
-            <Card className="border border-border/60 shadow-sm rounded-xl">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-semibold">Summary — {totalHours.toFixed(1)}h total</CardTitle>
-                    <p className="text-xs text-muted-foreground">Concentrated work sessions tracked across the selected date range.</p>
-                </CardHeader>
-                <CardContent className="space-y-1.5 text-sm">
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground text-xs">Primary activity:</span>
-                        <span className="text-xs font-medium">Work</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground text-xs">Screenshots reviewed:</span>
-                        <span className="text-xs font-medium">{screenshots.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground text-xs">Activity pattern:</span>
-                        <span className="text-xs font-medium">
-                            {avgActivity >= 70 ? "Mostly consistent" : avgActivity >= 40 ? "Moderate" : "Inconsistent"}
-                        </span>
-                    </div>
-                </CardContent>
-            </Card>
+            {filteredInsights.map((insight, index) => (
+                <Collapsible
+                    key={insight.id}
+                    defaultOpen={selectedInsightId !== "today" || index === 0}
+                    className="border border-border/60 rounded-xl bg-muted/10 overflow-hidden transition-all"
+                >
+                    <CollapsibleTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            className="w-full flex justify-between items-center py-10 px-5 hover:bg-muted/20 transition-all group rounded-none border-none"
+                        >
+                            <div className="flex items-center gap-3 px-3">
+                                <span className="text-base font-semibold">{getInsightLabel(insight)}</span>
+                            </div>
+                            <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                        </Button>
+                    </CollapsibleTrigger>
 
-            <Card className="border border-border/60 shadow-sm rounded-xl">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-semibold">Time Allocation</CardTitle>
-                    <p className="text-xs text-muted-foreground">Work Summary</p>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {sessionsLoading ? (
-                        <div className="space-y-2">
-                            <Skeleton className="h-4 w-3/4" />
-                            <Skeleton className="h-4 w-2/3" />
-                            <Skeleton className="h-4 w-1/2" />
+                    <CollapsibleContent className="p-6 pt-0 space-y-4">
+                        <div className="text-muted-foreground text-sm">
+                            {insight.aiResult.hourly_summary}
                         </div>
-                    ) : (
-                        <>
-                            <div className="space-y-1.5">
-                                {[
-                                    { label: "Primarily focused on tracked tasks (55% of time)", color: "text-emerald-600" },
-                                    { label: "Secondary work on project activities", color: "text-emerald-600" },
-                                    { label: "Activity levels remained consistent throughout the period", color: "text-emerald-600" },
-                                ].map((item, i) => (
-                                    <div key={i} className="flex items-center gap-2">
-                                        <CheckCircle2 className={`h-4 w-4 shrink-0 ${item.color}`} />
-                                        <span className="text-xs text-muted-foreground">{item.label}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <Separator />
-
-                            <div className="flex flex-wrap gap-3 text-xs">
-                                {[
-                                    { label: "Work", pct: 55 },
-                                    { label: "Meetings", pct: 25 },
-                                    { label: "Review", pct: 15 },
-                                    { label: "Other", pct: 5 },
-                                ].map((item) => (
-                                    <div key={item.label} className="flex items-center gap-1">
-                                        <span className="font-medium">{item.label}</span>
-                                        <span className="text-muted-foreground">{item.pct}%</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="space-y-2 pt-1">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                        <BarChart2 className="h-4 w-4" />
-                                        Activity Review Score
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="text-sm font-semibold text-red-500">{activityScore}</span>
-                                        {activityScore < 80 && (
-                                            <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-red-300 text-red-600">
-                                                Review Recommended
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-                                <Progress
-                                    value={activityScore}
-                                    className={`h-2 ${activityScore < 80 ? "[&>div]:bg-red-500" : "[&>div]:bg-emerald-500"}`}
-                                />
-                                <div className="space-y-1">
-                                    <p className="text-[11px] text-muted-foreground font-medium">Evidence</p>
-                                    {[
-                                        { text: "Extended idle periods detected (3+ occurrences)", color: "text-amber-500" },
-                                        { text: "Unusual application switching pattern", color: "text-amber-500" },
-                                        { text: "Activity gaps during core hours", color: "text-amber-500" },
-                                    ].map((e, i) => (
-                                        <div key={i} className="flex items-center gap-1.5">
-                                            <AlertTriangle className={`h-3.5 w-3.5 shrink-0 ${e.color}`} />
-                                            <span className="text-xs text-muted-foreground">{e.text}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </CardContent>
-            </Card>
-
-            <Card className="border border-border/60 shadow-sm rounded-xl">
-                <CardHeader className="pb-2 cursor-pointer select-none" onClick={() => setShowRawActivity((v) => !v)}>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-semibold">Manual Review — Raw Activity (10:00 AM – 11:00 AM)</CardTitle>
-                        {showRawActivity ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        )}
-                    </div>
-                </CardHeader>
-                {showRawActivity && (
-                    <CardContent className="space-y-3">
-                        <div className="inline-flex items-center rounded-lg bg-muted p-1">
-                            <button
-                                type="button"
-                                onClick={() => setRawActivityView("screenshots")}
-                                className={clsx(
-                                    "h-9 px-3 text-xs rounded-md transition-colors font-medium flex items-center gap-2",
-                                    rawActivityView === "screenshots"
-                                        ? "bg-background text-foreground shadow-sm border border-border"
-                                        : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                <Camera className="h-4 w-4" />
-                                Screenshots ({screenshots.length})
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setRawActivityView("log")}
-                                className={clsx(
-                                    "h-9 px-3 text-xs rounded-md transition-colors font-medium flex items-center gap-2",
-                                    rawActivityView === "log"
-                                        ? "bg-background text-foreground shadow-sm border border-border"
-                                        : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                <AlignLeft className="h-4 w-4" />
-                                Activity Log
-                            </button>
-                        </div>
-
-                        {rawActivityView === "log" && (
-                            <div className="flex items-center gap-2">
-                                {([
-                                    { value: "all", label: "All" },
-                                    { value: "active", label: "Active only" },
-                                    { value: "idle", label: "Idle only" },
-                                ] as const).map((f) => {
-                                    const isActive = logFilter === f.value
-                                    return (
-                                        <button
-                                            key={f.value}
-                                            type="button"
-                                            onClick={() => setLogFilter(f.value)}
-                                            className={clsx(
-                                                "h-8 px-3 rounded-full text-xs transition-colors",
-                                                isActive
-                                                    ? "bg-foreground text-background"
-                                                    : "bg-transparent text-foreground hover:bg-muted"
-                                            )}
-                                        >
-                                            {f.label}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        )}
-
-                        {rawActivityView === "screenshots" && (
-                            <>
+                        <Card className="border border-border/60 shadow-sm rounded-xl">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-semibold">Time Allocation</CardTitle>
+                                <p className="text-xs text-muted-foreground">Work Summary</p>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
                                 {sessionsLoading ? (
-                                    <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-                                        {days.map((day) => (
-                                            <Card key={day.toISOString()} className="overflow-hidden border-border/60">
-                                                <Skeleton className="aspect-video w-full rounded-none" />
-                                                <CardContent className="p-2 space-y-2">
-                                                    <div className="flex items-center justify-between">
-                                                        <Skeleton className="h-3 w-20" />
-                                                        <Skeleton className="h-3 w-3 rounded-full" />
-                                                    </div>
-                                                    <div className="space-y-1.5">
-                                                        <Skeleton className="h-1 w-full" />
-                                                        <Skeleton className="h-2 w-16 mx-auto" />
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-3/4" />
+                                        <Skeleton className="h-4 w-2/3" />
+                                        <Skeleton className="h-4 w-1/2" />
                                     </div>
                                 ) : (
-                                    <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-                                        {days.map((day) => {
-                                            const session = aggregatedSessions.find((s) => {
-                                                const d = new Date(s.day || s.date)
-                                                return !Number.isNaN(d.getTime()) && isSameDay(d, day)
-                                            })
+                                    <>
+                                        <div className="space-y-1.5">
+                                            {insight.aiResult.work_summary.map((item, i) => (
+                                                <div key={i} className="flex items-center gap-2">
+                                                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                                                    <span className="text-xs text-muted-foreground">{item}</span>
+                                                </div>
+                                            ))}
+                                        </div>
 
-                                            const firstShot = session?.screenshots?.[0]
-                                            const shotCount = session?.screenshots?.length || 0
-                                            const activity = typeof session?.activityRate === "number" ? Math.round(session.activityRate) : null
+                                        <Separator />
 
-                                            return (
-                                                <Card key={day.toISOString()} className="overflow-hidden border-border/60 h-full">
-                                                    <div className="relative aspect-video w-full bg-muted/30">
-                                                        {firstShot?.url ? (
-                                                            <img
-                                                                src={firstShot.url}
-                                                                alt={`Screenshot ${format(day, "MMM d")}`}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-muted-foreground/60">
-                                                                <Camera className="h-6 w-6" />
-                                                            </div>
-                                                        )}
+                                        <div className="flex flex-wrap gap-3 text-xs">
+                                            {insight.aiResult.time_allocation.map((item) => (
+                                                <div key={item.activity} className="flex items-center gap-1">
+                                                    <span className="font-medium">{item.activity}</span>
+                                                    <span className="text-muted-foreground">{item.percentage}%</span>
+                                                </div>
+                                            ))}
+                                        </div>
 
-                                                        {shotCount > 0 ? (
-                                                            <div className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-background/90 border border-border/60">
-                                                                {shotCount}
-                                                            </div>
-                                                        ) : null}
-                                                    </div>
-
-                                                    <CardContent className="p-2 space-y-2">
-                                                        <div className="flex items-center justify-between">
-                                                            <p className="text-[11px] font-medium text-muted-foreground">
-                                                                {format(day, "MMM d, yyyy")}
-                                                            </p>
-                                                            <div
-                                                                className={clsx(
-                                                                    "h-2.5 w-2.5 rounded-full",
-                                                                    shotCount > 0 ? "bg-emerald-500" : "bg-muted"
-                                                                )}
-                                                            />
-                                                        </div>
-
-                                                        <div className="space-y-1.5">
-                                                            <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-                                                                <div
-                                                                    className="h-full bg-foreground"
-                                                                    style={{ width: `${activity ?? 0}%` }}
-                                                                />
-                                                            </div>
-                                                            <p className="text-[11px] text-muted-foreground text-center">
-                                                                {activity === null ? "No activity" : `${activity}% active`}
-                                                            </p>
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
-                                            )
-                                        })}
-                                    </div>
-                                )}
-                            </>
-                        )}
-
-                        {rawActivityView === "log" && (
-                            <div className="rounded-lg border border-border/60 overflow-hidden">
-                                {sessionsLoading ? (
-                                    <div className="p-4 space-y-2">
-                                        {Array.from({ length: 6 }).map((_, i) => (
-                                            <Skeleton key={i} className="h-10 w-full rounded-md" />
-                                        ))}
-                                    </div>
-                                ) : activityLog.length > 0 ? (
-                                    <div className="max-h-[320px] overflow-y-auto">
-                                        {activityLog.map((e, i) => (
-                                            <div
-                                                key={e.id}
-                                                className={clsx(
-                                                    "flex items-center gap-4 px-4 py-3 border-b last:border-b-0",
-                                                    e.status === "idle" ? "bg-muted/20" : "bg-background",
-                                                    "hover:bg-muted/30 transition-colors"
-                                                )}
-                                            >
-                                                <div className="w-14 text-xs text-muted-foreground tabular-nums">{e.time}</div>
-                                                <div className="flex-1 text-sm font-medium">{e.app}</div>
-                                                <div
-                                                    className={clsx(
-                                                        "text-[10px] px-2 py-0.5 rounded-full font-semibold",
-                                                        e.status === "active"
-                                                            ? "bg-foreground text-background"
-                                                            : "bg-muted text-muted-foreground"
+                                        <div className="space-y-2 pt-1">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                    <BarChart2 className="h-4 w-4" />
+                                                    Activity Review Score
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className={clsx(
+                                                        "text-sm font-semibold",
+                                                        insight.aiResult.review_score < 0.7 ? "text-amber-500" : insight.aiResult.review_score < 0.4 ? "text-red-500" : "text-emerald-500"
+                                                    )}>
+                                                        {Math.round(insight.aiResult.review_score * 100)}%
+                                                    </span>
+                                                    {insight.aiResult.review_score > 0.55 && (
+                                                        <Badge variant="outline" className={clsx(
+                                                            "text-[10px] h-5 px-1.5",
+                                                            insight.aiResult.review_score > 0.5 ? "border-red-300 text-red-600" : "border-amber-300 text-amber-600"
+                                                        )}>
+                                                            Review Recommended
+                                                        </Badge>
                                                     )}
-                                                >
-                                                    {e.status}
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="p-6 text-xs text-muted-foreground text-center">No activity logs found.</div>
+                                            <Progress
+                                                value={insight.aiResult.review_score * 100}
+                                                className={clsx(
+                                                    "h-2",
+                                                    insight.aiResult.review_score < 0.4 ? "[&>div]:bg-red-500" : insight.aiResult.review_score < 0.7 ? "[&>div]:bg-amber-500" : "[&>div]:bg-emerald-500"
+                                                )}
+                                            />
+                                            {insight.aiResult.review_evidence.length > 0 && <div className="space-y-1">
+                                                <p className="text-[11px] text-muted-foreground font-medium">Evidence</p>
+                                                {insight.aiResult.review_evidence.map((text, i) => (
+                                                    <div key={i} className="flex items-center gap-1.5">
+                                                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                                                        <span className="text-xs text-muted-foreground">{text}</span>
+                                                    </div>
+                                                ))}
+                                            </div>}
+                                        </div>
+                                    </>
                                 )}
-                            </div>
-                        )}
-                    </CardContent>
-                )}
-            </Card>
+                            </CardContent>
+                        </Card>
 
-            <Card className="border border-border/60 shadow-sm rounded-xl">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-semibold">Manager Notes — 10:00 AM – 11:00 AM</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    <Textarea
-                        placeholder="Add your notes for this hour/day..."
-                        value={managerNote}
-                        onChange={(e) => setManagerNote(e.target.value)}
-                        className="min-h-[120px] text-sm resize-none"
-                    />
-                    <div className="flex justify-end">
-                        <Button
-                            size="sm"
-                            className="gap-2 text-xs bg-foreground text-background hover:bg-foreground/90"
-                        >
-                            <Save className="h-4 w-4" />
-                            Save Note
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+                        <Card className="border border-border/60 shadow-sm rounded-xl">
+                            <CardHeader className="pb-2 cursor-pointer select-none" onClick={() => setShowRawActivity((v) => !v)}>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-sm font-semibold">Manual Review — Raw Activity ({getInsightLabel(insight)})</CardTitle>
+                                    {showRawActivity ? (
+                                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                </div>
+                            </CardHeader>
+                            {showRawActivity && (
+                                <CardContent className="space-y-3">
+                                    <div className="inline-flex items-center rounded-lg bg-muted p-1">
+                                        <CustomTabs
+                                            value={rawActivityView}
+                                            onChange={(v) => setRawActivityView(v as any)}
+                                            tabs={[
+                                                {
+                                                    label: "Screenshots",
+                                                    value: "screenshots",
+                                                    icon: <Camera className="h-4 w-4" />
+                                                },
+                                                {
+                                                    label: "Activity Log",
+                                                    value: "log",
+                                                    icon: <AlignLeft className="h-4 w-4" />
+                                                }
+                                            ]}
+                                        />
+                                    </div>
+
+                                    {rawActivityView === "log" && (
+                                        <div className="flex items-center gap-2">
+                                            {([
+                                                { value: "all", label: "All" },
+                                                { value: "active", label: "Active only" },
+                                                { value: "idle", label: "Idle only" },
+                                            ] as const).map((f) => {
+                                                const isActive = logFilter === f.value
+                                                return (
+                                                    <button
+                                                        key={f.value}
+                                                        type="button"
+                                                        onClick={() => setLogFilter(f.value)}
+                                                        className={clsx(
+                                                            "h-8 px-3 rounded-full text-xs transition-colors",
+                                                            isActive
+                                                                ? "bg-foreground text-background"
+                                                                : "bg-transparent text-foreground hover:bg-muted"
+                                                        )}
+                                                    >
+                                                        {f.label}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {rawActivityView === "screenshots" && (
+                                        <>
+                                            {sessionsLoading ? (
+                                                <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
+                                                    {days.map((day) => (
+                                                        <Card key={day.toISOString()} className="overflow-hidden border-border/60">
+                                                            <Skeleton className="aspect-video w-full rounded-none" />
+                                                            <CardContent className="p-2 space-y-2">
+                                                                <div className="flex items-center justify-between">
+                                                                    <Skeleton className="h-3 w-20" />
+                                                                    <Skeleton className="h-3 w-3 rounded-full" />
+                                                                </div>
+                                                                <div className="space-y-1.5">
+                                                                    <Skeleton className="h-1 w-full" />
+                                                                    <Skeleton className="h-2 w-16 mx-auto" />
+                                                                </div>
+                                                            </CardContent>
+                                                        </Card>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
+                                                    {insight.hourlyData.slots.map((slot, sIdx) => {
+                                                        const firstShot = slot.screenshots?.[0]
+                                                        const shotCount = slot.screenshots?.length || 0
+                                                        const activity = Math.round(slot.overall)
+                                                        const slotTime = slot.time_slot
+
+                                                        return (
+                                                            <Card key={slot.time_slot || sIdx} className="overflow-hidden border-border/60 h-full gap-0 p-0">
+                                                                <div className="relative aspect-video w-full bg-muted/30">
+                                                                    {firstShot?.full_url ? (
+                                                                        <img
+                                                                            src={firstShot.full_url}
+                                                                            alt={`Screenshot ${slotTime}`}
+                                                                            className="w-full h-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground/60">
+                                                                            <Camera className="h-6 w-6" />
+                                                                        </div>
+                                                                    )}
+
+                                                                    {shotCount > 0 ? (
+                                                                        <div className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-background/90 border border-border/60">
+                                                                            {shotCount}
+                                                                        </div>
+                                                                    ) : null}
+                                                                </div>
+
+                                                                <CardContent className="p-2 space-y-2">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <p className="text-[11px] font-medium text-muted-foreground">
+                                                                            {slotTime}
+                                                                        </p>
+                                                                        <div
+                                                                            className={clsx(
+                                                                                "h-2.5 w-2.5 rounded-full",
+                                                                                shotCount > 0 ? "bg-emerald-500" : "bg-muted"
+                                                                            )}
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="space-y-1.5">
+                                                                        <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+                                                                            <div
+                                                                                className="h-full bg-foreground"
+                                                                                style={{ width: `${activity}%` }}
+                                                                            />
+                                                                        </div>
+                                                                        <p className="text-[11px] text-muted-foreground text-center">
+                                                                            {activity}% active
+                                                                        </p>
+                                                                    </div>
+                                                                </CardContent>
+                                                            </Card>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {rawActivityView === "log" && (
+                                        <div className="rounded-lg border border-border/60 overflow-hidden">
+                                            {sessionsLoading ? (
+                                                <div className="p-4 space-y-2">
+                                                    {Array.from({ length: 6 }).map((_, i) => (
+                                                        <Skeleton key={i} className="h-10 w-full rounded-md" />
+                                                    ))}
+                                                </div>
+                                            ) : activityLog.length > 0 ? (
+                                                <div className="max-h-[320px] overflow-y-auto">
+                                                    {activityLog.map((e, i) => (
+                                                        <div
+                                                            key={e.id}
+                                                            className={clsx(
+                                                                "flex items-center gap-4 px-4 py-3 border-b last:border-b-0",
+                                                                e.status === "idle" ? "bg-muted/20" : "bg-background",
+                                                                "hover:bg-muted/30 transition-colors"
+                                                            )}
+                                                        >
+                                                            <div className="w-14 text-xs text-muted-foreground tabular-nums">{e.time}</div>
+                                                            <div className="flex-1 text-sm font-medium">{e.app}</div>
+                                                            <div
+                                                                className={clsx(
+                                                                    "text-[10px] px-2 py-0.5 rounded-full font-semibold",
+                                                                    e.status === "active"
+                                                                        ? "bg-foreground text-background"
+                                                                        : "bg-muted text-muted-foreground"
+                                                                )}
+                                                            >
+                                                                {e.status}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="p-6 text-xs text-muted-foreground text-center">No activity logs found.</div>
+                                            )}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            )}
+                        </Card>
+
+                        <Card className="border border-border/60 shadow-sm rounded-xl">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-semibold">Manager Notes — {getInsightLabel(insight)}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <Textarea
+                                    placeholder="Add your notes for this hour/day..."
+                                    value={managerNote}
+                                    onChange={(e) => setManagerNote(e.target.value)}
+                                    className="min-h-[120px] text-sm resize-none"
+                                />
+                                <div className="flex justify-end">
+                                    <Button
+                                        size="sm"
+                                        className="gap-2 text-xs bg-foreground text-background hover:bg-foreground/90"
+                                    >
+                                        <Save className="h-4 w-4" />
+                                        Save Note
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </CollapsibleContent>
+                </Collapsible>
+            ))}
         </div>
     )
 }

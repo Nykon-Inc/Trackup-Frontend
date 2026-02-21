@@ -7,7 +7,6 @@ export function StaffProfileSkeleton() {
         <div className="px-6 pt-4 pb-2">
             <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
-                    <Skeleton className="h-8 w-8 rounded-md" />
                     <Skeleton className="h-10 w-10 rounded-full" />
                     <div className="space-y-1.5">
                         <Skeleton className="h-5 w-44" />

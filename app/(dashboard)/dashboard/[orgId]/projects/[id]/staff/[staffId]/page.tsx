@@ -14,11 +14,12 @@ import { InsightsTab } from '@/components/projects/staff-profile/tabs/insights-t
 import { WorkLimitsTab } from '@/components/projects/staff-profile/tabs/work-limits-tab'
 import { EditStaffInfoModal } from '@/components/projects/staff-profile/modals/edit-staff-info-modal'
 import { toast } from 'sonner'
-import { subDays } from 'date-fns'
+import { subDays, startOfDay, endOfDay } from 'date-fns'
 import clsx from 'clsx'
 import { ProjectMemberRole, WorkDay } from '@/interfaces/projects.interfaces'
 import { GetAggregatedSessionsResponse } from '@/interfaces/sessions.interfaces'
 import { CustomTabs } from '@/components/custom-tabs'
+import { useGetStaffInsights } from '@/services/ai.services'
 
 // ─────────────────────────────────────────────
 // Sub-tab IDs
@@ -75,6 +76,8 @@ export default function StaffProfilePage() {
     const orgId = params?.orgId as string
     const { activeOrgId } = useWorkspace()
 
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+
     const queryParams = useSearchParams();
     const activeSubTab = queryParams.get("tab") || "overview";
     const [editInfoOpen, setEditInfoOpen] = useState(false)
@@ -104,6 +107,12 @@ export default function StaffProfilePage() {
     })
 
     const { mutateAsync: updateProfile, isPending: isSavingProfile } = useUpdateProjectMemberProfile()
+    const { data: insightsData, isLoading: insightsLoading } = useGetStaffInsights({
+        projectId: id,
+        userId: staffId,
+        startDate: startOfDay(selectedDate).toISOString(),
+        endDate: endOfDay(selectedDate).toISOString(),
+    })
 
     const sessions: GetAggregatedSessionsResponse = profileData?.rawActivity?.aggregatedSessions || []
     const member = profileData?.member
@@ -180,26 +189,12 @@ export default function StaffProfilePage() {
             <div className="flex flex-col flex-1 px-6 pt-3 pb-6 overflow-auto">
                 {/* Sub-tab buttons */}
                 <div>
-                    <div className="inline-flex items-center rounded-lg bg-muted p-1 mb-4">
+                    <div className="mb-4">
                         <CustomTabs
                             persistInRoute
                             tabs={SUB_TABS}
                             defaultValue={activeSubTab}
                         />
-                        {/* {SUB_TABS.map((tab) => (
-                            <button
-                                key={tab.value}
-                                onClick={() => setActiveSubTab(tab.value)}
-                                className={clsx(
-                                    "h-8 px-3 text-xs rounded-md transition-colors font-medium",
-                                    activeSubTab === tab.value
-                                        ? "bg-background text-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                {tab.label}
-                            </button>
-                        ))} */}
                     </div>
 
                 </div>
@@ -221,7 +216,11 @@ export default function StaffProfilePage() {
                     {activeSubTab === 'insights' && (
                         <InsightsTab
                             aggregatedSessions={sessions}
-                            sessionsLoading={sessionsLoading}
+                            insightsData={insightsData}
+                            sessionsLoading={insightsLoading || sessionsLoading}
+                            onDateChange={(date) => setSelectedDate(date)}
+                            selectedDate={selectedDate}
+                            employmentStartDate={profileData?.employment?.startDate || undefined}
                         />
                     )}
                     {activeSubTab === 'work-limits' && (
