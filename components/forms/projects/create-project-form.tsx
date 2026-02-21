@@ -16,10 +16,9 @@ import { Organization } from "@/interfaces/organizations.interfaces";
 
 interface CreateProjectFormProps {
     onClose?: () => void;
-    createProjectForOrganizationId?: string;
 }
 
-export function CreateProjectForm({ onClose, createProjectForOrganizationId }: CreateProjectFormProps) {
+export function CreateProjectForm({ onClose }: CreateProjectFormProps) {
     const [orgSearch, setOrgSearch] = useState("");
 
     // Fetch organizations with pagination/searching
@@ -35,7 +34,7 @@ export function CreateProjectForm({ onClose, createProjectForOrganizationId }: C
         initialValues: {
             name: "",
             description: "",
-            organization: createProjectForOrganizationId ? { id: createProjectForOrganizationId } : (null as Organization | null),
+            organization: null as Organization | null,
         },
         validationSchema: Yup.object({
             name: Yup.string().required("Project name is required"),
@@ -77,26 +76,24 @@ export function CreateProjectForm({ onClose, createProjectForOrganizationId }: C
                 )}
             </div>
 
-            {!createProjectForOrganizationId && (
-                <div className="space-y-2">
-                    <Label htmlFor="organization">Organization</Label>
-                    <SelectControlled<Organization>
-                        mode="single"
-                        value={formik.values.organization as Organization | null}
-                        onChange={(val) => formik.setFieldValue("organization", val)}
-                        onSearch={setOrgSearch}
-                        items={organizations}
-                        isLoading={isLoadingOrgs}
-                        getId={(item) => item.id}
-                        getLabel={(item) => item.name}
-                        placeholder="Select organization..."
-                        searchable
-                    />
-                    {formik.touched.organization && formik.errors.organization && (
-                        <div className="text-sm text-red-500">{formik.errors.organization as string}</div>
-                    )}
-                </div>
-            )}
+            <div className="space-y-2">
+                <Label htmlFor="organization">Organization</Label>
+                <SelectControlled<Organization>
+                    mode="single"
+                    value={formik.values.organization}
+                    onChange={(val) => formik.setFieldValue("organization", val)}
+                    onSearch={setOrgSearch}
+                    items={organizations}
+                    isLoading={isLoadingOrgs}
+                    getId={(item) => item.id}
+                    getLabel={(item) => item.name}
+                    placeholder="Select organization..."
+                    searchable
+                />
+                {formik.touched.organization && formik.errors.organization && (
+                    <div className="text-sm text-red-500">{formik.errors.organization as string}</div>
+                )}
+            </div>
 
             <div className="space-y-2">
                 <Label htmlFor="description">Description (Optional)</Label>

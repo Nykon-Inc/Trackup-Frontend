@@ -324,27 +324,27 @@ export function AddStaffMember({ projectId, organizationId }: { projectId?: stri
                                 {formik.values.users.map((user, index) => (
                                     <div key={index} className="grid grid-cols-12 gap-2 items-start">
                                         <div className="col-span-12 sm:col-span-7 space-y-1">
-                                        <Input
-                                            name={`users[${index}].email`}
-                                            placeholder="user@example.com"
-                                            value={user.email}
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            className={
-                                                formik.touched.users?.[index]?.email &&
-                                                    Array.isArray(formik.errors.users) &&
-                                                    typeof getUserEmailError(index) === "string"
-                                                    ? "border-red-500"
-                                                    : ""
-                                            }
-                                        />
-                                        {formik.touched.users?.[index]?.email &&
-                                            Array.isArray(formik.errors.users) &&
-                                            typeof getUserEmailError(index) === "string" && (
-                                                <p className="text-xs text-red-500">
-                                                    {getUserEmailError(index)}
-                                                </p>
-                                            )}
+                                            <Input
+                                                name={`users[${index}].email`}
+                                                placeholder="user@example.com"
+                                                value={user.email}
+                                                onChange={formik.handleChange}
+                                                onBlur={formik.handleBlur}
+                                                className={
+                                                    formik.touched.users?.[index]?.email &&
+                                                        Array.isArray(formik.errors.users) &&
+                                                        typeof getUserEmailError(index) === "string"
+                                                        ? "border-red-500"
+                                                        : ""
+                                                }
+                                            />
+                                            {formik.touched.users?.[index]?.email &&
+                                                Array.isArray(formik.errors.users) &&
+                                                typeof getUserEmailError(index) === "string" && (
+                                                    <p className="text-xs text-red-500">
+                                                        {getUserEmailError(index)}
+                                                    </p>
+                                                )}
                                         </div>
                                         <div className="col-span-10 sm:col-span-4 space-y-1">
                                             <select

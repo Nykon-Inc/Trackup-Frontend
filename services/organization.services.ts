@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import http from "@/services/base";
 import { routes } from "@/services/routes";
-import { OrganizationMember, GetInternalOrganizationsParams, Organization } from "@/interfaces/organizations.interfaces";
+import { OrganizationMember, GetInternalOrganizationsParams } from "@/interfaces/organizations.interfaces";
 import { invalidateActivityLogs } from "@/services/activity-logs";
 import { BulkInvitePayload } from "@/interfaces/organizations.interfaces";
 import { queryClient } from "@/lib/react-query";
@@ -131,6 +131,23 @@ export const useBulkInvite = () => {
     });
 };
 
+export const useBulkInviteOnboarding = () => {
+    return useMutation({
+        mutationFn: async ({ token, organizationId, members }: BulkInvitePayload & { token: string }) => {
+            const data = await http.post({
+                url: routes.organization.bulkInvite(organizationId),
+                body: { members },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+            return data;
+        },
+    });
+};
+
+
 export const useInviteUserToOrganization = (organizationId: string) => {
     return useMutation({
         mutationFn: async (payload: { members: { email: string; role: string }[] }) => {
@@ -152,21 +169,6 @@ export const useInviteUserToOrganization = (organizationId: string) => {
     });
 };
 
-export const useBulkInviteOnboarding = () => {
-    return useMutation({
-        mutationFn: async ({ token, organizationId, members }: BulkInvitePayload & { token: string }) => {
-            const data = await http.post({
-                url: routes.organization.bulkInvite(organizationId),
-                body: { members },
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-            });
-            return data;
-        },
-    });
-};
 
 export const useAcceptInvitation = () => {
     const { setAccount, setAccess, setOrganization, setPermissions } = useAuthStore();

@@ -118,15 +118,12 @@ export default function ProjectDetailsPage() {
                 ]}
             />
             <div className="px-6">
-                <div className="pt-4 mb-6">
+                <div className="pt-1 mb-6">
                     <div className="flex items-center justify-between">
-                        <button
-                            onClick={handleBackToProjects}
-                            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                            Back to Projects
-                        </button>
+                        <div className="mt-4">
+                            <h2 className="text-2xl font-semibold tracking-tight">{project.name || "Project"}</h2>
+                            <p className="text-sm text-muted-foreground">Internal dashboard for business intelligence and reporting</p>
+                        </div>
 
                         <div className="flex items-center gap-3">
                             <AddStaffMember projectId={project.id} organizationId={activeOrgId || orgId} />
@@ -135,11 +132,6 @@ export default function ProjectDetailsPage() {
                                 Export Project Report
                             </Button>
                         </div>
-                    </div>
-
-                    <div className="mt-4">
-                        <h2 className="text-2xl font-semibold tracking-tight">{project.name || "Project"}</h2>
-                        <p className="text-sm text-muted-foreground">Internal dashboard for business intelligence and reporting</p>
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -158,34 +150,8 @@ export default function ProjectDetailsPage() {
                 </div>
 
                 <div>
-                    {/* tabs definitions */}
-                    <div className="px-0">
-                        <div className="flex gap-2 h-12  items-center">
-                            {tabItems.map((e) => {
-                                const isActive = currentTab === e.value;
-                                return (
-                                    <button
-                                        key={e.value}
-                                        onClick={() => handleTabChange(e.value)}
-                                        className={clsx(
-                                            "h-9 flex cursor-pointer items-center px-4 text-sm border-b-2 transition-all duration-300 ease-in-out font-medium",
-                                            isActive
-                                                ? "border-primary text-primary"
-                                                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted/50"
-                                        )}
-                                    >
-                                        {e.icon && <e.icon className="h-4 w-4 mr-2" />}
-                                        {e.label}
-                                    </button>
-                                );
-                            })}
-
-                        </div>
-                    </div>
-
-                    <div key={currentTab} className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out py-2">
-                        {currentTab === "staff" && <Staff project={project} />}
-                        {currentTab === "configurations" && <div className="text-muted-foreground p-8 text-center bg-muted/5 rounded-lg border border-dashed">Configurations content coming soon</div>}
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out py-2">
+                        <Staff project={project} />
                     </div>
                 </div>
             </div>

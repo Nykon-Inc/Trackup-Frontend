@@ -91,7 +91,6 @@ export default function Staff({ project }: { project: Project }) {
         start(email)
         resendInviteUser({
             projectId: project.id,
-            organizationId: activeOrgId || undefined,
             members: [{
                 email,
                 role,
