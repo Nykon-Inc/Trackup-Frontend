@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useGetProjectMemberProfile, useUpdateProjectMemberProfile } from '@/services/projects.services'
 import { useWorkspace } from '@/components/providers/workspace-provider'
 import { DateRange } from 'react-day-picker'
@@ -18,6 +18,7 @@ import { subDays } from 'date-fns'
 import clsx from 'clsx'
 import { ProjectMemberRole, WorkDay } from '@/interfaces/projects.interfaces'
 import { GetAggregatedSessionsResponse } from '@/interfaces/sessions.interfaces'
+import { CustomTabs } from '@/components/custom-tabs'
 
 // ─────────────────────────────────────────────
 // Sub-tab IDs
@@ -74,7 +75,8 @@ export default function StaffProfilePage() {
     const orgId = params?.orgId as string
     const { activeOrgId } = useWorkspace()
 
-    const [activeSubTab, setActiveSubTab] = useState<SubTab>('overview')
+    const queryParams = useSearchParams();
+    const activeSubTab = queryParams.get("tab") || "overview";
     const [editInfoOpen, setEditInfoOpen] = useState(false)
 
     const [date, setDate] = useState<DateRange | undefined>({
@@ -130,7 +132,8 @@ export default function StaffProfilePage() {
                 breadcrumbs={[
                     { label: "Dashboard", href: orgId ? `/dashboard/${orgId}` : "/dashboard", active: false },
                     { label: "Projects", href: orgId ? `/dashboard/${orgId}/projects` : "/dashboard/projects", active: false },
-                    { label: projectName, href: orgId ? `/dashboard/${orgId}/projects/${projectHrefId}` : `/dashboard/projects/${projectHrefId}`, active: true },
+                    { label: projectName, href: orgId ? `/dashboard/${orgId}/projects/${projectHrefId}` : `/dashboard/projects/${projectHrefId}`, active: false },
+                    { label: staffName, href: orgId ? `/dashboard/${orgId}/projects/${projectHrefId}/staff/${staffId}` : `/dashboard/projects/${projectHrefId}/staff/${staffId}`, active: true },
                 ]}
             />
 
@@ -178,7 +181,12 @@ export default function StaffProfilePage() {
                 {/* Sub-tab buttons */}
                 <div>
                     <div className="inline-flex items-center rounded-lg bg-muted p-1 mb-4">
-                        {SUB_TABS.map((tab) => (
+                        <CustomTabs
+                            persistInRoute
+                            tabs={SUB_TABS}
+                            defaultValue={activeSubTab}
+                        />
+                        {/* {SUB_TABS.map((tab) => (
                             <button
                                 key={tab.value}
                                 onClick={() => setActiveSubTab(tab.value)}
@@ -191,7 +199,7 @@ export default function StaffProfilePage() {
                             >
                                 {tab.label}
                             </button>
-                        ))}
+                        ))} */}
                     </div>
 
                 </div>

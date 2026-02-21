@@ -38,13 +38,6 @@ export function StaffProfileHero({
         <div className="px-6 pt-4 pb-2">
             <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
-                    <button
-                        onClick={onBack}
-                        className="flex items-center justify-center h-8 w-8  text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                    </button>
-
                     <Avatar className="h-10 w-10 shrink-0">
                         <AvatarImage src={staffAvatar} alt={staffName} />
                         <AvatarFallback className="text-sm font-semibold">{getInitials(staffName)}</AvatarFallback>

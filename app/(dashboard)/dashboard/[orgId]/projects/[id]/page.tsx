@@ -125,7 +125,7 @@ export default function ProjectDetailsPage() {
             <div className="px-6">
                 <div className="pt-1 mb-6">
                     <div className="flex items-center justify-between">
-                        <div className="mt-4">
+                        <div className="">
                             <h2 className="text-2xl font-semibold tracking-tight">{project.name || "Project"}</h2>
                             <p className="text-sm text-muted-foreground">Internal dashboard for business intelligence and reporting</p>
                         </div>
