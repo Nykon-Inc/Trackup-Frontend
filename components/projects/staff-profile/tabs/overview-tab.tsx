@@ -153,13 +153,15 @@ export function OverviewTab({
                             <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
                                 <div>
                                     <p className="text-sm font-medium">{project.name}</p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
-                                        {sessionsLoading ? (
-                                            <Skeleton className="h-3 w-24 inline-block" />
-                                        ) : (
-                                            `${totalHours.toFixed(1)}h • $${Number(earnings).toLocaleString()}`
-                                        )}
-                                    </p>
+                                    {sessionsLoading ? (
+                                        <div className="mt-0.5">
+                                            <Skeleton className="h-3 w-24" />
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            {`${totalHours.toFixed(1)}h • $${Number(earnings).toLocaleString()}`}
+                                        </p>
+                                    )}
                                 </div>
                                 <button
                                     type="button"
