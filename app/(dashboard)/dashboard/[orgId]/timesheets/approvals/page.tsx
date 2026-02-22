@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
@@ -16,16 +16,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useParams } from "next/navigation";
 import { ITimesheet } from "@/interfaces/timesheet.interfaces";
+import TablePagination from "@/components/ui/table-pagination";
 
 // ✅ NEW IMPORTS
 import { DateRange } from "react-day-picker";
 import { subWeeks } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { useWorkspace } from "@/components/providers/workspace-provider";
 
 export default function ViewEditTimesheetsPage() {
   const params = useParams();
+  const { activeOrgId } = useWorkspace(); 
 
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // ✅ Default date range = last 8 weeks
   const today = new Date();
@@ -39,11 +44,29 @@ export default function ViewEditTimesheetsPage() {
     search,
     dateFrom: dateRange?.from?.toISOString(),
     dateTo: dateRange?.to?.toISOString(),
+    page,
+    limit: rowsPerPage,
+    orgId : activeOrgId, 
   });
 
   const columns: TableColumn<ITimesheet>[] = [
-    { header: "Member", key: "Member" },
-    { header: "Pay Period", key: "payPeriod" },
+    { header: "User", key: "user" },
+    {
+      header: "Pay Period",
+      key: "startDate",
+      render: (_, row) => {
+        if (!row?.startDate || !row?.endDate) return "-";
+        const formatDate = (date: Date | string) =>
+          new Date(date).toLocaleDateString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          });
+
+        return `${formatDate(row.startDate)} - ${formatDate(row.endDate)}`;
+      },
+    },
     {
       header: "Regular Hours",
       key: "regularHours",
@@ -51,9 +74,10 @@ export default function ViewEditTimesheetsPage() {
     {
       header: "Manual Time",
       key: "manualTime",
-      render: (value) => (
-        <Badge variant="default">{value} hrs</Badge>
-      ),
+      render: (value) => {
+        if (!value) return "";
+        return <Badge variant="default">{value} hrs</Badge>;
+      },
     },
     {
       header: "Total Worked Hours",
@@ -72,10 +96,14 @@ export default function ViewEditTimesheetsPage() {
     {
       header: "Submitted On",
       key: "submittedOn",
-      render: (value) =>
-        new Date(value).toLocaleDateString() +
-        " " +
-        new Date(value).toLocaleTimeString(),
+      render: (value) => {
+        if (!value) return "-";
+        return (
+          new Date(value).toLocaleDateString() +
+          " " +
+          new Date(value).toLocaleTimeString()
+        );
+      },
     },
     {
       header: "Approved By",
@@ -118,9 +146,25 @@ export default function ViewEditTimesheetsPage() {
     },
   ];
 
+  const response = timesheetsData as any;
+
   const timesheets = Array.isArray(timesheetsData)
     ? timesheetsData
-    : (timesheetsData as any)?.results || [];
+    : response?.results || [];
+
+  const totalResults = Array.isArray(timesheetsData)
+    ? timesheets.length
+    : response?.totalResults ?? timesheets.length;
+
+  const totalPages = Array.isArray(timesheetsData)
+    ? Math.max(1, Math.ceil(totalResults / rowsPerPage))
+    : response?.totalPages ?? Math.max(1, Math.ceil(totalResults / rowsPerPage));
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   return (
     <div className="flex flex-col h-full min-w-0">
@@ -149,14 +193,20 @@ export default function ViewEditTimesheetsPage() {
         {/* Search + Date (fixed within this panel) */}
         <div className="flex items-center justify-between flex-shrink-0">
           <DebouncedSearch
-            onSearch={(val) => setSearch(val)}
+            onSearch={(val) => {
+              setSearch(val);
+              setPage(1);
+            }}
             placeholder="Search users..."
             wrapperClassName="max-w-sm"
           />
 
           <DatePickerWithRange
             date={dateRange}
-            setDate={(range: any) => setDateRange(range)}
+            setDate={(range: any) => {
+              setDateRange(range);
+              setPage(1);
+            }}
             className="w-[300px]"
           />
         </div>
@@ -175,6 +225,19 @@ export default function ViewEditTimesheetsPage() {
               </div>
             </div>
           </div>
+
+          <TablePagination
+            count={totalResults}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(Number(e.target.value));
+              setPage(1);
+            }}
+            rowsPerPageOptions={[10, 20, 50, 100]}
+            disabled={isLoading || totalPages <= 1}
+          />
         </div>
 
       </div>
