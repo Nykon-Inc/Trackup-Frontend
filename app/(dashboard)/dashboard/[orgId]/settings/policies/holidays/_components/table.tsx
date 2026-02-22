@@ -48,7 +48,7 @@ const HolidayTable = ({ grouped, handleEdit, handleDelete }: Props) => {
         {
             header: 'Date',
             key: 'date',
-            width: '20%',
+            width: '15%',
             render: (value) => (
                 <span className="font-mono text-xs text-slate-500">
                     {format(new Date(value), 'EEE, MMM dd')}
@@ -80,28 +80,27 @@ const HolidayTable = ({ grouped, handleEdit, handleDelete }: Props) => {
         },
         {
             header: '',
-            key: 'id',
-            width: '10%',
+            key: 'actions',
+            width: '15%',
             align: 'right',
+
             render: (_, row) => (
-                <div className="flex items-center gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1.5 justify-end opacity-0  group-hover:opacity-100 transition-opacity">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 px-2.5 text-xs"
+                        className="h-7 text-xs"
                         onClick={() => handleEdit(row)}
                     >
                         <EditIcon className="h-3 w-3 mr-1" />
-                        Edit
                     </Button>
                     <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 px-2.5 text-xs text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                        className="h-7  text-xs text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
                         onClick={() => handleDelete(row.id)}
                     >
                         <TrashIcon className="h-3 w-3 mr-1" />
-                        Delete
                     </Button>
                 </div>
             ),
