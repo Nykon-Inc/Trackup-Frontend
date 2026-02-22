@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import http from "@/services/base";
 import { routes } from "@/services/routes";
 
@@ -17,11 +17,17 @@ export const useFetchInternalTimesheets = (params?: any) => {
 };
 
 export const useSubmitTimesheet = () => {
+    const queryClient = useQueryClient();
+    
     return useMutation({
         mutationFn: async (timesheetId: string) => {
             return await http.post({
                 url: `${routes.timesheets.internalTimesheets}/${timesheetId}/submit`,
+                body: {},
             });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["internal-timesheets"] });
         },
     });
 };

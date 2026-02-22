@@ -15,4 +15,5 @@ export interface ITimesheet {
     totalWorkedHours: number;
     activityLevel: number;
     screenshotCount: number;
+    user?: string
 }

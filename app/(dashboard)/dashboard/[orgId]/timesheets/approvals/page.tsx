@@ -15,6 +15,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ITimesheet } from "@/interfaces/timesheet.interfaces";
 import TablePagination from "@/components/ui/table-pagination";
 
@@ -23,13 +24,13 @@ import { DateRange } from "react-day-picker";
 import { subWeeks } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useWorkspace } from "@/components/providers/workspace-provider";
-import { useQueryClient } from "@tanstack/react-query";
 import { useSubmitTimesheet } from "@/services/timesheets";
 import { SubmitTimesheetModal } from "../components/SubmitTimesheetModal";
 import { toast } from "sonner";
 
 export default function ViewEditTimesheetsPage() {
     const params = useParams();
+    const router = useRouter();
     const { activeOrgId } = useWorkspace();
 
     const [search, setSearch] = useState("");
@@ -46,7 +47,6 @@ export default function ViewEditTimesheetsPage() {
 
     const [submitModalOpen, setSubmitModalOpen] = useState(false);
     const [selectedTimesheet, setSelectedTimesheet] = useState<ITimesheet | null>(null);
-    const queryClient = useQueryClient();
     const submitTimesheetMutation = useSubmitTimesheet();
 
     const handleSubmitClick = (row: ITimesheet) => {
@@ -58,7 +58,6 @@ export default function ViewEditTimesheetsPage() {
         if (selectedTimesheet && "id" in selectedTimesheet) {
             try {
                 await submitTimesheetMutation.mutateAsync((selectedTimesheet as any).id);
-                queryClient.invalidateQueries({ queryKey: ["internal-timesheets"] });
                 setSubmitModalOpen(false);
                 setSelectedTimesheet(null);
                 toast.success("Timesheet submitted successfully");
@@ -123,7 +122,7 @@ export default function ViewEditTimesheetsPage() {
             header: "Activity Level",
             key: "activityLevel",
             render: (value) => (
-                <Badge variant="default">{value}%</Badge>
+                <Badge variant="default">{value}</Badge>
             ),
         },
         {
@@ -168,7 +167,12 @@ export default function ViewEditTimesheetsPage() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => { }}>
+                        <DropdownMenuItem onClick={() => {
+                            if (typeof window !== 'undefined') {
+                                sessionStorage.setItem('timesheetData', JSON.stringify(row));
+                            }
+                            router.push(`/dashboard/${params?.orgId}/timesheets/approvals/${(row as any).id}`);
+                        }}>
                             View
                         </DropdownMenuItem>
                         {row.status === 'open' && (
