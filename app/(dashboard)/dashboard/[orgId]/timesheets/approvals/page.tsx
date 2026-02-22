@@ -23,6 +23,10 @@ import { DateRange } from "react-day-picker";
 import { subWeeks } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useWorkspace } from "@/components/providers/workspace-provider";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSubmitTimesheet } from "@/services/timesheets";
+import { SubmitTimesheetModal } from "../components/SubmitTimesheetModal";
+import { toast } from "sonner";
 
 export default function ViewEditTimesheetsPage() {
   const params = useParams();
@@ -38,6 +42,31 @@ export default function ViewEditTimesheetsPage() {
     from: subWeeks(today, 8),
     to: today,
   });
+
+  const [submitModalOpen, setSubmitModalOpen] = useState(false);
+  const [selectedTimesheet, setSelectedTimesheet] = useState<ITimesheet | null>(null);
+  const queryClient = useQueryClient();
+  const submitTimesheetMutation = useSubmitTimesheet();
+
+  const handleSubmitClick = (row: ITimesheet) => {
+    setSelectedTimesheet(row);
+    setSubmitModalOpen(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (selectedTimesheet && "id" in selectedTimesheet) {
+      try {
+        await submitTimesheetMutation.mutateAsync((selectedTimesheet as any).id);
+        queryClient.invalidateQueries({ queryKey: ["internal-timesheets"] });
+        setSubmitModalOpen(false);
+        setSelectedTimesheet(null);
+        toast.success("Timesheet submitted successfully");
+      } catch (error) {
+        console.error("Failed to submit timesheet:", error);
+        toast.error("Failed to submit timesheet. Please try again.");
+      }
+    }
+  };
 
   // ✅ Pass date range to fetch hook
   const { data: timesheetsData, isLoading } = useFetchInternalTimesheets({
@@ -98,11 +127,12 @@ export default function ViewEditTimesheetsPage() {
       key: "submittedOn",
       render: (value) => {
         if (!value) return "-";
-        return (
-          new Date(value).toLocaleDateString() +
-          " " +
-          new Date(value).toLocaleTimeString()
-        );
+        return new Date(value).toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
       },
     },
     {
@@ -137,9 +167,11 @@ export default function ViewEditTimesheetsPage() {
             <DropdownMenuItem onClick={() => {}}>
               View
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {}}>
-              Submit
-            </DropdownMenuItem>
+            {row.status === 'open' && (
+              <DropdownMenuItem onClick={() => handleSubmitClick(row)}>
+                Submit
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -241,6 +273,14 @@ export default function ViewEditTimesheetsPage() {
         </div>
 
       </div>
+
+      <SubmitTimesheetModal
+        open={submitModalOpen}
+        onOpenChange={setSubmitModalOpen}
+        selectedTimesheet={selectedTimesheet}
+        isLoading={submitTimesheetMutation.isPending}
+        onConfirm={handleConfirmSubmit}
+      />
     </div>
   );
 }
