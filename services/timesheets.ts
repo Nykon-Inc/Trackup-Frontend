@@ -31,3 +31,15 @@ export const useSubmitTimesheet = () => {
         },
     });
 };
+
+export const useFetchTimesheetSessions = (timesheetId: string | undefined) => {
+    return useQuery({
+        queryKey: ["timesheet-sessions", timesheetId],
+        queryFn: async () => {
+            return await http.get({
+                url: timesheetId ? routes.timesheets.sessions(timesheetId) : "",
+            });
+        },
+        enabled: !!timesheetId,
+    });
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -8,28 +8,37 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import { ITimesheet } from "@/interfaces/timesheet.interfaces";
-import { useSubmitTimesheet } from "@/services/timesheets";
+import { useSubmitTimesheet, useFetchTimesheetSessions } from "@/services/timesheets";
 import { toast } from "sonner";
 import { SubmitTimesheetModal } from "../../components/SubmitTimesheetModal";
+import { SessionsByDay } from "../../components/SessionsByDay";
 
 export default function TimesheetDetailPage() {
     const params = useParams();
     const router = useRouter();
     const submitTimesheetMutation = useSubmitTimesheet();
     const [submitModalOpen, setSubmitModalOpen] = useState(false);
+    const [timesheetData, setTimesheetData] = useState<ITimesheet | null>(null);
 
-    const [timesheetData] = useState<ITimesheet | null>(() => {
-        // Get timesheet data from sessionStorage
+    // Load timesheet data from sessionStorage after hydration
+    useEffect(() => {
         if (typeof window !== "undefined") {
             const data = sessionStorage.getItem("timesheetData");
             try {
-                return data ? JSON.parse(data) : null;
-            } catch {
-                return null;
+                if (data) {
+                    setTimesheetData(JSON.parse(data));
+                }
+            } catch (error) {
+                console.error("Failed to parse timesheet data:", error);
             }
         }
-        return null;
-    });
+    }, []);
+
+    // Fetch sessions data - use the route ID which is the timesheet ID
+    const timesheetId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+    const { data: sessionsData, isLoading: sessionsLoading } = useFetchTimesheetSessions(
+        timesheetId as string | undefined
+    );
 
     const handleSubmitClick = () => {
         setSubmitModalOpen(true);
@@ -198,23 +207,8 @@ export default function TimesheetDetailPage() {
                     </CardContent>
                 </Card>
 
-                {/* Activity Screenshots Section */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Activity Screenshots</CardTitle>
-                        <p className="text-sm text-muted-foreground mt-2">
-                            Screenshots organized by day for the period:{" "}
-                            {formatDate(timesheetData.startDate)} -{" "}
-                            {formatDate(timesheetData.endDate)}
-                        </p>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-center py-8 text-muted-foreground">
-                            <p>Screenshot data will be fetched and displayed here</p>
-                            <p className="text-sm mt-2">Loading implementation in progress...</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Activity Sessions Section */}
+                <SessionsByDay data={sessionsData} isLoading={sessionsLoading} />
             </div>
 
             <SubmitTimesheetModal
