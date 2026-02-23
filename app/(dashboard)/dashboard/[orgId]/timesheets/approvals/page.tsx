@@ -204,6 +204,7 @@ export default function ViewEditTimesheetsPage() {
     const statusCounts = {
         all: totalResults,
         open: timesheets.filter((t: ITimesheet) => t.status === 'open').length,
+        submitted: timesheets.filter((t: ITimesheet) => t.status === 'submitted').length,
         approved: timesheets.filter((t: ITimesheet) => t.status === 'approved').length,
         rejected: timesheets.filter((t: ITimesheet) => t.status === 'rejected').length,
     };
@@ -266,7 +267,7 @@ export default function ViewEditTimesheetsPage() {
                     <div className="h-full w-full overflow-hidden rounded-lg border bg-card ">
                         {/* Status Filter Buttons */}
                         <div className="flex items-center gap-2 flex-shrink-0 mb-1 justify-end p-2">
-                            {['all', 'open', 'approved', 'rejected'].map((status) => (
+                            {['all', 'open','submitted', 'approved', 'rejected'].map((status) => (
                                 <Button
                                     key={status}
                                     variant={statusFilter === (status === 'all' ? null : status) ? "default" : "outline"}
