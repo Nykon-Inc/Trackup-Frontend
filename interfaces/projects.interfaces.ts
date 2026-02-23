@@ -142,6 +142,8 @@ export interface ProjectMemberProfileResponse {
         totalHoursWorked: number;
         amountEarned: number;
         avgActivityRate: number;
+        totalWorkedThisWeek: number;
+        totalWorkedToday: number;
     };
     rawActivity: {
         aggregatedSessions: GetAggregatedSessionsResponse;

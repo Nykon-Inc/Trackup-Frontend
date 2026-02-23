@@ -30,6 +30,8 @@ export function WorkLimitsTab({
     member: ProjectMember | undefined
     initialValues?: {
         expectedWorkDays: WorkDay[]
+        totalHoursThisWeek: number | null
+        totalHoursToday: number | null
         weeklyLimitHours: number | null
         dailyLimitHours: number | null
         expectedWeeklyHours: number | null
@@ -190,8 +192,8 @@ export function WorkLimitsTab({
                                             Edit limit
                                         </Button>
                                     </div>
-                                    <p className="text-lg font-semibold tabular-nums">27:45 <span className="text-muted-foreground font-normal">/ {weeklyLimit}:00</span></p>
-                                    <Progress value={(27.75 / Number(weeklyLimit || 1)) * 100} className="h-2 [&>div]:bg-foreground" />
+                                    <p className="text-lg font-semibold tabular-nums">{initialValues?.totalHoursThisWeek} <span className="text-muted-foreground font-normal">/ {weeklyLimit}:00</span></p>
+                                    <Progress value={(Number(initialValues?.totalHoursThisWeek || 0) / Number(weeklyLimit || 1)) * 100} className="h-2 [&>div]:bg-foreground" />
                                     <Button variant="link" size="sm" className="h-auto p-0 text-sm text-foreground">
                                         Remove
                                     </Button>
@@ -227,8 +229,8 @@ export function WorkLimitsTab({
                                             Edit limit
                                         </Button>
                                     </div>
-                                    <p className="text-lg font-semibold tabular-nums">5:33 <span className="text-muted-foreground font-normal">/ {dailyLimit}:00</span></p>
-                                    <Progress value={(5.55 / Number(dailyLimit || 1)) * 100} className="h-2 [&>div]:bg-foreground" />
+                                    <p className="text-lg font-semibold tabular-nums">{initialValues?.totalHoursToday} <span className="text-muted-foreground font-normal">/ {dailyLimit}:00</span></p>
+                                    <Progress value={(Number(initialValues?.totalHoursToday || 0) / Number(dailyLimit || 1)) * 100} className="h-2 [&>div]:bg-foreground" />
                                     <Button variant="link" size="sm" className="h-auto p-0 text-sm text-foreground">
                                         Remove
                                     </Button>

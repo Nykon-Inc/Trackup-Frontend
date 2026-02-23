@@ -22,6 +22,8 @@ import {
     FileText,
     Save,
     Check,
+    Sparkles,
+    Info,
 } from "lucide-react"
 import {
     DropdownMenu,
@@ -221,6 +223,53 @@ export function InsightsTab({
                     </div>
                 </CardHeader>
             </Card>
+
+            {sessionsLoading && filteredInsights.length === 0 && (
+                <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                        <Card key={i} className="border border-border/60 rounded-xl overflow-hidden opacity-60">
+                            <div className="p-10 flex justify-between items-center bg-muted/5">
+                                <div className="space-y-2">
+                                    <Skeleton className="h-6 w-48" />
+                                    <Skeleton className="h-3 w-32" />
+                                </div>
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            )}
+
+            {!sessionsLoading && filteredInsights.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-24 px-6 bg-muted/2 rounded-3xl border border-dashed border-border/60 mt-4 relative overflow-hidden group animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="absolute inset-0 bg-linear-to-b from-transparent via-[#D9C8B4]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+                    <div className="relative mb-8">
+                        <div className="absolute -inset-10 bg-[#D9C8B4]/15 rounded-full blur-3xl" />
+                        <div className="relative bg-background border border-border/60 p-6 rounded-[2.5rem] shadow-xl backdrop-blur-sm">
+                            <Sparkles className="h-10 w-10 text-[#D9C8B4]" />
+                        </div>
+                    </div>
+
+                    <div className="relative text-center space-y-3 z-10">
+                        <h3 className="text-xl font-bold text-foreground tracking-tight">No Insights for {format(selectedDate, "MMMM d, yyyy")}</h3>
+                        <p className="text-[15px] text-muted-foreground/80 max-w-[400px] leading-relaxed mx-auto">
+                            {aggregatedSessions.length === 0
+                                ? "There was no activity recorded on this day. Insights will appear here once the expert starts logging work."
+                                : "Activity was recorded, but it was too brief for Tessa to generate meaningful insights yet. Tessa requires significant activity to provide an accurate audit."}
+                        </p>
+                    </div>
+
+                    {aggregatedSessions.length > 0 && (
+                        <div className="mt-10 relative z-10">
+                            <div className="flex items-center gap-2.5 text-xs text-muted-foreground bg-muted/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-border/50 shadow-sm">
+                                <Info className="h-4 w-4 text-[#D9C8B4]" />
+                                <span>Tessa analyzes blocks of active work to provide quality audits.</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {filteredInsights.map((insight, index) => (
                 <Collapsible

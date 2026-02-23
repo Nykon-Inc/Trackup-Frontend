@@ -227,6 +227,8 @@ export default function StaffProfilePage() {
                         <WorkLimitsTab
                             member={member}
                             initialValues={{
+                                totalHoursThisWeek: profileData?.rangeMetrics?.totalWorkedThisWeek ?? null,
+                                totalHoursToday: profileData?.rangeMetrics?.totalWorkedToday ?? null,
                                 expectedWorkDays: (member?.expectedWorkDays || [WorkDay.MON, WorkDay.TUE, WorkDay.WED, WorkDay.THU, WorkDay.FRI]) as WorkDay[],
                                 weeklyLimitHours: member?.weeklyLimitHours ?? null,
                                 dailyLimitHours: member?.dailyLimitHours ?? null,
