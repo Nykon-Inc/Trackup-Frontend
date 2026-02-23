@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import Table, { TableColumn } from "@/components/ui/data-table";
-import { useFetchInternalTimesheets } from "@/services/timesheets";
+import { useFetchOwnerTimesheets, useApproveTimesheet, useRejectTimesheet } from "@/services/timesheets";
 import { Badge } from "@/components/ui/badge";
 import { DebouncedSearch } from "@/components/ui/debounced-search";
 import {
@@ -18,17 +18,14 @@ import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { ITimesheet } from "@/interfaces/timesheet.interfaces";
 import TablePagination from "@/components/ui/table-pagination";
-
-// ✅ NEW IMPORTS
 import { DateRange } from "react-day-picker";
 import { subWeeks } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useWorkspace } from "@/components/providers/workspace-provider";
-import { useSubmitTimesheet } from "@/services/timesheets";
-import { SubmitTimesheetModal } from "../components/SubmitTimesheetModal";
+import { ApprovalActionsModal } from "../components/ApprovalActionsModal";
 import { toast } from "sonner";
 
-export default function ViewEditTimesheetsPage() {
+export default function OwnerTimesheetApprovalsPage() {
     const params = useParams();
     const router = useRouter();
     const { activeOrgId } = useWorkspace();
@@ -38,37 +35,49 @@ export default function ViewEditTimesheetsPage() {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
-    // ✅ Default date range = last 8 weeks
     const today = new Date();
     const [dateRange, setDateRange] = useState<DateRange>({
         from: subWeeks(today, 8),
         to: today,
     });
 
-    const [submitModalOpen, setSubmitModalOpen] = useState(false);
+    const [actionModalOpen, setActionModalOpen] = useState(false);
     const [selectedTimesheet, setSelectedTimesheet] = useState<ITimesheet | null>(null);
-    const submitTimesheetMutation = useSubmitTimesheet();
+    const approveMutation = useApproveTimesheet();
+    const rejectMutation = useRejectTimesheet();
 
-    const handleSubmitClick = (row: ITimesheet) => {
+    const handleApproveClick = (row: ITimesheet) => {
         setSelectedTimesheet(row);
-        setSubmitModalOpen(true);
+        setActionModalOpen(true);
     };
 
-    const handleConfirmSubmit = async () => {
+    const handleApprove = async () => {
         if (selectedTimesheet && "id" in selectedTimesheet) {
             try {
-                await submitTimesheetMutation.mutateAsync((selectedTimesheet as any).id);
-                setSubmitModalOpen(false);
-                setSelectedTimesheet(null);
-                toast.success("Timesheet submitted successfully");
+                await approveMutation.mutateAsync((selectedTimesheet as any).id);
+                toast.success("Timesheet approved successfully");
             } catch (error) {
-                console.error("Failed to submit timesheet:", error);
-                toast.error("Failed to submit timesheet. Please try again.");
+                console.error("Failed to approve timesheet:", error);
+                toast.error("Failed to approve timesheet. Please try again.");
             }
         }
     };
 
-    // ✅ Pass date range to fetch hook
+    const handleReject = async (reason?: string) => {
+        if (selectedTimesheet && "id" in selectedTimesheet) {
+            try {
+                await rejectMutation.mutateAsync({
+                    timesheetId: (selectedTimesheet as any).id,
+                    reason,
+                });
+                toast.success("Timesheet rejected successfully");
+            } catch (error) {
+                console.error("Failed to reject timesheet:", error);
+                toast.error("Failed to reject timesheet. Please try again.");
+            }
+        }
+    };
+
     const fetchParams = {
         search,
         dateFrom: dateRange?.from?.toISOString(),
@@ -79,7 +88,7 @@ export default function ViewEditTimesheetsPage() {
         ...(statusFilter && { status: statusFilter }),
     };
 
-    const { data: timesheetsData, isLoading } = useFetchInternalTimesheets(fetchParams);
+    const { data: timesheetsData, isLoading } = useFetchOwnerTimesheets(fetchParams);
 
     const columns: TableColumn<ITimesheet>[] = [
         { header: "User", key: "user" },
@@ -139,11 +148,6 @@ export default function ViewEditTimesheetsPage() {
             },
         },
         {
-            header: "Approved By",
-            key: "approvedBy",
-            render: (value) => value || "-",
-        },
-        {
             header: "Status",
             key: "status",
             render: (value) => <Badge>{value}</Badge>,
@@ -175,10 +179,12 @@ export default function ViewEditTimesheetsPage() {
                         }}>
                             View
                         </DropdownMenuItem>
-                        {row.status === 'open' && (
-                            <DropdownMenuItem onClick={() => handleSubmitClick(row)}>
-                                Submit
-                            </DropdownMenuItem>
+                        {row.status === 'submitted' && (
+                            <>
+                                <DropdownMenuItem onClick={() => handleApproveClick(row)}>
+                                    Approve/Reject
+                                </DropdownMenuItem>
+                            </>
                         )}
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -187,10 +193,21 @@ export default function ViewEditTimesheetsPage() {
     ];
 
     const response = timesheetsData as any;
-
-    const timesheets = Array.isArray(timesheetsData)
+    const rawTimesheets = Array.isArray(timesheetsData)
         ? timesheetsData
         : response?.results || [];
+
+    // Filter out open timesheets - owners should only see submitted, approved, and rejected
+    const filteredTimesheets = rawTimesheets.filter((t: ITimesheet) => t.status !== 'open');
+
+    // Sort timesheets: submitted on top, then by date
+    const timesheets = [...filteredTimesheets].sort((a: ITimesheet, b: ITimesheet) => {
+        // If one is submitted and the other isn't, submitted comes first
+        if (a.status === 'submitted' && b.status !== 'submitted') return -1;
+        if (a.status !== 'submitted' && b.status === 'submitted') return 1;
+        // Otherwise maintain original order (or sort by date if needed)
+        return 0;
+    });
 
     const totalResults = Array.isArray(timesheetsData)
         ? timesheets.length
@@ -200,10 +217,8 @@ export default function ViewEditTimesheetsPage() {
         ? Math.max(1, Math.ceil(totalResults / rowsPerPage))
         : response?.totalPages ?? Math.max(1, Math.ceil(totalResults / rowsPerPage));
 
-    // Calculate status counts
     const statusCounts = {
         all: totalResults,
-        open: timesheets.filter((t: ITimesheet) => t.status === 'open').length,
         submitted: timesheets.filter((t: ITimesheet) => t.status === 'submitted').length,
         approved: timesheets.filter((t: ITimesheet) => t.status === 'approved').length,
         rejected: timesheets.filter((t: ITimesheet) => t.status === 'rejected').length,
@@ -218,7 +233,7 @@ export default function ViewEditTimesheetsPage() {
     return (
         <div className="flex flex-col h-full min-w-0">
             <PageHeader
-                title="Timesheet Approvals (Member View)"
+                title="Timesheet Approvals (Owner View)"
                 breadcrumbs={[
                     {
                         label: "Dashboard",
@@ -232,14 +247,13 @@ export default function ViewEditTimesheetsPage() {
                     },
                     {
                         label: "Approvals",
-                        href: `/dashboard/${params?.orgId}/timesheets/approvals`,
+                        href: `#`,
                         active: true,
                     },
                 ]}
             />
 
             <div className="flex-1 min-w-0 flex flex-col p-4">
-                {/* Search + Date (fixed within this panel) */}
                 <div className="flex items-center justify-between flex-shrink-0 mb-4">
                     <DebouncedSearch
                         onSearch={(val) => {
@@ -260,14 +274,10 @@ export default function ViewEditTimesheetsPage() {
                     />
                 </div>
 
-
-
-                {/* Table: occupies remaining space and scrolls only inside its border */}
                 <div className="flex-1 min-w-0 mt-4">
-                    <div className="h-full w-full overflow-hidden rounded-lg border bg-card ">
-                        {/* Status Filter Buttons */}
+                    <div className="h-full w-full overflow-hidden rounded-lg border bg-card">
                         <div className="flex items-center gap-2 flex-shrink-0 mb-1 justify-end p-2">
-                            {['all', 'open','submitted', 'approved', 'rejected'].map((status) => (
+                            {['all', 'submitted', 'approved', 'rejected'].map((status) => (
                                 <Button
                                     key={status}
                                     variant={statusFilter === (status === 'all' ? null : status) ? "default" : "outline"}
@@ -282,6 +292,7 @@ export default function ViewEditTimesheetsPage() {
                                 </Button>
                             ))}
                         </div>
+
                         <div className="min-w-full h-full overflow-auto border-t">
                             <div className="min-w-full">
                                 <Table
@@ -303,22 +314,19 @@ export default function ViewEditTimesheetsPage() {
                             setRowsPerPage(Number(e.target.value));
                             setPage(1);
                         }}
-
                         rowsPerPageOptions={[10, 20, 50, 100]}
                         disabled={isLoading}
-                        // rowsPerPageOptions={[10, 20, 50, 100]}
-                        // disabled={isLoading || totalPages <= 1}
                     />
                 </div>
-
             </div>
 
-            <SubmitTimesheetModal
-                open={submitModalOpen}
-                onOpenChange={setSubmitModalOpen}
+            <ApprovalActionsModal
+                open={actionModalOpen}
+                onOpenChange={setActionModalOpen}
                 selectedTimesheet={selectedTimesheet}
-                isLoading={submitTimesheetMutation.isPending}
-                onConfirm={handleConfirmSubmit}
+                isLoading={approveMutation.isPending || rejectMutation.isPending}
+                onApprove={handleApprove}
+                onReject={handleReject}
             />
         </div>
     );
