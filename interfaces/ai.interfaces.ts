@@ -85,3 +85,10 @@ export interface IGetOrgInsightsParams {
     startDate?: string;
     endDate?: string;
 }
+
+export interface IRunUserInsightsBody {
+    userId: string;
+    projectId: string;
+    startTime?: string;
+    endTime?: string;
+}

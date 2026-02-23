@@ -1,11 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import http from "@/services/base";
 import { routes } from "@/services/routes";
 import {
     IStaffHourlyInsight,
     IOrgHourlyInsight,
     IGetStaffInsightsParams,
-    IGetOrgInsightsParams
+    IGetOrgInsightsParams,
+    IRunUserInsightsBody
 } from "@/interfaces/ai.interfaces";
 
 export const useGetStaffInsights = (params: IGetStaffInsightsParams) => {
@@ -33,5 +34,16 @@ export const useGetOrgInsights = (params: IGetOrgInsightsParams) => {
             return data as IOrgHourlyInsight[];
         },
         enabled: !!params.organizationId,
+    });
+};
+
+export const useRunUserInsights = () => {
+    return useMutation({
+        mutationFn: async (body: IRunUserInsightsBody) => {
+            return await http.post({
+                url: routes.ai.runUserInsights,
+                body,
+            });
+        },
     });
 };

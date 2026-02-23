@@ -41,6 +41,8 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { CustomTabs } from "@/components/custom-tabs"
+import { useRunUserInsights } from "@/services/ai.services"
+import { useParams } from "next/navigation"
 
 export function InsightsTab({
     aggregatedSessions,
@@ -57,11 +59,17 @@ export function InsightsTab({
     selectedDate: Date,
     employmentStartDate: string | undefined
 }) {
+    const params = useParams()
+    const id = params?.id as string
+    const staffId = params?.staffId as string
+    const orgId = params?.orgId as string
     const [managerNote, setManagerNote] = useState("")
     const [showRawActivity, setShowRawActivity] = useState(true)
     const [rawActivityView, setRawActivityView] = useState<"screenshots" | "log">("screenshots")
     const [logFilter, setLogFilter] = useState<"all" | "active" | "idle">("all")
     const [selectedInsightId, setSelectedInsightId] = useState<string | "today">("today")
+
+    const { mutate: runInsights, isPending } = useRunUserInsights();
 
     const screenshots = useMemo(() => {
         return aggregatedSessions.flatMap((s) => s.screenshots || []).slice(0, 8)
@@ -219,6 +227,13 @@ export function InsightsTab({
                         <Button size="sm" className="h-8 text-xs gap-1.5">
                             <FileText className="h-3.5 w-3.5" />
                             Reports
+                        </Button>
+                        <Button onClick={() => runInsights({
+                            userId: staffId,
+                            projectId: id,
+                        })} size="sm" className="h-8 text-xs gap-1.5">
+                            <FileText className="h-3.5 w-3.5" />
+                            Run Last Insights
                         </Button>
                     </div>
                 </CardHeader>
@@ -451,9 +466,17 @@ export function InsightsTab({
                                                         </Card>
                                                     ))}
                                                 </div>
-                                            ) : (
+                                            ) : insight.hourlyData.slots.filter(s => {
+                                                const parts = s.time_slot.split(" - ");
+                                                if (parts.length < 2) return true;
+                                                return parts[0].trim() !== parts[1].split(" ")[0].trim();
+                                            }).length > 0 ? (
                                                 <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-                                                    {insight.hourlyData.slots.map((slot, sIdx) => {
+                                                    {insight.hourlyData.slots.filter(s => {
+                                                        const parts = s.time_slot.split(" - ");
+                                                        if (parts.length < 2) return true;
+                                                        return parts[0].trim() !== parts[1].split(" ")[0].trim();
+                                                    }).map((slot, sIdx) => {
                                                         const firstShot = slot.screenshots?.[0]
                                                         const shotCount = slot.screenshots?.length || 0
                                                         const activity = Math.round(slot.overall)
@@ -510,6 +533,16 @@ export function InsightsTab({
                                                         )
                                                     })}
                                                 </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-12 px-4 border border-dashed border-border/60 rounded-xl bg-muted/5">
+                                                    <div className="bg-muted/50 p-3 rounded-full mb-3">
+                                                        <Camera className="h-6 w-6 text-muted-foreground/40" />
+                                                    </div>
+                                                    <h4 className="text-sm font-semibold text-foreground">No screenshots available</h4>
+                                                    <p className="text-xs text-muted-foreground max-w-[200px] text-center mt-1">
+                                                        No visual activity was captured during this time period.
+                                                    </p>
+                                                </div>
                                             )}
                                         </>
                                     )}
@@ -549,7 +582,15 @@ export function InsightsTab({
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <div className="p-6 text-xs text-muted-foreground text-center">No activity logs found.</div>
+                                                <div className="flex flex-col items-center justify-center py-12 px-4 bg-muted/5 rounded-lg border border-dashed border-border/60">
+                                                    <div className="bg-muted/50 p-3 rounded-full mb-3">
+                                                        <AlignLeft className="h-6 w-6 text-muted-foreground/40" />
+                                                    </div>
+                                                    <h4 className="text-sm font-semibold text-foreground">No activity log entries</h4>
+                                                    <p className="text-xs text-muted-foreground max-w-[200px] text-center mt-1">
+                                                        Detailed app and status logs are not available for this window.
+                                                    </p>
+                                                </div>
                                             )}
                                         </div>
                                     )}

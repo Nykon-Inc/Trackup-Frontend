@@ -72,6 +72,7 @@ export const routes = {
     ai: {
         staff: "/client/ai/staff",
         org: "/client/ai/org",
+        runUserInsights: "/client/ai/run-user-insights",
     },
     timesheets: {
         // memberTimesheets: (params?: any) => `/timesheets/member${params ? `?${new URLSearchParams(params)}` : ""}`,
