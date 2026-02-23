@@ -72,5 +72,13 @@ export const routes = {
     ai: {
         staff: "/client/ai/staff",
         org: "/client/ai/org",
-    }
+    },
+    timesheets: {
+        // memberTimesheets: (params?: any) => `/timesheets/member${params ? `?${new URLSearchParams(params)}` : ""}`,
+        internalTimesheets: "/timesheets/member",
+        sessions: (timesheetId: string) => `/timesheets/member/${timesheetId}/sessions`,
+        timesheetDetail: (id: string) => `/internal/timesheets/${id}`,
+        approveTimesheet: (id: string) => `/internal/timesheets/${id}/approve`,
+        rejectTimesheet: (id: string) => `/internal/timesheets/${id}/reject`,
+    },
 }

@@ -7,9 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useState } from "react";
+import { HubstaffIntegrationDialog } from "@/components/settings/hubstaff/hubstaff-modal";
 
 export default function SettingsPage() {
     const params = useParams();
+    const [isHubStaffOpen, setIsHubStaffOpen] = useState(false);
 
     return (
         <div className="flex flex-col h-full w-full">
@@ -41,12 +44,17 @@ export default function SettingsPage() {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link
-                                        href={`/dashboard/${params?.orgId}/settings/integrations/hubstaff`}
-                                        className="flex items-center p-2 px-3 text-xs text-muted-foreground rounded-md font-medium hover:bg-muted hover:text-foreground transition-colors"
+                                    <button
+                                        onClick={() => setIsHubStaffOpen(true)}
+                                        className="flex items-center w-full p-2 px-3 text-xs text-muted-foreground rounded-md font-medium hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                                     >
                                         Hubstaff
-                                    </Link>
+                                    </button>
+                                    <HubstaffIntegrationDialog
+                                        open={isHubStaffOpen}
+                                        onOpenChange={setIsHubStaffOpen}
+                                        orgId={(params?.orgId || "") as string}
+                                    />
                                 </li>
                                 <li>
                                     <Link

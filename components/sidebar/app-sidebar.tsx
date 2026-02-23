@@ -66,9 +66,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 exact: true,
             },
             {
-                title: isMember ? "Timesheets" : "Projects",
-                url: `/dashboard/${activeOrgId}/${isMember ? "timesheets" : "projects"}`,
-                icon: isMember ? Clock : Folder,
+                title: "Timesheets",
+                url: `/dashboard/${activeOrgId}/timesheets`,
+                icon: Clock,
                 items: isMember ? [
                     {
                         title: "View & edit",
@@ -79,8 +79,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         url: `/dashboard/${activeOrgId}/timesheets/approvals`,
                     }
                 ] : [
+                    {
+                        title: "Approvals",
+                        url: `/dashboard/${activeOrgId}/timesheets/owner`,
+                    }
                 ],
             },
+            ...(isMember ? [] : [{
+                title: "Projects",
+                url: `/dashboard/${activeOrgId}/projects`,
+                icon: Folder,
+                items: [],
+            }]),
             {
                 title: isMember ? "Activity" : "Team Members",
                 url: `/dashboard/${activeOrgId}/${isMember ? "activity" : "teams"}`,
