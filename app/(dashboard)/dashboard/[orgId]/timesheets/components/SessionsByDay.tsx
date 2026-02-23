@@ -213,7 +213,7 @@ export const SessionsByDay: React.FC<SessionsByDayProps> = ({ data, isLoading })
                                 <Table
                                     data={daySessions}
                                     columns={columns}
-                                    rowKey={(row) => `${date}-${row.id}`}
+                                    rowKey={(row, index) => row.id ? `${date}-${row.id}` : `${date}-${index}`}
                                 />
                             </div>
                         </div>

@@ -1,7 +1,7 @@
 export interface ITimesheet {
     startDate: Date;
     endDate: Date;
-    status: 'open' | 'approved' | 'rejected';
+    status: 'open' | 'submitted' | 'approved' | 'rejected';
     submittedOn: Date;
     organizationId: string;
 

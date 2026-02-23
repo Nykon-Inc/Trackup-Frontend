@@ -8,17 +8,25 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import { ITimesheet } from "@/interfaces/timesheet.interfaces";
-import { useSubmitTimesheet, useFetchTimesheetSessions } from "@/services/timesheets";
+import { useSubmitTimesheet, useFetchTimesheetSessions, useApproveTimesheet, useRejectTimesheet } from "@/services/timesheets";
 import { toast } from "sonner";
 import { SubmitTimesheetModal } from "../../components/SubmitTimesheetModal";
+import { ApprovalActionsModal } from "../../components/ApprovalActionsModal";
 import { SessionsByDay } from "../../components/SessionsByDay";
+import { useWorkspace } from "@/components/providers/workspace-provider";
 
 export default function TimesheetDetailPage() {
     const params = useParams();
     const router = useRouter();
+    const { activeOrg } = useWorkspace();
     const submitTimesheetMutation = useSubmitTimesheet();
+    const approveMutation = useApproveTimesheet();
+    const rejectMutation = useRejectTimesheet();
     const [submitModalOpen, setSubmitModalOpen] = useState(false);
+    const [approvalModalOpen, setApprovalModalOpen] = useState(false);
     const [timesheetData, setTimesheetData] = useState<ITimesheet | null>(null);
+
+    const isOwner = activeOrg?.role !== "member";
 
     // Load timesheet data from sessionStorage after hydration
     useEffect(() => {
@@ -58,6 +66,41 @@ export default function TimesheetDetailPage() {
         }
     };
 
+    const handleApprovalClick = () => {
+        setApprovalModalOpen(true);
+    };
+
+    const handleApprove = async () => {
+        if (timesheetData && "id" in timesheetData) {
+            try {
+                await approveMutation.mutateAsync((timesheetData as any).id);
+                setApprovalModalOpen(false);
+                toast.success("Timesheet approved successfully");
+                router.back();
+            } catch (error) {
+                console.error("Failed to approve timesheet:", error);
+                toast.error("Failed to approve timesheet. Please try again.");
+            }
+        }
+    };
+
+    const handleReject = async (reason?: string) => {
+        if (timesheetData && "id" in timesheetData) {
+            try {
+                await rejectMutation.mutateAsync({
+                    timesheetId: (timesheetData as any).id,
+                    reason,
+                });
+                setApprovalModalOpen(false);
+                toast.success("Timesheet rejected successfully");
+                router.back();
+            } catch (error) {
+                console.error("Failed to reject timesheet:", error);
+                toast.error("Failed to reject timesheet. Please try again.");
+            }
+        }
+    };
+
     if (!timesheetData) {
         return (
             <div className="flex flex-col h-full min-w-0 p-4">
@@ -87,15 +130,7 @@ export default function TimesheetDetailPage() {
     return (
         <div className="flex flex-col h-full min-w-0">
             <div className="p-4">
-                <Button
-                    variant="ghost"
-                    onClick={() => router.back()}
-                    className="w-fit mb-4"
-                >
-                    <ChevronLeft className="h-4 w-4 mr-2" />
-                    Back to Approvals
-                </Button>
-
+                
                 <PageHeader
                     title="Timesheet Details"
                     breadcrumbs={[
@@ -139,6 +174,11 @@ export default function TimesheetDetailPage() {
                                 {timesheetData.status === "open" && (
                                     <Button onClick={handleSubmitClick} className="bg-blue-600 hover:bg-blue-700">
                                         Submit Timesheet
+                                    </Button>
+                                )}
+                                {isOwner && timesheetData.status === "submitted" && (
+                                    <Button onClick={handleApprovalClick} className="bg-green-600 hover:bg-green-700">
+                                        Approve/Reject
                                     </Button>
                                 )}
                             </div>
@@ -217,6 +257,15 @@ export default function TimesheetDetailPage() {
                 selectedTimesheet={timesheetData}
                 isLoading={submitTimesheetMutation.isPending}
                 onConfirm={handleConfirmSubmit}
+            />
+
+            <ApprovalActionsModal
+                open={approvalModalOpen}
+                onOpenChange={setApprovalModalOpen}
+                selectedTimesheet={timesheetData}
+                isLoading={approveMutation.isPending || rejectMutation.isPending}
+                onApprove={handleApprove}
+                onReject={handleReject}
             />
         </div>
     );

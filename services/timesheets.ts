@@ -43,3 +43,47 @@ export const useFetchTimesheetSessions = (timesheetId: string | undefined) => {
         enabled: !!timesheetId,
     });
 };
+
+export const useApproveTimesheet = () => {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: async (timesheetId: string) => {
+            return await http.post({
+                url: `${routes.timesheets.approveTimesheet(timesheetId)}`,
+                body: {},
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["owner-timesheets"] });
+        },
+    });
+};
+
+export const useRejectTimesheet = () => {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: async (data: { timesheetId: string; reason?: string }) => {
+            return await http.post({
+                url: `${routes.timesheets.rejectTimesheet(data.timesheetId)}`,
+                body: { reason: data.reason },
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["owner-timesheets"] });
+        },
+    });
+};
+
+export const useFetchOwnerTimesheets = (params?: any) => {
+    return useQuery({
+        queryKey: ["owner-timesheets", params],
+        queryFn: async () => {
+            return await http.get({
+                url: "/timesheets/owner",
+                query: params,
+            });
+        },
+    });
+};
