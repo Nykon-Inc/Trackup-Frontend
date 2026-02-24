@@ -21,7 +21,7 @@ interface MetricCardProps {
 
 export function MetricCard({ title, value, trend, trendPositive, chart, onRemove }: MetricCardProps) {
     return (
-        <Card className="rounded-md border shadow-sm relative overflow-hidden p-1 gap-0">
+        <Card className="rounded-md border shadow-sm relative overflow-hidden p-0 gap-0">
             <CardHeader className="p-3 pb-1 flex flex-row items-center justify-between space-y-0">
                 <div className="flex items-center gap-1">
                     <CardTitle className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">{title}</CardTitle>
