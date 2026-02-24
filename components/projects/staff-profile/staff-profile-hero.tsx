@@ -60,7 +60,7 @@ export function StaffProfileHero({
                         <Pencil className="h-3.5 w-3.5" />
                         Edit Info
                     </Button>
-                    <Button
+                    {/* <Button
                         variant="outline"
                         size="sm"
                         className="h-9 text-xs gap-1.5"
@@ -79,7 +79,7 @@ export function StaffProfileHero({
                     >
                         <Download className="h-3.5 w-3.5" />
                         Export
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
 

@@ -100,9 +100,9 @@ export function OverviewTab({
                                 <CardTitle className="text-sm font-semibold">Work & Earnings</CardTitle>
                                 <p className="text-xs text-muted-foreground mt-0.5">Summary for the selected date range</p>
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
+                            {/* <div className="flex items-center gap-2 flex-wrap">
                                 <DatePickerWithRange date={date} setDate={setDate} />
-                            </div>
+                            </div> */}
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -131,7 +131,7 @@ export function OverviewTab({
                                 <CardTitle className="text-sm font-semibold">Project Assignments</CardTitle>
                                 <p className="text-xs text-muted-foreground mt-0.5">Manage project assignments for this team member</p>
                             </div>
-                            <Button
+                            {/* <Button
                                 variant="outline"
                                 size="sm"
                                 className="h-8 text-xs gap-1.5"
@@ -139,7 +139,7 @@ export function OverviewTab({
                             >
                                 <FolderKanban className="h-3.5 w-3.5" />
                                 Assign to Project
-                            </Button>
+                            </Button> */}
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
