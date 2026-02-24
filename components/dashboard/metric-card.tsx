@@ -28,7 +28,7 @@ export function MetricCard({ title, value, trend, trendPositive, chart, onRemove
                     <Info className="h-2.5 w-2.5 text-muted-foreground/50" />
                 </div>
                 <div>
-                    <DropdownMenu>
+                    {onRemove && <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-6 w-6 p-0 hover:bg-transparent">
                                 <MoreVertical className="h-3.5 w-3.5 text-muted-foreground cursor-pointer opacity-50 hover:opacity-100" />
@@ -39,7 +39,7 @@ export function MetricCard({ title, value, trend, trendPositive, chart, onRemove
                                 Hide Widget
                             </DropdownMenuItem>
                         </DropdownMenuContent>
-                    </DropdownMenu>
+                    </DropdownMenu>}
                 </div>
             </CardHeader>
             <CardContent className="p-3 pt-0">
