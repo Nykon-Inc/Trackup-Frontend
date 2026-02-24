@@ -53,8 +53,8 @@ export default function ActivityPage() {
         }
     });
 
-    const members = (membersData as any)?.results || [];
-    const projects = (projectsData as any)?.results || [];
+    const members = ((membersData as any)?.results || []).filter((m: OrganizationMember) => m.role === OrganizationMemberRole.MEMBER);
+    const projects = ((projectsData as any)?.results || []);
     const selectedMember = members.find((m: OrganizationMember) => m.userId === userIdFromUrl) || null;
     const selectedProject = projects.find((p: any) => p.id === projectIdFromUrl) || null;
 
