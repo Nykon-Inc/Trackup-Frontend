@@ -21,7 +21,7 @@ import TablePagination from "@/components/ui/table-pagination";
 
 // ✅ NEW IMPORTS
 import { DateRange } from "react-day-picker";
-import { subWeeks } from "date-fns";
+import { subWeeks, format } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useWorkspace } from "@/components/providers/workspace-provider";
 import { useSubmitTimesheet } from "@/services/timesheets";
@@ -71,8 +71,8 @@ export default function ViewEditTimesheetsPage() {
     // ✅ Pass date range to fetch hook
     const fetchParams = {
         search,
-        dateFrom: dateRange?.from?.toISOString(),
-        dateTo: dateRange?.to?.toISOString(),
+        dateFrom: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") + "T00:00:00.000Z" : undefined,
+        dateTo: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") + "T23:59:59.999Z" : undefined,
         page,
         limit: rowsPerPage,
         orgId: activeOrgId,
@@ -240,7 +240,7 @@ export default function ViewEditTimesheetsPage() {
 
             <div className="flex-1 min-w-0 flex flex-col p-4">
                 {/* Search + Date (fixed within this panel) */}
-                <div className="flex items-center justify-between flex-shrink-0 mb-4">
+                <div className="flex items-center justify-between shrink-0 mb-4">
                     <DebouncedSearch
                         onSearch={(val) => {
                             setSearch(val);
@@ -266,8 +266,8 @@ export default function ViewEditTimesheetsPage() {
                 <div className="flex-1 min-w-0 mt-4">
                     <div className="h-full w-full overflow-hidden rounded-lg border bg-card ">
                         {/* Status Filter Buttons */}
-                        <div className="flex items-center gap-2 flex-shrink-0 mb-1 justify-end p-2">
-                            {['all', 'open','submitted', 'approved', 'rejected'].map((status) => (
+                        <div className="flex items-center gap-2 shrink-0 mb-1 justify-end p-2">
+                            {['all', 'open', 'submitted', 'approved', 'rejected'].map((status) => (
                                 <Button
                                     key={status}
                                     variant={statusFilter === (status === 'all' ? null : status) ? "default" : "outline"}
@@ -306,8 +306,8 @@ export default function ViewEditTimesheetsPage() {
 
                         rowsPerPageOptions={[10, 20, 50, 100]}
                         disabled={isLoading}
-                        // rowsPerPageOptions={[10, 20, 50, 100]}
-                        // disabled={isLoading || totalPages <= 1}
+                    // rowsPerPageOptions={[10, 20, 50, 100]}
+                    // disabled={isLoading || totalPages <= 1}
                     />
                 </div>
 

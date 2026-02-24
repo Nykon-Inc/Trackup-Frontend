@@ -64,12 +64,12 @@ export default function ActivityPage() {
 
     const { data, isLoading: sessionsLoading } = useGetAggregatedSessions({
         userId: effectiveUserId,
-        startDate: startOfDay(date).toISOString(),
-        endDate: endOfDay(date).toISOString(),
+        startDate: format(date, "yyyy-MM-dd") + "T00:00:00.000Z",
+        endDate: format(date, "yyyy-MM-dd") + "T23:59:59.999Z",
         projectId: projectIdFromUrl || undefined
     })
 
-    const aggregated = data?.[0];
+    const aggregated = data?.at(-1);
     const rawBreakdown = aggregated?.breakdown || [];
     const screenshots = aggregated?.screenshots || [];
 
@@ -122,7 +122,7 @@ export default function ActivityPage() {
             />
 
             {/* Custom Toolbar based on image */}
-            <div className="border-b px-4 py-3 flex items-center justify-between gap-4 sticky top-12 z-20 bg-white">
+            <div className="border-b px-4 py-3 flex items-center justify-between gap-4 sticky top-12 z-20 bg-white shrink-0">
                 <div className="flex items-center gap-2">
                     <div className="flex items-center border rounded-md overflow-hidden bg-white">
                         <Button variant="ghost" size="icon" className="h-9 w-9 border-r rounded-none" onClick={handlePrevDay}>
@@ -138,6 +138,7 @@ export default function ActivityPage() {
                             selected={date}
                             onSelect={(d) => d && setDate(d)}
                             classname="h-9 text-sm"
+                            maxDate={new Date()}
                         />
                     </div>
 
