@@ -96,7 +96,7 @@ export const useGetInternalProject = (projectId: string) => {
     });
 };
 
-export const useGetProjects = (payload: { organizationId: string, userId: string, query?: Record<string, any> }) => {
+export const useGetProjects = (payload: { organizationId: string, userId: string, query?: Record<string, unknown> }) => {
     return useQuery({
         queryKey: ["projects", payload.organizationId, payload.userId, payload.query],
         queryFn: async () => {
@@ -244,6 +244,49 @@ export const useUpdateProjectMemberProfile = () => {
             queryClient.invalidateQueries({ queryKey: ["project-members", payload.projectId] });
             queryClient.invalidateQueries({ queryKey: ["project", payload.projectId] });
             queryClient.invalidateQueries({ queryKey: ["project-stats", payload.organizationId, payload.projectId] });
+        },
+    });
+};
+
+export const useAssignProjectMember = () => {
+    return useMutation({
+        mutationFn: async (payload: {
+            organizationId: string;
+            projectId: string;
+            userId: string;
+            role?: "manager" | "member" | "viewer";
+        }) => {
+            return await http.post({
+                url: `${routes.organization.index}/${payload.organizationId}/projects/${payload.projectId}/members`,
+                body: {
+                    userId: payload.userId,
+                    role: payload.role,
+                },
+            });
+        },
+        onSuccess: (_, payload) => {
+            queryClient.invalidateQueries({ queryKey: ["organization-member"] });
+            queryClient.invalidateQueries({ queryKey: ["project-member-profile"] });
+            queryClient.invalidateQueries({ queryKey: ["project-members", payload.projectId] });
+        },
+    });
+};
+
+export const useUnassignProjectMember = () => {
+    return useMutation({
+        mutationFn: async (payload: {
+            organizationId: string;
+            projectId: string;
+            userId: string;
+        }) => {
+            return await http.delete({
+                url: `${routes.organization.index}/${payload.organizationId}/projects/${payload.projectId}/members/${payload.userId}`,
+            });
+        },
+        onSuccess: (_, payload) => {
+            queryClient.invalidateQueries({ queryKey: ["organization-member"] });
+            queryClient.invalidateQueries({ queryKey: ["project-member-profile"] });
+            queryClient.invalidateQueries({ queryKey: ["project-members", payload.projectId] });
         },
     });
 };

@@ -16,15 +16,29 @@ import { InsightsTab } from "@/components/projects/staff-profile/tabs/insights-t
 import { WorkLimitsTab } from "@/components/projects/staff-profile/tabs/work-limits-tab"
 import { EditStaffInfoModal } from "@/components/projects/staff-profile/modals/edit-staff-info-modal"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { CustomTabs } from "@/components/custom-tabs"
 import { useWorkspace } from "@/components/providers/workspace-provider"
 import { useGetOrganizationMember } from "@/services/organization.services"
-import { useUpdateProjectMemberProfile } from "@/services/projects.services"
+import { useAssignProjectMember, useGetProjects, useUnassignProjectMember, useUpdateProjectMemberProfile } from "@/services/projects.services"
 import { IStaffHourlyInsight } from "@/interfaces/ai.interfaces"
 import { ProjectMemberProfileResponse, ProjectMemberRole, WorkDay } from "@/interfaces/projects.interfaces"
 
 type SubTab = "overview" | "insights" | "work-limits"
+
+type AssignmentLike = {
+    id?: string
+    projectId?: string
+    name?: string
+    role?: string
+    projectRole?: string
+    project?: {
+        id?: string
+        name?: string
+    }
+}
 
 const SUB_TABS: { value: SubTab; label: string }[] = [
     { value: "overview", label: "Overview" },
@@ -55,10 +69,23 @@ export default function TeamStaffProfilePage() {
         to: new Date(),
     })
     const [editInfoOpen, setEditInfoOpen] = useState(false)
+    const [assignOpen, setAssignOpen] = useState(false)
+    const [assignProjectId, setAssignProjectId] = useState("")
+    const [assignRole, setAssignRole] = useState<ProjectMemberRole>(ProjectMemberRole.MEMBER)
+    const [removingProjectId, setRemovingProjectId] = useState<string | null>(null)
 
-    const { data: organizationMember, isLoading: isLoadingMember } = useGetOrganizationMember({
+    const { data: organizationMember, isLoading: isLoadingMember, refetch: refetchOrganizationMember } = useGetOrganizationMember({
         organizationId,
         memberId,
+    })
+
+    const { data: projectsData } = useGetProjects({
+        organizationId,
+        userId: staffId,
+        query: {
+            limit: 100,
+            page: 1,
+        },
     })
 
     const rawAssignments = useMemo(() => {
@@ -68,10 +95,11 @@ export default function TeamStaffProfilePage() {
 
     const assignments = useMemo(() => {
         return rawAssignments
-            .map((item: any) => {
-                const id = item?.id || item?.projectId || item?.project?.id
-                const name = item?.name || item?.project?.name || "Unnamed Project"
-                const role = item?.role || item?.projectRole || "member"
+            .map((item) => {
+                const assignment = item as AssignmentLike
+                const id = assignment?.id || assignment?.projectId || assignment?.project?.id
+                const name = assignment?.name || assignment?.project?.name || "Unnamed Project"
+                const role = assignment?.role || assignment?.projectRole || "member"
                 return id ? { id: String(id), name: String(name), role: String(role) } : null
             })
             .filter(Boolean) as Array<{ id: string; name: string; role?: string }>
@@ -187,12 +215,68 @@ export default function TeamStaffProfilePage() {
     const member = activeProfileData?.member
     const staffName = member?.user?.name || organizationMember?.user?.name || "Staff Member"
     const staffRole = member?.jobTitle || member?.role || organizationMember?.role || "Member"
-    const staffAvatar = member?.user?.avatar || organizationMember?.user?.avatar
+    const staffAvatar = member?.user?.avatar ?? organizationMember?.user?.avatar ?? undefined
 
     const isProfilesLoading = profileQueries.some((query) => query.isLoading)
     const isInsightsLoading = insightsQueries.some((query) => query.isLoading)
 
     const { mutateAsync: updateProfile, isPending: isSavingProfile } = useUpdateProjectMemberProfile()
+    const { mutateAsync: assignProjectMember, isPending: isAssigningProject } = useAssignProjectMember()
+    const { mutateAsync: unassignProjectMember } = useUnassignProjectMember()
+
+    const availableProjects = useMemo(() => {
+        const list = projectsData?.results || []
+        const assignedIds = new Set(assignments.map((item) => item.id))
+
+        return list
+            .map((item) => ({ id: item.id, name: item.name }))
+            .filter((item) => !assignedIds.has(item.id))
+    }, [projectsData, assignments])
+
+    const handleOpenAssign = () => {
+        if (!availableProjects.length) {
+            toast.message("No available projects to assign")
+            return
+        }
+
+        setAssignProjectId(availableProjects[0]?.id || "")
+        setAssignRole(ProjectMemberRole.MEMBER)
+        setAssignOpen(true)
+    }
+
+    const handleAssignProject = async () => {
+        if (!assignProjectId) {
+            toast.error("Select a project")
+            return
+        }
+
+        await assignProjectMember({
+            organizationId,
+            projectId: assignProjectId,
+            userId: staffId,
+            role: assignRole as "manager" | "member" | "viewer",
+        })
+
+        setAssignOpen(false)
+        await refetchOrganizationMember()
+        toast.success("Project assigned")
+    }
+
+    const handleRemoveProject = async (projectId: string) => {
+        setRemovingProjectId(projectId)
+
+        try {
+            await unassignProjectMember({
+                organizationId,
+                projectId,
+                userId: staffId,
+            })
+            await refetchOrganizationMember()
+            toast.success("Removed from project")
+        } finally {
+            setRemovingProjectId(null)
+        }
+    }
 
     if (isLoadingMember || (assignments.length > 0 && isProfilesLoading)) {
         return (
@@ -267,7 +351,9 @@ export default function TeamStaffProfilePage() {
 
             <div className="flex flex-col flex-1 px-6 pt-3 pb-6 overflow-auto">
                 <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
-                    <CustomTabs persistInRoute tabs={SUB_TABS} defaultValue={activeSubTab} />
+
+                    {/* <CustomTabs persistInRoute tabs={SUB_TABS} defaultValue={activeSubTab} /> */}
+
                     <div className="flex items-center gap-2">
                         <Label htmlFor="project-filter" className="text-xs text-muted-foreground whitespace-nowrap">Project</Label>
                         <select
@@ -304,10 +390,14 @@ export default function TeamStaffProfilePage() {
                             projects={assignments}
                             employmentStartDate={activeProfileData?.employment?.startDate || undefined}
                             employmentBirthday={activeProfileData?.employment?.birthday || undefined}
+                            canManageAssignments
+                            onAssignProject={handleOpenAssign}
+                            onRemoveProject={async (projectId) => handleRemoveProject(projectId)}
+                            removingProjectId={removingProjectId}
                         />
                     )}
 
-                    {activeSubTab === "insights" && (
+                    {/* {activeSubTab === "insights" && (
                         <InsightsTab
                             aggregatedSessions={activeProfileData?.rawActivity?.aggregatedSessions || []}
                             insightsData={selectedInsights}
@@ -351,9 +441,61 @@ export default function TeamStaffProfilePage() {
                                 </CardContent>
                             </Card>
                         )
-                    )}
+                    )} */}
                 </div>
             </div>
+
+            <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Assign to project</DialogTitle>
+                        <DialogDescription>
+                            Add this team member to a project and set their role.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="assign-project">Project</Label>
+                            <select
+                                id="assign-project"
+                                className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
+                                value={assignProjectId}
+                                onChange={(event) => setAssignProjectId(event.target.value)}
+                            >
+                                {availableProjects.map((project) => (
+                                    <option key={project.id} value={project.id}>
+                                        {project.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="assign-role">Role</Label>
+                            <select
+                                id="assign-role"
+                                className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
+                                value={assignRole}
+                                onChange={(event) => setAssignRole(event.target.value as ProjectMemberRole)}
+                            >
+                                <option value={ProjectMemberRole.MEMBER}>Member</option>
+                                <option value={ProjectMemberRole.MANAGER}>Manager</option>
+                                <option value={ProjectMemberRole.VIEWER}>Viewer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setAssignOpen(false)} disabled={isAssigningProject}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleAssignProject} loading={isAssigningProject}>
+                            Assign
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

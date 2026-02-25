@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Search, Settings2, Calendar as LucideCalendar, Filter } from "lucide-react";
+import { MoreHorizontal, Search } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { AddOrganizationMember } from "./create-organization-member-dialog";
 import { BulkAddOrganizationMember } from "./bulk-create-organization-members";
@@ -22,12 +22,27 @@ import { PageHeader } from "@/components/page-header";
 import { useWorkspace } from "@/components/providers/workspace-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
-import { Mail, Clock } from "lucide-react";
-import { useGetOrganizationMembers, useGetOrganizationInvitations, useUpdateOrganizationMember } from "@/services/organization.services";
-import { Account } from "@/interfaces/auth.interfaces";
+import { Mail } from "lucide-react";
+import {
+    useGetOrganizationMembers,
+    useGetOrganizationInvitations,
+    useRemoveOrganizationInvitation,
+    useResendOrganizationInvitation,
+    useUpdateOrganizationInvitation,
+    useUpdateOrganizationMember,
+} from "@/services/organization.services";
 import { OrganizationMember, OrganizationInvitation } from "@/interfaces/organizations.interfaces";
 import { useAuthStore } from "@/stores/auth.store";
 import { EditTeamMemberDialog } from "@/components/forms/teams/edit-team-member-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 interface UnifiedMember {
     id: string;
@@ -44,6 +59,7 @@ interface UnifiedMember {
         role: string;
     }>;
     isInvitation: boolean;
+    invitationToken?: string;
     userId?: string;
     startDate?: string | null;
     birthday?: string | null;
@@ -53,6 +69,8 @@ interface UnifiedMember {
 interface EditableMember {
     id: string;
     memberId: string;
+    invitationToken?: string;
+    isInvitation?: boolean;
     name: string;
     email: string;
     role: string;
@@ -68,17 +86,51 @@ export default function TeamsPage() {
     const [rowsPerPage, setRowsPerPage] = useState(20);
     const [showPending, setShowPending] = useState(false);
     const [editingMember, setEditingMember] = useState<EditableMember | null>(null);
+    const [resendInviteTarget, setResendInviteTarget] = useState<{ token: string; email: string } | null>(null)
+    const [removeInviteTarget, setRemoveInviteTarget] = useState<{ token: string; email: string } | null>(null)
     const { account } = useAuthStore();
     const { mutateAsync: updateOrganizationMember } = useUpdateOrganizationMember();
+    const { mutateAsync: updateOrganizationInvitation } = useUpdateOrganizationInvitation();
+    const { mutateAsync: resendOrganizationInvitation, isPending: isResendingInvitation } = useResendOrganizationInvitation();
+    const { mutateAsync: removeOrganizationInvitation, isPending: isRemovingInvitation } = useRemoveOrganizationInvitation();
+
+    const handleConfirmResendInvite = async () => {
+        if (!activeOrgId || !resendInviteTarget?.token) return
+
+        try {
+            await resendOrganizationInvitation({
+                organizationId: activeOrgId,
+                invitationToken: resendInviteTarget.token,
+            })
+            await refetchInvitations()
+            toast.success("Invitation resent")
+            setResendInviteTarget(null)
+        } catch (error: unknown) {
+            const apiError = error as { response?: { data?: { message?: string } } }
+            toast.error(apiError?.response?.data?.message || "Failed to resend invitation")
+        }
+    }
+
+    const handleConfirmRemoveInvite = async () => {
+        if (!activeOrgId || !removeInviteTarget?.token) return
+
+        try {
+            await removeOrganizationInvitation({
+                organizationId: activeOrgId,
+                invitationToken: removeInviteTarget.token,
+            })
+            await refetchInvitations()
+            toast.success("Invitation removed")
+            setRemoveInviteTarget(null)
+        } catch (error: unknown) {
+            const apiError = error as { response?: { data?: { message?: string } } }
+            toast.error(apiError?.response?.data?.message || "Failed to remove invitation")
+        }
+    }
 
     const debouncedSearch = useDebounce(search, 500);
 
     const { activeOrgId } = useWorkspace();
-
-    // Reset page when search or toggle changes
-    useEffect(() => {
-        setPage(1);
-    }, [debouncedSearch, showPending]);
 
     const { data: membersData, isLoading: isLoadingMembers, refetch: refetchMembers } = useGetOrganizationMembers({
         organizationId: activeOrgId || "",
@@ -103,12 +155,15 @@ export default function TeamsPage() {
 
     const members: UnifiedMember[] = showPending
         ? (invitationsData?.results || []).map((inv: OrganizationInvitation) => ({
-            id: inv.token,
+            id: inv.id || inv.token,
             name: inv.email.split('@')[0],
             email: inv.email,
             role: inv.role,
             status: inv.status,
             isInvitation: true,
+            invitationToken: inv.token,
+            startDate: inv.startDate ? new Date(inv.startDate).toISOString() : null,
+            birthday: inv.birthday ? new Date(inv.birthday).toISOString() : null,
             payRate: inv.hourlyRate || 0,
             hours: 0,
             earnings: 0,
@@ -123,12 +178,12 @@ export default function TeamsPage() {
             status: m.status,
             isInvitation: false,
             userId: m.userId,
-            payRate: (m as any).hourlyRate || 0,
-            startDate: (m as any).startDate || null,
-            birthday: (m as any).birthday || null,
-            hours: (m as any).hours || 0,
-            earnings: (m as any).earnings || 0,
-            projects: (m as any).projects || [],
+            payRate: m.hourlyRate || 0,
+            startDate: m.startDate || null,
+            birthday: m.birthday || null,
+            hours: 0,
+            earnings: 0,
+            projects: m.projects || [],
             createdAt: m.createdAt
         }));
 
@@ -286,10 +341,54 @@ export default function TeamsPage() {
                                     View details
                                 </DropdownMenuItem>
                             )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive focus:text-destructive">
-                                Remove member
-                            </DropdownMenuItem>
+                            {member.isInvitation ? (
+                                <>
+                                    <DropdownMenuItem
+                                        onClick={() => {
+                                            if (!member.invitationToken) return;
+                                            setEditingMember({
+                                                id: member.id,
+                                                invitationToken: member.invitationToken,
+                                                memberId: member.id,
+                                                isInvitation: true,
+                                                name: member.name,
+                                                email: member.email,
+                                                role: member.role,
+                                                payRate: member.payRate,
+                                                startDate: member.startDate,
+                                                birthday: member.birthday,
+                                            });
+                                        }}
+                                    >
+                                        Edit invite
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={async () => {
+                                            if (!member.invitationToken) return
+                                            setResendInviteTarget({ token: member.invitationToken, email: member.email })
+                                        }}
+                                    >
+                                        Resend invite
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive"
+                                        onClick={async () => {
+                                            if (!member.invitationToken) return
+                                            setRemoveInviteTarget({ token: member.invitationToken, email: member.email })
+                                        }}
+                                    >
+                                        Remove invite
+                                    </DropdownMenuItem>
+                                </>
+                            ) : (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                                        Remove member
+                                    </DropdownMenuItem>
+                                </>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -324,7 +423,10 @@ export default function TeamsPage() {
                         <Input
                             placeholder="Search by name, role, email..."
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => {
+                                setSearch(e.target.value)
+                                setPage(1)
+                            }}
                             className="h-10 pl-10 bg-white border-slate-200"
                         />
                     </div>
@@ -339,7 +441,10 @@ export default function TeamsPage() {
                             </div>
                             <Switch
                                 checked={showPending}
-                                onCheckedChange={setShowPending}
+                                onCheckedChange={(checked) => {
+                                    setShowPending(checked)
+                                    setPage(1)
+                                }}
                             />
                         </div>
                     </div>
@@ -392,7 +497,7 @@ export default function TeamsPage() {
                     }
                 }}
                 user={editingMember}
-                title="Edit Team Member"
+                title={editingMember?.isInvitation ? "Edit Invitation" : "Edit Team Member"}
                 showExtendedFields
                 roleOptions={[
                     { id: "manager", label: "Manager" },
@@ -401,12 +506,25 @@ export default function TeamsPage() {
                 onSubmit={async (values) => {
                     if (!activeOrgId || !values.memberId) return;
 
+                    if (editingMember?.isInvitation && editingMember.invitationToken) {
+                        await updateOrganizationInvitation({
+                            organizationId: activeOrgId,
+                            invitationToken: editingMember.invitationToken,
+                            body: {
+                                role: values.role,
+                                payRate: values.payRate,
+                                startDate: values.startDate,
+                                birthday: values.birthday,
+                            },
+                        });
+                        return;
+                    }
+
                     await updateOrganizationMember({
                         organizationId: activeOrgId,
                         memberId: values.memberId,
                         body: {
                             name: values.name,
-                            email: values.email,
                             role: values.role,
                             hourlyRate: values.payRate,
                             startDate: values.startDate,
@@ -418,6 +536,44 @@ export default function TeamsPage() {
                     await Promise.all([refetchMembers(), refetchInvitations()]);
                 }}
             />
+
+            <Dialog open={!!resendInviteTarget} onOpenChange={(open) => !open && setResendInviteTarget(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Resend invitation?</DialogTitle>
+                        <DialogDescription>
+                            This will resend the invite email to `{resendInviteTarget?.email}`.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setResendInviteTarget(null)} disabled={isResendingInvitation}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleConfirmResendInvite} loading={isResendingInvitation}>
+                            Resend invite
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!removeInviteTarget} onOpenChange={(open) => !open && setRemoveInviteTarget(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Remove invitation?</DialogTitle>
+                        <DialogDescription>
+                            This will remove the pending invite for `{removeInviteTarget?.email}`.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setRemoveInviteTarget(null)} disabled={isRemovingInvitation}>
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={handleConfirmRemoveInvite} loading={isRemovingInvitation}>
+                            Remove invite
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

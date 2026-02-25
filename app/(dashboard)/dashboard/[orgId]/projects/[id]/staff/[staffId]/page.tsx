@@ -211,6 +211,7 @@ export default function StaffProfilePage() {
                             project={project}
                             employmentStartDate={profileData?.employment?.startDate || undefined}
                             employmentBirthday={profileData?.employment?.birthday || undefined}
+                            canManageAssignments={false}
                         />
                     )}
                     {activeSubTab === 'insights' && (

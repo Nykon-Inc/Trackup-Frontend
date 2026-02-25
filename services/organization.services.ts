@@ -27,7 +27,7 @@ export const useGetMyOrganizations = (key?: string) => {
 
 export const useCreateInternalOrganization = () => {
     return useMutation({
-        mutationFn: async (payload: any) => {
+        mutationFn: async (payload: Record<string, unknown>) => {
             const data = await http.post({
                 url: routes.organization.internalCreate,
                 body: payload,
@@ -320,7 +320,10 @@ export const useGetOrganizationMember = (payload: { organizationId: string; memb
             const data = await http.get({
                 url: routes.organization.member(payload.organizationId, payload.memberId),
             });
-            return data as any;
+            return data as OrganizationMember & {
+                projects?: { id: string; name: string; role?: string }[];
+                member?: { projects?: { id: string; name: string; role?: string }[] };
+            };
         },
         enabled: !!payload.organizationId && !!payload.memberId,
     });
@@ -348,6 +351,59 @@ export const useUpdateOrganizationMember = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["organization-members"] });
+            queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
+        },
+    });
+};
+
+export const useUpdateOrganizationInvitation = () => {
+    return useMutation({
+        mutationFn: async (payload: {
+            organizationId: string;
+            invitationToken: string;
+            body: {
+                role?: string;
+                payRate?: number;
+                startDate?: string | null;
+                birthday?: string | null;
+            };
+        }) => {
+            const data = await http.patch({
+                url: routes.organization.invitation(payload.organizationId, payload.invitationToken),
+                body: payload.body,
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
+        },
+    });
+};
+
+export const useResendOrganizationInvitation = () => {
+    return useMutation({
+        mutationFn: async (payload: { organizationId: string; invitationToken: string }) => {
+            const data = await http.post({
+                url: routes.organization.resendInvitationByToken(payload.organizationId, payload.invitationToken),
+                body: {},
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
+        },
+    });
+};
+
+export const useRemoveOrganizationInvitation = () => {
+    return useMutation({
+        mutationFn: async (payload: { organizationId: string; invitationToken: string }) => {
+            const data = await http.delete({
+                url: routes.organization.invitation(payload.organizationId, payload.invitationToken),
+            });
+            return data;
+        },
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
         },
     });
