@@ -1,4 +1,3 @@
-// pto-file-upload.tsx
 import { UploadIcon, XIcon } from 'lucide-react';
 import { useRef } from 'react';
 
