@@ -71,7 +71,7 @@ export function DailyBreakdown({ days, excludeWeekends, excludeHolidays, totalSe
                                         <Input
                                             type="number"
                                             min={0}
-                                            step={0.5}
+                                            step={1}
                                             value={day.hours}
                                             onChange={(e) => onHoursChange(index, parseFloat(e.target.value) || 0)}
                                             className="w-20 h-8 text-sm"
