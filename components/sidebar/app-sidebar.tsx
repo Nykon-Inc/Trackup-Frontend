@@ -91,11 +91,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 icon: Folder,
                 items: [],
             }]),
+            ...(isMember ? [] : [{
+                title: "Team Members",
+                url: `/dashboard/${activeOrgId}/teams`,
+                icon: Users,
+                items: [],
+            }]),
             {
-                title: isMember ? "Activity" : "Team Members",
-                url: `/dashboard/${activeOrgId}/${isMember ? "activity" : "teams"}`,
-                icon: isMember ? Activity : Users,
-                items: isMember ? [
+                title: "Activity",
+                url: `/dashboard/${activeOrgId}/activity`,
+                icon: Activity,
+                items: [
                     {
                         title: "Activity",
                         url: `/dashboard/${activeOrgId}/activity`,
@@ -108,7 +114,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         title: "Apps & URLs",
                         url: `/dashboard/${activeOrgId}/apps-urls`,
                     },
-                ] : [
                 ],
             },
             {

@@ -5,11 +5,16 @@ export interface IPTOPolicy {
     effectiveDate: string;
     description: string;
     enabled: boolean;
+    projectIds: string[];
 }
 
 export interface IPTORequest {
     id: string;
     policyId: {
+        id: string;
+        name: string;
+    };
+    projectId: {
         id: string;
         name: string;
     };
@@ -23,6 +28,7 @@ export interface IPTORequest {
         name: string;
         email: string;
     }
+    totalHours: number;
 }
 
 export interface IPTORequestPayload {

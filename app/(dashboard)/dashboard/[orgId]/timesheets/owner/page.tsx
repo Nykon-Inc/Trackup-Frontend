@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { ITimesheet } from "@/interfaces/timesheet.interfaces";
 import TablePagination from "@/components/ui/table-pagination";
 import { DateRange } from "react-day-picker";
-import { subWeeks } from "date-fns";
+import { subWeeks, format } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useWorkspace } from "@/components/providers/workspace-provider";
 import { ApprovalActionsModal } from "../components/ApprovalActionsModal";
@@ -80,8 +80,8 @@ export default function OwnerTimesheetApprovalsPage() {
 
     const fetchParams = {
         search,
-        dateFrom: dateRange?.from?.toISOString(),
-        dateTo: dateRange?.to?.toISOString(),
+        dateFrom: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") + "T00:00:00.000Z" : undefined,
+        dateTo: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") + "T23:59:59.999Z" : undefined,
         page,
         limit: rowsPerPage,
         orgId: activeOrgId,
@@ -254,7 +254,7 @@ export default function OwnerTimesheetApprovalsPage() {
             />
 
             <div className="flex-1 min-w-0 flex flex-col p-4">
-                <div className="flex items-center justify-between flex-shrink-0 mb-4">
+                <div className="flex items-center justify-between shrink-0 mb-4">
                     <DebouncedSearch
                         onSearch={(val) => {
                             setSearch(val);
@@ -276,7 +276,7 @@ export default function OwnerTimesheetApprovalsPage() {
 
                 <div className="flex-1 min-w-0 mt-4">
                     <div className="h-full w-full overflow-hidden rounded-lg border bg-card">
-                        <div className="flex items-center gap-2 flex-shrink-0 mb-1 justify-end p-2">
+                        <div className="flex items-center gap-2 shrink-0 mb-1 justify-end p-2">
                             {['all', 'submitted', 'approved', 'rejected'].map((status) => (
                                 <Button
                                     key={status}

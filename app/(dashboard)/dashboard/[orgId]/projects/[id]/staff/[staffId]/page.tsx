@@ -14,7 +14,7 @@ import { InsightsTab } from '@/components/projects/staff-profile/tabs/insights-t
 import { WorkLimitsTab } from '@/components/projects/staff-profile/tabs/work-limits-tab'
 import { EditStaffInfoModal } from '@/components/projects/staff-profile/modals/edit-staff-info-modal'
 import { toast } from 'sonner'
-import { subDays, startOfDay, endOfDay } from 'date-fns'
+import { subDays, startOfDay, endOfDay, format } from 'date-fns'
 import clsx from 'clsx'
 import { ProjectMemberRole, WorkDay } from '@/interfaces/projects.interfaces'
 import { GetAggregatedSessionsResponse } from '@/interfaces/sessions.interfaces'
@@ -110,8 +110,8 @@ export default function StaffProfilePage() {
     const { data: insightsData, isLoading: insightsLoading } = useGetStaffInsights({
         projectId: id,
         userId: staffId,
-        startDate: startOfDay(selectedDate).toISOString(),
-        endDate: endOfDay(selectedDate).toISOString(),
+        startDate: format(selectedDate, "yyyy-MM-dd") + "T00:00:00.000Z",
+        endDate: format(selectedDate, "yyyy-MM-dd") + "T23:59:59.999Z",
     })
 
     const sessions: GetAggregatedSessionsResponse = profileData?.rawActivity?.aggregatedSessions || []

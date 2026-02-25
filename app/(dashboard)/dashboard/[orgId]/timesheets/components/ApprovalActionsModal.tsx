@@ -78,7 +78,7 @@ export const ApprovalActionsModal: React.FC<ApprovalActionsModalProps> = ({
                     {!isRejectMode ? (
                         <>
                             <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                                 <p className="text-sm text-blue-800">
                                     Are you sure you want to approve this timesheet? This action cannot be undone.
                                 </p>

@@ -234,6 +234,20 @@ export const useGetHubstaffAuthUrl = () => {
     });
 };
 
+export const useDisConnectHubstaff = (organizationId: string) => {
+    return useMutation({
+        mutationFn: async () => {
+            const data = await http.delete({
+                url: routes.organization.hubstaffDisconnect(organizationId),
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
+        },
+    });
+};
+
 export const useExchangeHubstaffToken = () => {
     return useMutation({
         mutationFn: async ({ organizationId, code }: { organizationId: string; code: string }) => {

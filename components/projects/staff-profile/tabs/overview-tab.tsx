@@ -17,7 +17,7 @@ import {
     X,
 } from "lucide-react"
 import type { ProjectMember } from "@/interfaces/projects.interfaces"
-import type { AggregatedSession } from "@/interfaces/sessions.interfaces"
+import type { AggregatedSessions } from "@/interfaces/sessions.interfaces"
 import { RemoveFromProjectModal } from "@/components/projects/staff-profile/modals/remove-from-project-modal"
 import { toast } from "sonner"
 
@@ -33,7 +33,7 @@ export function OverviewTab({
     employmentBirthday,
 }: {
     member: ProjectMember | undefined
-    aggregatedSessions: AggregatedSession[]
+    aggregatedSessions: AggregatedSessions[]
     sessionsLoading: boolean
     date: DateRange | undefined
     setDate: (d: DateRange | undefined) => void

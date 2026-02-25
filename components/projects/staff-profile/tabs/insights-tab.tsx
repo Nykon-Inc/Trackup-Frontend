@@ -32,9 +32,6 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import type { AggregatedSession } from "@/interfaces/sessions.interfaces"
-import { IStaffHourlyInsight } from "@/interfaces/ai.interfaces"
-import { DatePickerCalendar } from "@/components/ui/date-picker-calendar"
 import {
     Collapsible,
     CollapsibleContent,
@@ -43,6 +40,9 @@ import {
 import { CustomTabs } from "@/components/custom-tabs"
 import { useRunUserInsights } from "@/services/ai.services"
 import { useParams } from "next/navigation"
+import type { AggregatedSessions } from "@/interfaces/sessions.interfaces"
+import { IStaffHourlyInsight } from "@/interfaces/ai.interfaces"
+import { DatePickerCalendar } from "@/components/ui/date-picker-calendar"
 
 export function InsightsTab({
     aggregatedSessions,
@@ -54,7 +54,7 @@ export function InsightsTab({
     runInsightsUserId,
     runInsightsProjectId,
 }: {
-    aggregatedSessions: AggregatedSession[]
+    aggregatedSessions: AggregatedSessions[]
     sessionsLoading: boolean,
     insightsData: IStaffHourlyInsight[] | undefined,
     onDateChange: (date: Date) => void,
@@ -77,14 +77,10 @@ export function InsightsTab({
     const effectiveUserId = runInsightsUserId || staffId || id
     const effectiveProjectId = runInsightsProjectId || (staffId ? id : "")
 
-    const screenshots = useMemo(() => {
-        return aggregatedSessions.flatMap((s) => s.screenshots || []).slice(0, 8)
-    }, [aggregatedSessions])
-
     const days = useMemo(() => {
         if (aggregatedSessions.length > 0) {
             const dates = aggregatedSessions
-                .map((s) => new Date(s.day || s.date))
+                .map((s) => new Date(s.day))
                 .filter((d) => !Number.isNaN(d.getTime()))
                 .sort((a, b) => a.getTime() - b.getTime())
             if (dates.length > 0) {
@@ -131,7 +127,7 @@ export function InsightsTab({
             .map((s, i) => {
                 const app = apps[i % apps.length]
                 const status = app === "Idle" ? "idle" : "active"
-                const time = s.timestamp ? format(new Date(s.timestamp * 1000), "HH:mm") : "--:--"
+                const time = s.timestamp ? format(new Date(s.timestamp), "HH:mm") : "--:--"
                 return { id: `${s.timestamp}-${i}`, time, app, status }
             })
 

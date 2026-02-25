@@ -11,11 +11,11 @@ export const useGetAggregatedSessions = (query: GetAggregatedSessionsQuery) => {
         queryKey: ["aggregated-sessions", query],
         queryFn: async () => {
             const data = await http.get({
-                url: `client/${routes.sessions.index}${routes.sessions.aggregated}`,
+                url: `client${routes.sessions.index}${routes.sessions.aggregated}`,
                 query,
             });
             return data as GetAggregatedSessionsResponse;
         },
-        enabled: !!query.userId && !!query.projectId && !!query.startDate && !!query.endDate,
+        enabled: !!query.userId && !!query.startDate && !!query.endDate,
     });
 };

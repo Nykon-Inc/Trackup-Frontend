@@ -112,6 +112,8 @@ export default function ProjectDetailsPage() {
         },
     ]
 
+    const isAnalytics = !!project.hubstaffProjectId;
+
     return (
         <div className="flex flex-col h-full space-y-4">
             <PageHeader
@@ -131,7 +133,7 @@ export default function ProjectDetailsPage() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <AddStaffMember projectId={project.id} organizationId={activeOrgId || orgId} />
+                            {!isAnalytics && <AddStaffMember projectId={project.id} organizationId={activeOrgId || orgId} />}
                             <Button variant="outline" size="sm">
                                 <Download className="h-4 w-4 mr-2" />
                                 Export Project Report

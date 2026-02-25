@@ -21,14 +21,14 @@ interface MetricCardProps {
 
 export function MetricCard({ title, value, trend, trendPositive, chart, onRemove }: MetricCardProps) {
     return (
-        <Card className="rounded-md border shadow-sm relative overflow-hidden p-1 gap-0">
+        <Card className="rounded-md border shadow-sm relative overflow-hidden p-0 gap-0">
             <CardHeader className="p-3 pb-1 flex flex-row items-center justify-between space-y-0">
                 <div className="flex items-center gap-1">
                     <CardTitle className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">{title}</CardTitle>
                     <Info className="h-2.5 w-2.5 text-muted-foreground/50" />
                 </div>
                 <div>
-                    <DropdownMenu>
+                    {onRemove && <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-6 w-6 p-0 hover:bg-transparent">
                                 <MoreVertical className="h-3.5 w-3.5 text-muted-foreground cursor-pointer opacity-50 hover:opacity-100" />
@@ -39,7 +39,7 @@ export function MetricCard({ title, value, trend, trendPositive, chart, onRemove
                                 Hide Widget
                             </DropdownMenuItem>
                         </DropdownMenuContent>
-                    </DropdownMenu>
+                    </DropdownMenu>}
                 </div>
             </CardHeader>
             <CardContent className="p-3 pt-0">
