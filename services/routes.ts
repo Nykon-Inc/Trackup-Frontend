@@ -27,6 +27,7 @@ export const routes = {
         invitations: (id: string) => `/client/organizations/${id}/invitations`,
         hubstaffAuth: (id: string) => `/client/organizations/${id}/hubstaff/auth`,
         hubstaffExchangeToken: (id: string) => `/client/organizations/${id}/hubstaff/exchange-token`,
+        hubstaffDisconnect: (id: string) => `/client/organizations/${id}/hubstaff/disconnect`,
         hubstaffProjects: (id: string) => `/client/organizations/${id}/hubstaff/projects`,
         acceptInvitation: (id: string) => `/client/organizations/${id}/accept-invitation`,
         rejectInvitation: (id: string) => `/client/organizations/${id}/reject-invitation`,

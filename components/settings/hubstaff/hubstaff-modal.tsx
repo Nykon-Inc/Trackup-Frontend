@@ -4,7 +4,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { useGetHubstaffAuthUrl, useGetMyOrganizations } from "@/services/organization.services";
+import { useDisConnectHubstaff, useGetHubstaffAuthUrl, useGetMyOrganizations } from "@/services/organization.services";
 import { ConnectedView } from "./connected-view";
 import { UnconnectedView } from "./unconnected-view";
 
@@ -24,6 +24,7 @@ export function HubstaffIntegrationDialog({
 
     const { data: myOrganizations } = useGetMyOrganizations(); // no request cost , RQ uses cache
     const { mutate: getHubstaffAuthUrl, isPending: isGettingHubstaffAuthUrl } = useGetHubstaffAuthUrl();
+    const { mutate: disConnectHubstaff, isPending: isDisConnectingHubstaff } = useDisConnectHubstaff(orgId);
 
     const isHubstaffConnectedForCurrentOrg = (myOrganizations || []).find((org) => org.organizationId === orgId)?.organization?.isHubstaffConnected || false;
 
@@ -50,16 +51,20 @@ export function HubstaffIntegrationDialog({
                     </div>
                 </DialogHeader>
 
-                <div className="h-px bg-neutral-100 mt-6" />
+                <div className="h-px bg-gray-300 mt-6" />
 
-                <div className="px-7 py-6">
+                <div className="px-7 pb-6">
                     {
                         !isHubstaffConnectedForCurrentOrg
                             ? <UnconnectedView
                                 loading={isGettingHubstaffAuthUrl}
                                 onConnect={handleConnect}
                             />
-                            : <ConnectedView onClose={() => onOpenChange(false)} />
+                            : <ConnectedView
+                                onClose={() => onOpenChange(false)}
+                                onDisconnect={() => disConnectHubstaff()}
+                                isDisconnecting={isDisConnectingHubstaff}
+                            />
                     }
                 </div>
             </DialogContent>
