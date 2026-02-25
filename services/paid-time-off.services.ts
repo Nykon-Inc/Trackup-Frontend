@@ -51,7 +51,7 @@ export const useUpdatePtoPolicy = () => {
     })
 }
 
-export const useGetPtoPolicies = (payload: { organizationId: string, query?: Record<string, any> }) => {
+export const useGetPtoPolicies = (payload: { organizationId: string, query?: Record<string, any>, enabled?: boolean }) => {
     return useQuery<paginatedResponse<IPTOPolicy>>({
         queryKey: ["pto-policies", payload.organizationId, payload.query],
         queryFn: async () => {
@@ -68,10 +68,28 @@ export const useGetPtoPolicies = (payload: { organizationId: string, query?: Rec
 
             return data
         },
+        enabled: payload.enabled ?? true,
     })
 }
 
 /* PTO Requests */
+
+export const useGetMyUsedHours = ({ orgId, policyId, projectId }: { orgId: string, policyId: string, projectId: string }) => {
+    return useQuery<{ usedHours: number }>({
+        queryKey: ["my-used-hours"],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.ptoRequests(orgId) + "/me/used-hours",
+                query: {
+                    policyId,
+                    projectId
+                },
+            })
+            return data
+        },
+        enabled: !!orgId && !!policyId && !!projectId,
+    })
+}
 
 export const useCreatePtoRequest = (organizationId: string) => {
     return useMutation({

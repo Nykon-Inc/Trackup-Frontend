@@ -44,23 +44,25 @@ export default function PTORequestPage({ params }: PageProps<"/dashboard/[orgId]
                 rightElement={<div />}
             />
 
+            <div className='px-5'>
 
-            {role === 'member' && (
-                <Button
-                    size="sm"
-                    onClick={() => setIsFormOpen(true)}
-                    className='ml-auto block my-4'
-                >
-                    + Request Time Off
-                </Button>
-            )}
-            <div className="px-4 sm:px-6 lg:px-8 overflow-scroll">
+                {role === 'member' && (
+                    <Button
+                        size="sm"
+                        onClick={() => setIsFormOpen(true)}
+                        className='ml-auto block mt-4'
+                    >
+                        + Request Time Off
+                    </Button>
+                )}
+                <div className=" overflow-x-auto">
 
-                {
-                    (role === "manager" || role === "owner")
-                        ? <PTORequestTable orgId={orgId} />
-                        : <MemberPtoPage orgId={orgId} isFormOpen={isFormOpen} setIsFormOpen={setIsFormOpen} />
-                }
+                    {
+                        (role === "manager" || role === "owner")
+                            ? <PTORequestTable orgId={orgId} />
+                            : <MemberPtoPage orgId={orgId} isFormOpen={isFormOpen} setIsFormOpen={setIsFormOpen} />
+                    }
+                </div>
             </div>
         </section>
     )
