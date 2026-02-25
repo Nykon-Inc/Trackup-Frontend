@@ -28,6 +28,7 @@ export function OverviewTab({
     date,
     setDate,
     project,
+    projects,
     employmentStartDate,
     employmentBirthday,
 }: {
@@ -37,6 +38,7 @@ export function OverviewTab({
     date: DateRange | undefined
     setDate: (d: DateRange | undefined) => void
     project: { id: string; name: string } | undefined
+    projects?: { id: string; name: string; role?: string }[]
     employmentStartDate?: string
     employmentBirthday?: string
 }) {
@@ -143,7 +145,18 @@ export function OverviewTab({
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                        {project ? (
+                        {projects && projects.length > 0 ? (
+                            <div className="space-y-2">
+                                {projects.map((assigned) => (
+                                    <div key={assigned.id} className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+                                        <div>
+                                            <p className="text-sm font-medium">{assigned.name}</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5 capitalize">{assigned.role || "member"}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : project ? (
                             <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
                                 <div>
                                     <p className="text-sm font-medium">{project.name}</p>

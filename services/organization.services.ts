@@ -298,3 +298,43 @@ export const useGetOrganizationInvitations = (params: GetOrganizationMembersPara
         enabled: !!params.organizationId,
     });
 };
+
+export const useGetOrganizationMember = (payload: { organizationId: string; memberId: string }) => {
+    return useQuery({
+        queryKey: ["organization-member", payload.organizationId, payload.memberId],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.organization.member(payload.organizationId, payload.memberId),
+            });
+            return data as any;
+        },
+        enabled: !!payload.organizationId && !!payload.memberId,
+    });
+};
+
+export const useUpdateOrganizationMember = () => {
+    return useMutation({
+        mutationFn: async (payload: {
+            organizationId: string;
+            memberId: string;
+            body: {
+                name?: string;
+                email?: string;
+                role?: string;
+                hourlyRate?: number;
+                startDate?: string | null;
+                birthday?: string | null;
+            };
+        }) => {
+            const data = await http.patch({
+                url: routes.organization.member(payload.organizationId, payload.memberId),
+                body: payload.body,
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["organization-members"] });
+            queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
+        },
+    });
+};

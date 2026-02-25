@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -17,8 +16,25 @@ interface EditTeamMemberDialogProps {
         name: string;
         email: string;
         role: string;
+        memberId?: string;
+        payRate?: number;
+        startDate?: string | null;
+        birthday?: string | null;
     } | null;
     onSuccess?: () => void;
+    onSubmit?: (values: {
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+        memberId?: string;
+        payRate?: number;
+        startDate?: string | null;
+        birthday?: string | null;
+    }) => Promise<void>;
+    roleOptions?: Array<{ id: string; label: string }>;
+    title?: string;
+    showExtendedFields?: boolean;
 }
 
 export function EditTeamMemberDialog({
@@ -26,6 +42,10 @@ export function EditTeamMemberDialog({
     onOpenChange,
     user,
     onSuccess,
+    onSubmit,
+    roleOptions,
+    title,
+    showExtendedFields,
 }: EditTeamMemberDialogProps) {
     if (!user) return null;
 
@@ -33,12 +53,15 @@ export function EditTeamMemberDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Edit Internal User</DialogTitle>
+                    <DialogTitle>{title || "Edit Team Member"}</DialogTitle>
                 </DialogHeader>
                 <EditTeamMemberForm
                     user={user}
                     onClose={() => onOpenChange(false)}
                     onSuccess={onSuccess}
+                    onSubmit={onSubmit}
+                    roleOptions={roleOptions}
+                    showExtendedFields={showExtendedFields}
                 />
             </DialogContent>
         </Dialog>

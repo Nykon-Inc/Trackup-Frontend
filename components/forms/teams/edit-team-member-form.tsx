@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
 import { SelectControlled } from "@/components/ui/select-controlled";
+import { DatePickerCalendar } from "@/components/ui/date-picker-calendar";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import * as Yup from "yup";
@@ -19,9 +20,25 @@ interface EditTeamMemberFormProps {
         name: string;
         email: string;
         role: string;
+        memberId?: string;
+        payRate?: number;
+        startDate?: string | null;
+        birthday?: string | null;
     };
     onClose: () => void;
     onSuccess?: () => void;
+    onSubmit?: (values: {
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+        memberId?: string;
+        payRate?: number;
+        startDate?: string | null;
+        birthday?: string | null;
+    }) => Promise<void>;
+    roleOptions?: Array<{ id: string; label: string }>;
+    showExtendedFields?: boolean;
 }
 
 const editUserSchema = Yup.object().shape({
@@ -30,27 +47,59 @@ const editUserSchema = Yup.object().shape({
     role: Yup.string().required("Role is required"),
 });
 
-export function EditTeamMemberForm({ user, onClose, onSuccess }: EditTeamMemberFormProps) {
+export function EditTeamMemberForm({ user, onClose, onSuccess, onSubmit, roleOptions, showExtendedFields = false }: EditTeamMemberFormProps) {
     const [roleSearch, setRoleSearch] = useState("");
     const { mutateAsync: updateUser, isPending: isUpdating } = useUpdateInternalUser();
     const { data: rolesData } = useFetchRoles();
 
     // Map roles to { id, label } format
-    const roles = Array.isArray(rolesData) ? rolesData.map((r: any) => ({
+    const rolesFromApi = Array.isArray(rolesData) ? rolesData.map((r: any) => ({
         id: r.name,
         label: r.label || r.name
     })) : [];
+
+    const fallbackRoles = [
+        { id: "manager", label: "Manager" },
+        { id: "member", label: "Member" },
+    ];
+
+    const roles = (roleOptions && roleOptions.length > 0)
+        ? roleOptions
+        : (rolesFromApi.length > 0 ? rolesFromApi : fallbackRoles);
+
+    const toDate = (value?: string | null) => {
+        if (!value) return null;
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    };
 
     const formik = useFormik({
         initialValues: {
             name: user.name,
             email: user.email,
-            role: user.role
+            role: user.role,
+            payRate: user.payRate !== undefined ? String(user.payRate) : "",
+            startDate: toDate(user.startDate),
+            birthday: toDate(user.birthday),
         },
         validationSchema: editUserSchema,
         onSubmit: async (values) => {
             try {
-                await updateUser({ id: user.id, data: values });
+                const numericPayRate = values.payRate ? Number(values.payRate) : undefined;
+                if (onSubmit) {
+                    await onSubmit({
+                        id: user.id,
+                        name: values.name,
+                        email: values.email,
+                        role: values.role,
+                        memberId: user.memberId,
+                        payRate: numericPayRate,
+                        startDate: values.startDate ? values.startDate.toISOString() : null,
+                        birthday: values.birthday ? values.birthday.toISOString() : null,
+                    });
+                } else {
+                    await updateUser({ id: user.id, data: values });
+                }
                 toast.success("User updated successfully");
                 onClose();
                 if (onSuccess) {
@@ -77,19 +126,20 @@ export function EditTeamMemberForm({ user, onClose, onSuccess }: EditTeamMemberF
                     <p className="text-red-500 text-sm">{formik.errors.name}</p>
                 )}
             </div>
+
             <div className="space-y-2">
                 <Label>Email</Label>
                 <Input
+                    type="email"
                     name="email"
                     placeholder="john@example.com"
                     value={formik.values.email}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
+                    readOnly
+                    disabled
+                    className="bg-muted text-muted-foreground"
                 />
-                {formik.touched.email && formik.errors.email && (
-                    <p className="text-red-500 text-sm">{formik.errors.email}</p>
-                )}
             </div>
+
             <div className="space-y-2">
                 <Label>Role</Label>
                 <SelectControlled
@@ -107,6 +157,47 @@ export function EditTeamMemberForm({ user, onClose, onSuccess }: EditTeamMemberF
                     <p className="text-red-500 text-sm">{formik.errors.role}</p>
                 )}
             </div>
+
+            {showExtendedFields && (
+                <>
+                    <div className="space-y-2">
+                        <Label>Pay Rate ($/hr)</Label>
+                        <Input
+                            name="payRate"
+                            type="number"
+                            inputMode="decimal"
+                            min="0"
+                            step="0.01"
+                            placeholder="50"
+                            value={formik.values.payRate}
+                            onChange={formik.handleChange}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Start Date</Label>
+                            <DatePickerCalendar
+                                selected={formik.values.startDate || undefined}
+                                onSelect={(date) => formik.setFieldValue("startDate", date || null)}
+                                placeholder="Pick start date"
+                                classname="w-full"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Birthday</Label>
+                            <DatePickerCalendar
+                                selected={formik.values.birthday || undefined}
+                                onSelect={(date) => formik.setFieldValue("birthday", date || null)}
+                                placeholder="Pick birthday"
+                                toYear={new Date().getFullYear()}
+                                classname="w-full"
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
 
             <DialogFooter>
                 <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>

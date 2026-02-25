@@ -23,10 +23,11 @@ import { useWorkspace } from "@/components/providers/workspace-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Mail, Clock } from "lucide-react";
-import { useGetOrganizationMembers, useGetOrganizationInvitations } from "@/services/organization.services";
+import { useGetOrganizationMembers, useGetOrganizationInvitations, useUpdateOrganizationMember } from "@/services/organization.services";
 import { Account } from "@/interfaces/auth.interfaces";
 import { OrganizationMember, OrganizationInvitation } from "@/interfaces/organizations.interfaces";
 import { useAuthStore } from "@/stores/auth.store";
+import { EditTeamMemberDialog } from "@/components/forms/teams/edit-team-member-dialog";
 
 interface UnifiedMember {
     id: string;
@@ -44,7 +45,20 @@ interface UnifiedMember {
     }>;
     isInvitation: boolean;
     userId?: string;
+    startDate?: string | null;
+    birthday?: string | null;
     createdAt: string;
+}
+
+interface EditableMember {
+    id: string;
+    memberId: string;
+    name: string;
+    email: string;
+    role: string;
+    payRate?: number;
+    startDate?: string | null;
+    birthday?: string | null;
 }
 
 export default function TeamsPage() {
@@ -53,7 +67,9 @@ export default function TeamsPage() {
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(20);
     const [showPending, setShowPending] = useState(false);
+    const [editingMember, setEditingMember] = useState<EditableMember | null>(null);
     const { account } = useAuthStore();
+    const { mutateAsync: updateOrganizationMember } = useUpdateOrganizationMember();
 
     const debouncedSearch = useDebounce(search, 500);
 
@@ -64,7 +80,7 @@ export default function TeamsPage() {
         setPage(1);
     }, [debouncedSearch, showPending]);
 
-    const { data: membersData, isLoading: isLoadingMembers } = useGetOrganizationMembers({
+    const { data: membersData, isLoading: isLoadingMembers, refetch: refetchMembers } = useGetOrganizationMembers({
         organizationId: activeOrgId || "",
         query: {
             search: debouncedSearch,
@@ -73,7 +89,7 @@ export default function TeamsPage() {
         }
     });
 
-    const { data: invitationsData, isLoading: isLoadingInvitations } = useGetOrganizationInvitations({
+    const { data: invitationsData, isLoading: isLoadingInvitations, refetch: refetchInvitations } = useGetOrganizationInvitations({
         organizationId: activeOrgId || "",
         query: {
             search: debouncedSearch,
@@ -108,6 +124,8 @@ export default function TeamsPage() {
             isInvitation: false,
             userId: m.userId,
             payRate: (m as any).hourlyRate || 0,
+            startDate: (m as any).startDate || null,
+            birthday: (m as any).birthday || null,
             hours: (m as any).hours || 0,
             earnings: (m as any).earnings || 0,
             projects: (m as any).projects || [],
@@ -238,8 +256,36 @@ export default function TeamsPage() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-[180px]">
-                            <DropdownMenuItem>Edit member</DropdownMenuItem>
-                            <DropdownMenuItem>View details</DropdownMenuItem>
+                            {!member.isInvitation && (
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        if (!member.userId) return;
+                                        setEditingMember({
+                                            id: member.userId,
+                                            memberId: member.id,
+                                            name: member.name,
+                                            email: member.email,
+                                            role: member.role,
+                                            payRate: member.payRate,
+                                            startDate: member.startDate,
+                                            birthday: member.birthday,
+                                        });
+                                    }}
+                                >
+                                    Edit member
+                                </DropdownMenuItem>
+                            )}
+                            {!member.isInvitation && (
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        if (!member.userId) return;
+                                        const query = new URLSearchParams({ memberId: member.id, projectFilter: "all" });
+                                        router.push(`/dashboard/${activeOrgId}/teams/staff/${member.userId}?${query.toString()}`);
+                                    }}
+                                >
+                                    View details
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive focus:text-destructive">
                                 Remove member
@@ -310,7 +356,11 @@ export default function TeamsPage() {
                         className="border-0"
                         headerClassName="bg-transparent h-12 border-b border-slate-100 text-slate-400 font-normal text-xs uppercase tracking-wider"
                         emptyMessage="No team members found."
-                        onRowClick={(row) => router.push(`/dashboard/${activeOrgId}/teams/${row.id}`)}
+                        onRowClick={(row) => {
+                            if (row.isInvitation || !row.userId) return;
+                            const query = new URLSearchParams({ memberId: row.id, projectFilter: "all" });
+                            router.push(`/dashboard/${activeOrgId}/teams/staff/${row.userId}?${query.toString()}`);
+                        }}
                         rowClassName={"cursor-pointer border-b border-slate-50 last:border-0 hover:bg-slate-50/50"}
                         sortable
                         rowKey={(row: UnifiedMember) => row.id}
@@ -333,6 +383,41 @@ export default function TeamsPage() {
                     </div>
                 </div>
             </div>
+
+            <EditTeamMemberDialog
+                open={!!editingMember}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setEditingMember(null);
+                    }
+                }}
+                user={editingMember}
+                title="Edit Team Member"
+                showExtendedFields
+                roleOptions={[
+                    { id: "manager", label: "Manager" },
+                    { id: "member", label: "Member" },
+                ]}
+                onSubmit={async (values) => {
+                    if (!activeOrgId || !values.memberId) return;
+
+                    await updateOrganizationMember({
+                        organizationId: activeOrgId,
+                        memberId: values.memberId,
+                        body: {
+                            name: values.name,
+                            email: values.email,
+                            role: values.role,
+                            hourlyRate: values.payRate,
+                            startDate: values.startDate,
+                            birthday: values.birthday,
+                        },
+                    });
+                }}
+                onSuccess={async () => {
+                    await Promise.all([refetchMembers(), refetchInvitations()]);
+                }}
+            />
         </div>
     )
 }

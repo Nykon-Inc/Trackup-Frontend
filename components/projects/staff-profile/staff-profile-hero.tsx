@@ -69,17 +69,18 @@ export function StaffProfileHero({
                     >
                         <FolderKanban className="h-3.5 w-3.5" />
                         Manage Projects
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 text-xs gap-1.5"
-                        onClick={onExport}
-                        disabled={!onExport}
-                    >
-                        <Download className="h-3.5 w-3.5" />
-                        Export
                     </Button> */}
+                    {onExport ? (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 text-xs gap-1.5"
+                            onClick={onExport}
+                        >
+                            <Download className="h-3.5 w-3.5" />
+                            Export
+                        </Button>
+                    ) : null}
                 </div>
             </div>
 
