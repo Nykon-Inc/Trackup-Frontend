@@ -3,7 +3,6 @@
 import React, { useMemo, useState } from "react"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
-import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -28,8 +27,13 @@ export function OverviewTab({
     date,
     setDate,
     project,
+    projects,
     employmentStartDate,
     employmentBirthday,
+    canManageAssignments = false,
+    onAssignProject,
+    onRemoveProject,
+    removingProjectId,
 }: {
     member: ProjectMember | undefined
     aggregatedSessions: AggregatedSessions[]
@@ -37,10 +41,16 @@ export function OverviewTab({
     date: DateRange | undefined
     setDate: (d: DateRange | undefined) => void
     project: { id: string; name: string } | undefined
+    projects?: { id: string; name: string; role?: string }[]
     employmentStartDate?: string
     employmentBirthday?: string
+    canManageAssignments?: boolean
+    onAssignProject?: () => void
+    onRemoveProject?: (projectId: string, projectName: string) => Promise<void> | void
+    removingProjectId?: string | null
 }) {
     const [removeOpen, setRemoveOpen] = useState(false)
+    const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null)
 
     const totalHours = useMemo(() => {
         return aggregatedSessions.reduce((sum, s) => sum + (s.duration || 0), 0)
@@ -100,9 +110,9 @@ export function OverviewTab({
                                 <CardTitle className="text-sm font-semibold">Work & Earnings</CardTitle>
                                 <p className="text-xs text-muted-foreground mt-0.5">Summary for the selected date range</p>
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
+                            {/* <div className="flex items-center gap-2 flex-wrap">
                                 <DatePickerWithRange date={date} setDate={setDate} />
-                            </div>
+                            </div> */}
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -135,7 +145,14 @@ export function OverviewTab({
                                 variant="outline"
                                 size="sm"
                                 className="h-8 text-xs gap-1.5"
-                                onClick={() => toast.message("Assignment flow coming soon")}
+                                onClick={() => {
+                                    if (!canManageAssignments) {
+                                        toast.message("Manage assignments is available in Team view only")
+                                        return
+                                    }
+                                    onAssignProject?.()
+                                }}
+                                disabled={!canManageAssignments}
                             >
                                 <FolderKanban className="h-3.5 w-3.5" />
                                 Assign to Project
@@ -143,7 +160,33 @@ export function OverviewTab({
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                        {project ? (
+                        {projects && projects.length > 0 ? (
+                            <div className="space-y-2">
+                                {projects.map((assigned) => (
+                                    <div key={assigned.id} className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+                                        <div>
+                                            <p className="text-sm font-medium">{assigned.name}</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5 capitalize">{assigned.role || "member"}</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!canManageAssignments) {
+                                                    toast.message("Manage assignments is available in Team view only")
+                                                    return
+                                                }
+                                                setRemoveTarget({ id: assigned.id, name: assigned.name })
+                                                setRemoveOpen(true)
+                                            }}
+                                            className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+                                            disabled={!canManageAssignments || removingProjectId === assigned.id}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : project ? (
                             <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
                                 <div>
                                     <p className="text-sm font-medium">{project.name}</p>
@@ -159,8 +202,16 @@ export function OverviewTab({
                                 </div>
                                 <button
                                     type="button"
-                                    onClick={() => setRemoveOpen(true)}
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                    onClick={() => {
+                                        if (!canManageAssignments) {
+                                            toast.message("Manage assignments is available in Team view only")
+                                            return
+                                        }
+                                        setRemoveTarget({ id: project.id, name: project.name })
+                                        setRemoveOpen(true)
+                                    }}
+                                    className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+                                    disabled={!canManageAssignments || removingProjectId === project.id}
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -176,12 +227,13 @@ export function OverviewTab({
                 open={removeOpen}
                 onOpenChange={setRemoveOpen}
                 staffName={member?.user?.name || "This staff member"}
-                projectName={project?.name || "this project"}
+                projectName={removeTarget?.name || project?.name || "this project"}
                 onConfirm={async () => {
-                    // Backend unassignment not wired yet.
+                    if (!removeTarget) return
+                    await onRemoveProject?.(removeTarget.id, removeTarget.name)
                     setRemoveOpen(false)
-                    toast.success("Removed from project")
                 }}
+                isPending={!!removeTarget && removingProjectId === removeTarget.id}
             />
         </div>
     )

@@ -1,6 +1,6 @@
 import { Project, ProjectMember, GetProjectMembersQuery, ProjectMemberRole } from '@/interfaces/projects.interfaces'
 import React, { useState, useEffect, useCallback } from 'react'
-import { useGetProjectMembers, useResendInviteUser } from '@/services/projects.services'
+import { useGetProjectMemberProfile, useGetProjectMembers, useResendInviteUser, useUpdateProjectMemberProfile } from '@/services/projects.services'
 import Table, { TableColumn } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import TablePagination from "@/components/ui/table-pagination";
@@ -22,6 +22,8 @@ import { StaffFilters } from '../StaffFilters';
 import { useRouter } from 'next/navigation';
 import { useRowLoading } from '@/hooks/useRowLoading';
 import { useWorkspace } from '@/components/providers/workspace-provider';
+import { EditStaffInfoModal } from '@/components/projects/staff-profile/modals/edit-staff-info-modal';
+import { toast } from 'sonner';
 
 type ProjectMemberRow = ProjectMember & {
     displayName: string;
@@ -60,6 +62,8 @@ export default function Staff({ project }: { project: Project }) {
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(20);
+    const [editInfoOpen, setEditInfoOpen] = useState(false);
+    const [selectedMember, setSelectedMember] = useState<ProjectMemberRow | null>(null);
 
     // Filters
     const [roleFilter, setRoleFilter] = useState<"all" | "owner" | "manager" | "member">("all");
@@ -85,7 +89,13 @@ export default function Staff({ project }: { project: Project }) {
     const { isLoading: checkIsLoading, start, stop } = useRowLoading()
 
     const { data: projectMembersData, isLoading } = useGetProjectMembers(project.id, activeOrgId!, query);
+    const { data: selectedMemberProfile } = useGetProjectMemberProfile({
+        organizationId: activeOrgId || project.organization?.id || "",
+        projectId: project.id,
+        userId: selectedMember?.userId || "",
+    });
     const { mutate: resendInviteUser } = useResendInviteUser()
+    const { mutateAsync: updateProfile, isPending: isSavingProfile } = useUpdateProjectMemberProfile()
 
     const handleResendInvite = useCallback(({ email, role }: { email: string, role: ProjectMemberRole }) => {
         start(email)
@@ -132,6 +142,11 @@ export default function Staff({ project }: { project: Project }) {
     const onClearFilters = () => {
         setRoleFilter("all");
         setStatusFilter("all");
+    }
+
+    const handleOpenEditMember = (member: ProjectMemberRow) => {
+        setSelectedMember(member)
+        setEditInfoOpen(true)
     }
 
     const columns: TableColumn<ProjectMemberRow>[] = [
@@ -223,7 +238,7 @@ export default function Staff({ project }: { project: Project }) {
                                 {member.status === "invited" ? (
                                     <DropdownMenuItem onClick={() => handleResendInvite({ email: member.user?.email, role: member.role })}>Resend invitation</DropdownMenuItem>
                                 ) : (
-                                    <DropdownMenuItem>Edit member</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleOpenEditMember(member)}>Edit member</DropdownMenuItem>
                                 )}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="text-destructive focus:text-destructive">
@@ -287,6 +302,39 @@ export default function Staff({ project }: { project: Project }) {
                     className="border-t border-border"
                 />
             </div>
+
+            <EditStaffInfoModal
+                open={editInfoOpen}
+                onOpenChange={(open) => {
+                    setEditInfoOpen(open)
+                    if (!open) setSelectedMember(null)
+                }}
+                staffName={selectedMember?.user?.name || "Staff Member"}
+                jobTitle={String(selectedMember?.role || ProjectMemberRole.MEMBER)}
+                payRate={selectedMember?.hourlyRate}
+                startDate={selectedMemberProfile?.employment?.startDate || undefined}
+                birthday={selectedMemberProfile?.employment?.birthday || undefined}
+                notes={selectedMember?.notes || ""}
+                isSaving={isSavingProfile}
+                onSave={async (payload) => {
+                    if (!selectedMember) return
+
+                    await updateProfile({
+                        organizationId: activeOrgId || project.organization?.id || "",
+                        projectId: project.id,
+                        userId: selectedMember.userId,
+                        body: {
+                            role: payload.jobTitle as ProjectMemberRole,
+                            hourlyRate: payload.payRate,
+                            startDate: payload.startDate,
+                            birthday: payload.birthday,
+                            notes: payload.notes,
+                        },
+                    })
+
+                    toast.success("Staff profile updated")
+                }}
+            />
         </div>
     )
 }

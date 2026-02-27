@@ -1,5 +1,5 @@
 import { OrganizationMember, OrganizationInvitation } from "./organizations.interfaces";
-import { IProject, ProjectMembership } from "./projects.interfaces";
+import { ProjectMembership } from "./projects.interfaces";
 
 export interface LoginPayloadInterface {
     email: string;
@@ -84,10 +84,14 @@ export interface Account {
     id: string;
     name: string;
     email: string;
+    phoneNumber?: string;
+    avatar?: string | null;
+    avatarKey?: string | null;
     role?: string;
     accountType?: 'client' | 'internal';
     isVerified?: boolean;
     status?: 'active' | 'disabled';
+    twoFactorEnabled?: boolean;
 }
 
 export interface QueryResult {
