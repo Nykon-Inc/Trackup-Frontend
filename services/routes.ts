@@ -57,6 +57,8 @@ export const routes = {
         meProfileImageInternal: "/internal/users/me/profile-image",
         meTwoFactorClient: "/client/users/me/two-factor",
         meTwoFactorInternal: "/internal/users/me/two-factor",
+        mePasswordClient: "/client/users/me/password",
+        mePasswordInternal: "/internal/users/me/password",
         internal: "/internal/users",
         internalResetPassword: (id: string) => `/internal/users/${id}/reset-password`,
         internalDisable: (id: string) => `/internal/users/${id}/disable`,

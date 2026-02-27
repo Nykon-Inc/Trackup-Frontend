@@ -1,6 +1,7 @@
 "use client"
 
 import { ChangeEvent, useMemo, useRef, useState } from "react"
+import { useFormik } from "formik"
 import { useParams } from "next/navigation"
 import { Camera, KeyRound, ShieldCheck, Trash2 } from "lucide-react"
 import { toast } from "sonner"
@@ -13,12 +14,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
+    useChangeMyPassword,
     useDeleteMyProfileImage,
     useSaveOrEditMyProfileImage,
     useUpdateMyProfile,
     useUpdateMyTwoFactor,
 } from "@/services/users"
 import { useAuthStore } from "@/stores/auth.store"
+import { changePasswordSchema } from "@/validators/auth"
 
 const DEFAULT_TIMEZONE = "(GMT+01:00) Africa/Lagos"
 const MAX_PROFILE_IMAGE_BYTES = 2 * 1024 * 1024
@@ -65,6 +68,7 @@ export default function ProfilePage() {
     const deleteProfileImageMutation = useDeleteMyProfileImage()
     const updateMyProfileMutation = useUpdateMyProfile()
     const updateTwoFactorMutation = useUpdateMyTwoFactor()
+    const changeMyPasswordMutation = useChangeMyPassword()
 
     const baseForm = useMemo(() => {
         const parsedName = splitName(account?.name);
@@ -83,7 +87,35 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false)
     const [isDeletePictureOpen, setIsDeletePictureOpen] = useState(false)
     const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false)
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
     const [form, setForm] = useState(baseForm)
+
+    const changePasswordFormik = useFormik({
+        initialValues: {
+            currentPassword: "",
+            password: "",
+            confirmPassword: "",
+        },
+        validationSchema: changePasswordSchema,
+        onSubmit: async (values, helpers) => {
+            if (values.currentPassword === values.password) {
+                helpers.setFieldError("password", "New password must be different from current password")
+                return
+            }
+
+            try {
+                await changeMyPasswordMutation.mutateAsync({
+                    currentPassword: values.currentPassword,
+                    password: values.password,
+                })
+                toast.success("Password changed successfully")
+                handleCloseChangePassword()
+            } catch (error: any) {
+                const message = error?.response?.data?.message || "Failed to change password"
+                toast.error(message)
+            }
+        },
+    })
 
     const twoFactorEnabled = Boolean(account?.twoFactorEnabled)
 
@@ -188,6 +220,20 @@ export default function ProfilePage() {
         toast.error("Account deletion is disabled in this preview")
     }
 
+    const resetPasswordForm = () => {
+        changePasswordFormik.resetForm()
+    }
+
+    const handleOpenChangePassword = () => {
+        resetPasswordForm()
+        setIsChangePasswordOpen(true)
+    }
+
+    const handleCloseChangePassword = () => {
+        setIsChangePasswordOpen(false)
+        resetPasswordForm()
+    }
+
     const handleToggleTwoFactor = async (enabled: boolean) => {
         if (enabled === twoFactorEnabled) return
 
@@ -257,7 +303,7 @@ export default function ProfilePage() {
                                     <Trash2 className="h-4 w-4" />
                                     Delete picture
                                 </Button>
-                                <Button variant="outline" className="w-full justify-start" onClick={() => toast.info("Password change flow will be available soon")}>
+                                <Button variant="outline" className="w-full justify-start" onClick={handleOpenChangePassword}>
                                     <KeyRound className="h-4 w-4" />
                                     Change password
                                 </Button>
@@ -469,6 +515,79 @@ export default function ProfilePage() {
                             Delete account
                         </Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isChangePasswordOpen} onOpenChange={(open) => (open ? setIsChangePasswordOpen(true) : handleCloseChangePassword())}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Change password</DialogTitle>
+                        <DialogDescription>
+                            Enter your current password and choose a new one.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={changePasswordFormik.handleSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="current-password">Current password</Label>
+                            <Input
+                                id="current-password"
+                                name="currentPassword"
+                                type="password"
+                                placeholder="Current password"
+                                value={changePasswordFormik.values.currentPassword}
+                                onChange={changePasswordFormik.handleChange}
+                                onBlur={changePasswordFormik.handleBlur}
+                                disabled={changeMyPasswordMutation.isPending}
+                            />
+                            {changePasswordFormik.touched.currentPassword && changePasswordFormik.errors.currentPassword && (
+                                <p className="text-xs font-medium text-destructive">{changePasswordFormik.errors.currentPassword}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="new-password">New password</Label>
+                            <Input
+                                id="new-password"
+                                name="password"
+                                type="password"
+                                placeholder="New password"
+                                value={changePasswordFormik.values.password}
+                                onChange={changePasswordFormik.handleChange}
+                                onBlur={changePasswordFormik.handleBlur}
+                                disabled={changeMyPasswordMutation.isPending}
+                            />
+                            {changePasswordFormik.touched.password && changePasswordFormik.errors.password && (
+                                <p className="text-xs font-medium text-destructive">{changePasswordFormik.errors.password}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="confirm-new-password">Confirm new password</Label>
+                            <Input
+                                id="confirm-new-password"
+                                name="confirmPassword"
+                                type="password"
+                                placeholder="Confirm new password"
+                                value={changePasswordFormik.values.confirmPassword}
+                                onChange={changePasswordFormik.handleChange}
+                                onBlur={changePasswordFormik.handleBlur}
+                                disabled={changeMyPasswordMutation.isPending}
+                            />
+                            {changePasswordFormik.touched.confirmPassword && changePasswordFormik.errors.confirmPassword && (
+                                <p className="text-xs font-medium text-destructive">{changePasswordFormik.errors.confirmPassword}</p>
+                            )}
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={handleCloseChangePassword} disabled={changeMyPasswordMutation.isPending}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" loading={changeMyPasswordMutation.isPending}>
+                                Update password
+                            </Button>
+                        </DialogFooter>
+                    </form>
                 </DialogContent>
             </Dialog>
         </div>

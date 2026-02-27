@@ -21,6 +21,10 @@ const getMyTwoFactorRoute = (accountType?: "client" | "internal") => {
     return accountType === "internal" ? routes.users.meTwoFactorInternal : routes.users.meTwoFactorClient;
 };
 
+const getMyPasswordRoute = (accountType?: "client" | "internal") => {
+    return accountType === "internal" ? routes.users.mePasswordInternal : routes.users.mePasswordClient;
+};
+
 export const useFetchLoggedinInternalUser = () => {
     const { setAccount, setPermissions } = useAuthStore();
 
@@ -176,6 +180,18 @@ export const useUpdateMyProfile = () => {
             return await http.patch({
                 url: getMyProfileRoute(accountType),
                 body: { name, phoneNumber },
+            });
+        },
+    });
+};
+
+export const useChangeMyPassword = () => {
+    return useMutation({
+        mutationFn: async ({ currentPassword, password }: { currentPassword: string; password: string }) => {
+            const accountType = useAuthStore.getState().account?.accountType;
+            return await http.patch({
+                url: getMyPasswordRoute(accountType),
+                body: { currentPassword, password },
             });
         },
     });
