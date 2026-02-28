@@ -19,6 +19,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { SelectControlled } from "@/components/ui/select-controlled"
 import { CustomTabs } from "@/components/custom-tabs"
 import { useWorkspace } from "@/components/providers/workspace-provider"
 import { useGetOrganizationMember } from "@/services/organization.services"
@@ -68,6 +69,7 @@ export default function TeamStaffProfilePage() {
         from: subDays(new Date(), 7),
         to: new Date(),
     })
+    const [projectSearch, setProjectSearch] = useState("")
     const [editInfoOpen, setEditInfoOpen] = useState(false)
     const [assignOpen, setAssignOpen] = useState(false)
     const [assignProjectId, setAssignProjectId] = useState("")
@@ -104,6 +106,24 @@ export default function TeamStaffProfilePage() {
             })
             .filter(Boolean) as Array<{ id: string; name: string; role?: string }>
     }, [rawAssignments])
+
+    const projectOptions = useMemo(() => {
+        return [{ id: ALL_PROJECTS, name: "All projects" }, ...assignments.map((item) => ({ id: item.id, name: item.name }))]
+    }, [assignments])
+
+    const filteredProjectOptions = useMemo(() => {
+        const query = projectSearch.trim().toLowerCase()
+        if (!query) return projectOptions
+
+        const allOption = projectOptions[0]
+        const projectMatches = projectOptions.slice(1).filter((item) => item.name.toLowerCase().includes(query))
+
+        return allOption ? [allOption, ...projectMatches] : projectMatches
+    }, [projectOptions, projectSearch])
+
+    const selectedProjectOption = useMemo(() => {
+        return projectOptions.find((item) => item.id === projectFilter) || projectOptions[0] || null
+    }, [projectOptions, projectFilter])
 
     const from = date?.from
     const to = date?.to || date?.from
@@ -356,25 +376,27 @@ export default function TeamStaffProfilePage() {
 
                     <div className="flex items-center gap-2">
                         <Label htmlFor="project-filter" className="text-xs text-muted-foreground whitespace-nowrap">Project</Label>
-                        <select
-                            id="project-filter"
-                            value={projectFilter}
-                            onChange={(e) => {
-                                const q = new URLSearchParams(searchParams.toString())
-                                q.set("projectFilter", e.target.value)
-                                q.delete("projectId")
-                                if (memberId) q.set("memberId", memberId)
-                                router.replace(`${pathname}?${q.toString()}`)
-                            }}
-                            className="h-9 w-[220px] rounded-md border border-input bg-background px-2.5 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        >
-                            <option value={ALL_PROJECTS}>All projects</option>
-                            {assignments.map((assignment) => (
-                                <option key={assignment.id} value={assignment.id}>
-                                    {assignment.name}
-                                </option>
-                            ))}
-                        </select>
+                        <div id="project-filter" className="w-[220px]">
+                            <SelectControlled<{ id: string; name: string }>
+                                mode="single"
+                                value={selectedProjectOption}
+                                onChange={(value) => {
+                                    const nextValue = value?.id || ALL_PROJECTS
+                                    const q = new URLSearchParams(searchParams.toString())
+                                    q.set("projectFilter", nextValue)
+                                    q.delete("projectId")
+                                    if (memberId) q.set("memberId", memberId)
+                                    router.replace(`${pathname}?${q.toString()}`)
+                                }}
+                                onSearch={setProjectSearch}
+                                items={filteredProjectOptions}
+                                getId={(item) => item.id}
+                                getLabel={(item) => item.name}
+                                placeholder="All projects"
+                                searchable
+                                searchMinChars={1}
+                            />
+                        </div>
                     </div>
                 </div>
 

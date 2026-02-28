@@ -58,6 +58,7 @@ interface UnifiedMember {
         name: string;
         role: string;
     }>;
+    projectCount?: number;
     isInvitation: boolean;
     invitationToken?: string;
     userId?: string;
@@ -165,6 +166,7 @@ export default function TeamsPage() {
             startDate: inv.startDate ? new Date(inv.startDate).toISOString() : null,
             birthday: inv.birthday ? new Date(inv.birthday).toISOString() : null,
             payRate: inv.hourlyRate || 0,
+            projectCount: 0,
             hours: 0,
             earnings: 0,
             projects: [],
@@ -179,6 +181,7 @@ export default function TeamsPage() {
             isInvitation: false,
             userId: m.userId,
             payRate: m.hourlyRate || 0,
+            projectCount: m.projectCount || 0,
             startDate: m.startDate || null,
             birthday: m.birthday || null,
             hours: 0,
@@ -249,28 +252,11 @@ export default function TeamsPage() {
         },
         {
             header: "Project(s)",
-            key: "projects",
-            width: "350px",
+            key: "projectCount",
+            width: "180px",
             render: (value) => {
-                const projects = value as UnifiedMember['projects'];
-                if (!projects || projects.length === 0) {
-                    return <span className="text-muted-foreground text-sm">No projects</span>;
-                }
-
-                return (
-                    <div className="flex flex-wrap items-center gap-2">
-                        {projects.slice(0, 2).map(project => (
-                            <Badge key={project.id} variant="secondary" className="bg-slate-100/80 text-slate-900 border-none font-bold px-2.5 py-0.5 text-[10px] uppercase tracking-tight">
-                                {project.name}
-                            </Badge>
-                        ))}
-                        {projects.length > 2 && (
-                            <Badge variant="outline" className="font-bold text-[10px] py-0.5 px-1.5 border-slate-200 text-slate-600">
-                                +{projects.length - 2}
-                            </Badge>
-                        )}
-                    </div>
-                );
+                const count = Number(value || 0)
+                return <span className="text-sm text-slate-700">{count} {count === 1 ? "project" : "projects"}</span>
             },
         },
         {

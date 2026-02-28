@@ -52,6 +52,13 @@ export function OverviewTab({
     const [removeOpen, setRemoveOpen] = useState(false)
     const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null)
 
+    const formatCurrency = (value: number) => {
+        return value.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })
+    }
+
     const totalHours = useMemo(() => {
         return aggregatedSessions.reduce((sum, s) => sum + (s.duration || 0), 0)
     }, [aggregatedSessions])
@@ -78,7 +85,7 @@ export function OverviewTab({
                         <DollarSign className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                         <div>
                             <p className="text-xs text-muted-foreground">Pay Rate</p>
-                            <p className="text-sm">${payRate}/hr</p>
+                            <p className="text-sm">${formatCurrency(payRate)}/hr</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-3">
@@ -123,11 +130,11 @@ export function OverviewTab({
                             />
                             <MetricCard
                                 title="Pay Rate"
-                                value={payRate ? `$${payRate}/hr` : "--"}
+                                value={payRate ? `$${formatCurrency(payRate)}/hr` : "--"}
                             />
                             <MetricCard
                                 title="Earnings"
-                                value={sessionsLoading ? "--" : `$${Number(earnings || 0).toLocaleString()}`}
+                                value={sessionsLoading ? "--" : `$${formatCurrency(Number(earnings || 0))}`}
                             />
                         </div>
                     </CardContent>
@@ -196,7 +203,7 @@ export function OverviewTab({
                                         </div>
                                     ) : (
                                         <p className="text-xs text-muted-foreground mt-0.5">
-                                            {`${totalHours.toFixed(1)}h • $${Number(earnings || 0).toLocaleString()}`}
+                                            {`${totalHours.toFixed(1)}h • $${formatCurrency(Number(earnings || 0))}`}
                                         </p>
                                     )}
                                 </div>

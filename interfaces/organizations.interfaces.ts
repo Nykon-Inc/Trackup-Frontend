@@ -39,6 +39,7 @@ export interface OrganizationMember {
     status: string;
     createdAt: string;
     hourlyRate?: number;
+    projectCount?: number;
     startDate?: string | null;
     birthday?: string | null;
     projects?: {
