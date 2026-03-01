@@ -85,6 +85,9 @@ export const routes = {
         staff: "/client/ai/staff",
         org: "/client/ai/org",
         runUserInsights: "/client/ai/run-user-insights",
+        insightsToReview: "/client/ai/insights-to-review",
+        userProjectInsights: "/client/ai/user-project-insights",
+        updateNotes: (insightId: string) => `/client/ai/notes/${insightId}`,
     },
     timesheets: {
         // memberTimesheets: (params?: any) => `/timesheets/member${params ? `?${new URLSearchParams(params)}` : ""}`,

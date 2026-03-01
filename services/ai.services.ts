@@ -6,7 +6,11 @@ import {
     IOrgHourlyInsight,
     IGetStaffInsightsParams,
     IGetOrgInsightsParams,
-    IRunUserInsightsBody
+    IRunUserInsightsBody,
+    IGetInsightsToReviewParams,
+    IGetUserProjectInsightsParams,
+    IUpdateInsightNotesBody,
+    GetInsightsSummaryResponse,
 } from "@/interfaces/ai.interfaces";
 
 export const useGetStaffInsights = (params: IGetStaffInsightsParams) => {
@@ -37,11 +41,50 @@ export const useGetOrgInsights = (params: IGetOrgInsightsParams) => {
     });
 };
 
+export const useGetInsightsToReview = (params: IGetInsightsToReviewParams) => {
+    return useQuery({
+        queryKey: ["insights-to-review", params],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.ai.insightsToReview,
+                query: params,
+            });
+            return data as GetInsightsSummaryResponse;
+        },
+        enabled: !!params.organizationId,
+    });
+};
+
+export const useGetUserProjectInsights = (params: IGetUserProjectInsightsParams) => {
+    return useQuery({
+        queryKey: ["user-project-insights", params],
+        queryFn: async () => {
+            const data = await http.get({
+                url: routes.ai.userProjectInsights,
+                query: params,
+            });
+            return data;
+        },
+        enabled: !!params.organizationId && !!params.userId && !!params.projectId,
+    });
+};
+
 export const useRunUserInsights = () => {
     return useMutation({
         mutationFn: async (body: IRunUserInsightsBody) => {
             return await http.post({
                 url: routes.ai.runUserInsights,
+                body,
+            });
+        },
+    });
+};
+
+export const useUpdateInsightNotes = () => {
+    return useMutation({
+        mutationFn: async ({ insightId, body }: { insightId: string, body: IUpdateInsightNotesBody }) => {
+            return await http.patch({
+                url: routes.ai.updateNotes(insightId),
                 body,
             });
         },
