@@ -6,7 +6,14 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { DatePickerCalendar } from '@/components/ui/date-picker-calendar'
+import { SelectControlled } from '@/components/ui/select-controlled'
+import { useGetProjects } from '@/services/projects.services'
+import React, { useEffect } from 'react'
+import { useParams } from 'next/navigation'
+import { useAuthStore } from '@/stores/auth.store'
+import { IPTOPolicy } from '@/interfaces/paid-time-offs.interfaces'
 
 export interface Policy {
     id: string
@@ -16,13 +23,19 @@ export interface Policy {
     description: string
     enabled: boolean
     userCount: number
+    projectIds: string[]
+}
+
+interface Project {
+    id: string
+    name: string
 }
 
 interface PolicyFormProps {
     open: boolean
     onClose: () => void
     onSave: (policy: Omit<Policy, 'id' | 'userCount'>, resetForm: () => void) => void
-    policy?: Policy | null
+    policy?: IPTOPolicy | null
 }
 
 const validationSchema = Yup.object({
@@ -33,9 +46,54 @@ const validationSchema = Yup.object({
         .required('Days allowed is required'),
     effectiveDate: Yup.date().required('Effective date is required'),
     description: Yup.string(),
+    allProjects: Yup.boolean(),
+    selectedProjects: Yup.array().when('allProjects', {
+        is: false,
+        then: (schema) =>
+            schema.min(1, 'Please select at least one project'),
+        otherwise: (schema) => schema,
+    }),
 })
 
 export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
+    const [projectSearch, setProjectSearch] = React.useState('')
+    const params = useParams();
+    const { account } = useAuthStore();
+
+    const { data: projectsData, isLoading: projectsLoading, error: projectsError } = useGetProjects({
+        organizationId: params?.orgId as string,
+        userId: account?.id || "",
+        query: projectSearch ? { search: projectSearch } : undefined,
+    })
+
+    const allFetchedProjects: Project[] = projectsData?.results ?? []
+
+    const getInitialProjectValues = () => {
+        if (!policy?.projectIds?.length) {
+            return { allProjects: false, selectedProjects: [] as Project[] }
+        }
+
+        if (!allFetchedProjects.length) {
+            return { allProjects: true, selectedProjects: [] as Project[] }
+        }
+
+        const allIds = new Set(allFetchedProjects.map((p) => p.id))
+        const policyIds = new Set(policy.projectIds)
+
+        const isAll =
+            policyIds.size === allIds.size &&
+            [...policyIds].every((id) => allIds.has(id))
+
+        if (isAll) {
+            return { allProjects: true, selectedProjects: [] as Project[] }
+        }
+
+        return {
+            allProjects: false,
+            selectedProjects: allFetchedProjects.filter((p) => policyIds.has(p.id)),
+        }
+    }
+
     const formik = useFormik({
         enableReinitialize: true,
         initialValues: {
@@ -43,9 +101,14 @@ export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
             maxDaysPerYear: policy?.maxDaysPerYear ?? '',
             effectiveDate: policy?.effectiveDate ? parseISO(policy.effectiveDate) : null as Date | null,
             description: policy?.description ?? '',
+            ...getInitialProjectValues(),
         },
         validationSchema,
         onSubmit: (values, { resetForm }) => {
+            const projectIds = values.allProjects
+                ? allFetchedProjects.map((p) => p.id)
+                : values.selectedProjects.map((p) => p.id)
+
             onSave(
                 {
                     name: values.name,
@@ -53,6 +116,7 @@ export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
                     effectiveDate: values.effectiveDate ? format(values.effectiveDate, 'yyyy-MM-dd') : '',
                     description: values.description,
                     enabled: policy?.enabled ?? true,
+                    projectIds,
                 },
                 resetForm
             )
@@ -62,6 +126,14 @@ export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
     const handleClose = () => {
         formik.resetForm()
         onClose()
+    }
+
+    const handleAllProjectsToggle = (checked: boolean) => {
+        formik.setFieldValue('allProjects', checked)
+        // Clear manual selection when toggling back to "all"
+        if (checked) {
+            formik.setFieldValue('selectedProjects', [])
+        }
     }
 
     return (
@@ -120,7 +192,46 @@ export function PolicyForm({ open, onClose, onSave, policy }: PolicyFormProps) {
                                 placeholder="Brief description of the policy..."
                             />
                         </div>
+
+                        {/* Project assignment */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Checkbox
+                                    id="allProjects"
+                                    checked={formik.values.allProjects}
+                                    onCheckedChange={(checked) => handleAllProjectsToggle(!!checked)}
+                                />
+                                <Label htmlFor="allProjects" className="cursor-pointer font-normal">
+                                    Add all current projects to this policy
+                                </Label>
+                            </div>
+
+                            {!formik.values.allProjects && (
+                                <div className="space-y-1">
+                                    <Label>Select Projects</Label>
+                                    <SelectControlled<Project>
+                                        mode="multiple"
+                                        value={formik.values.selectedProjects}
+                                        onChange={(projects) => formik.setFieldValue('selectedProjects', projects)}
+                                        onSearch={setProjectSearch}
+                                        items={allFetchedProjects}
+                                        isLoading={projectsLoading}
+                                        error={projectsError ? 'Failed to load projects' : null}
+                                        getId={(p) => p.id}
+                                        getLabel={(p) => p.name}
+                                        placeholder="Search projects…"
+                                        searchMinChars={1}
+                                    />
+                                    {formik.touched.selectedProjects && formik.errors.selectedProjects && (
+                                        <p className="text-xs text-red-500">
+                                            {formik.errors.selectedProjects as string}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
+
                     <DialogFooter className="mt-3">
                         <Button type="button" variant="outline" onClick={handleClose}>
                             Cancel

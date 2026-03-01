@@ -3,18 +3,29 @@ import { PolicyList } from "./policy-list"
 import { Policy, PolicyForm } from "./policy-form"
 import { useCreatePtoPolicy, useUpdatePtoPolicy } from "@/services/paid-time-off.services"
 import { IPTOPolicy } from "@/interfaces/paid-time-offs.interfaces"
+import { ITablePagination } from "@/interfaces/common.interface"
 
 
 type Props = {
     policies: IPTOPolicy[]
     organizationId: string
-    editPolicy: Policy | null
-    setEditPolicy: React.Dispatch<React.SetStateAction<Policy | null>>
+    editPolicy: IPTOPolicy | null
+    setEditPolicy: React.Dispatch<React.SetStateAction<IPTOPolicy | null>>
     isFormOpen: boolean
     setIsFormOpen: React.Dispatch<React.SetStateAction<boolean>>
+    pagination: ITablePagination
 }
 
-export const PtoPolicies: FC<Props> = ({ policies, organizationId, editPolicy, setEditPolicy, isFormOpen, setIsFormOpen }) => {
+export const PtoPolicies: FC<Props> = (props) => {
+    const {
+        policies,
+        organizationId,
+        editPolicy,
+        setEditPolicy,
+        isFormOpen,
+        setIsFormOpen,
+        pagination,
+    } = props
     const { mutate: createPolicy } = useCreatePtoPolicy()
     const { mutate: updatePolicy } = useUpdatePtoPolicy()
 
@@ -24,23 +35,23 @@ export const PtoPolicies: FC<Props> = ({ policies, organizationId, editPolicy, s
         setEditPolicy(null)
     }
 
-    const handleEditPolicy = (policy: Policy) => {
+    const handleEditPolicy = (policy: IPTOPolicy) => {
         setEditPolicy(policy)
         setIsFormOpen(true)
     }
 
-    const onSubmit = (policy: Omit<Policy, "id" | "userCount">) => {
+    const onSubmit = (policy: Omit<Policy, "id" | "userCount">, resetForm: () => void) => {
         if (editPolicy?.id) {
             updatePolicy(
                 { ...policy, organizationId, id: editPolicy.id },
                 { onSuccess: closeForm }
             );
         } else {
-            createPolicy({ ...(policy), organizationId }, { onSuccess: closeForm })
+            createPolicy({ ...(policy), organizationId }, { onSuccess: () => { resetForm(); closeForm() } })
         }
     }
 
-    const handlePolicyToggle = (policy: Policy) => {
+    const handlePolicyToggle = (policy: IPTOPolicy) => {
         updatePolicy({ enabled: !policy.enabled, organizationId, id: policy.id })
     }
 
@@ -55,9 +66,16 @@ export const PtoPolicies: FC<Props> = ({ policies, organizationId, editPolicy, s
 
 
             <PolicyList
-                policies={policies?.map(e => ({ ...e, userCount: 0 })) || []}
+                policies={policies || []}
                 onEdit={handleEditPolicy}
                 onToggleActive={handlePolicyToggle}
+                pagination={{
+                    onPageChange: pagination.onPageChange,
+                    onRowsPerPageChange: pagination.onRowsPerPageChange,
+                    page: pagination.page,
+                    rowsPerPage: pagination.rowsPerPage,
+                    totalResults: pagination.totalResults
+                }}
             />
         </div>
     )

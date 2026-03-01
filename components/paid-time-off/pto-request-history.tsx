@@ -4,6 +4,7 @@ import { useGetOwnPtoRequests } from '@/services/paid-time-off.services'
 import TablePagination from '../ui/table-pagination'
 import { useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
+import { IPTORequest } from '@/interfaces/paid-time-offs.interfaces'
 
 
 export function RequestHistory({ organizationId }: { organizationId: string }) {
@@ -34,12 +35,21 @@ export function RequestHistory({ organizationId }: { organizationId: string }) {
             year: 'numeric',
         })
 
-    const columns: TableColumn[] = [
+    const columns: TableColumn<IPTORequest>[] = [
         {
             header: 'Policy',
             key: 'policyId',
             render: (value) => (
                 <span className="text-sm font-semibold text-foreground py-3">{value?.name}</span>
+            ),
+        },
+        {
+            header: "Project",
+            key: "projectId",
+            render: (value) => (
+                value
+                    ? <span className="text-sm font-semibold text-foreground py-3">{value?.name}</span>
+                    : <span className="text-muted-foreground/50 text-center">—</span>
             ),
         },
         {
@@ -67,9 +77,9 @@ export function RequestHistory({ organizationId }: { organizationId: string }) {
             header: 'Duration',
             key: 'totalDays',
             align: 'center',
-            render: (value) => (
+            render: (_, row) => (
                 <span className="text-xs font-medium text-foreground">
-                    {value} {value === 1 ? 'day' : 'days'}
+                    {row.totalHours === 0 ? 0 : row.totalHours} {row.totalHours === 1 ? 'hour' : 'hours'} / {row.totalDays} {row.totalDays === 1 ? 'day' : 'days'}
                 </span>
             ),
         },

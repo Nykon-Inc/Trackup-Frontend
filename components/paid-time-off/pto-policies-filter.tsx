@@ -4,20 +4,24 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Input } from "../ui/input"
 import { PTOPOLICY_STATUS } from "@/interfaces/paid-time-offs.interfaces"
 
-type Props = {
+type Filters = {
     search: string
-    statusFilter: string
-    setSearch: React.Dispatch<React.SetStateAction<string>>
-    setStatusFilter: React.Dispatch<React.SetStateAction<string>>
+    status: string
+    page: number
+    limit: number
+}
+type Props = {
+    filters: Filters,
+    setFilters: React.Dispatch<React.SetStateAction<Filters>>
     toggleStatusFilter: (status: string) => void
 }
-export const PTOPoliciesFilter: React.FC<Props> = ({ search, statusFilter, setSearch, setStatusFilter, toggleStatusFilter }) => {
+export const PTOPoliciesFilter: React.FC<Props> = ({ filters, setFilters, toggleStatusFilter }) => {
     return (
         <div className="flex items-center gap-2">
             <Input
                 placeholder="Search policies by name..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                 className="max-w-60 h-8 text-xs"
             />
             <DropdownMenu>
@@ -33,7 +37,7 @@ export const PTOPoliciesFilter: React.FC<Props> = ({ search, statusFilter, setSe
                     {Object.values(PTOPOLICY_STATUS).map((status) => (
                         <DropdownMenuCheckboxItem
                             key={status}
-                            checked={statusFilter === status}
+                            checked={filters.status === status}
                             onCheckedChange={() => toggleStatusFilter(status)}
                             className="text-xs"
                         >

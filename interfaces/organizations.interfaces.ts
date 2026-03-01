@@ -39,6 +39,14 @@ export interface OrganizationMember {
     status: string;
     createdAt: string;
     hourlyRate?: number;
+    projectCount?: number;
+    startDate?: string | null;
+    birthday?: string | null;
+    projects?: {
+        id: string;
+        name: string;
+        role: string;
+    }[];
     updatedAt: string;
     permissionOverrides: PermissionOverrides;
     organization: Organization;

@@ -9,6 +9,22 @@ import { setCookie } from "nookies";
 type InternalUserResponse = Omit<LoginResultInterface, "credentials" | "organization">;
 type ClientUserResponse = Omit<LoginResultInterface, "credentials" | "permissions">;
 
+const getMyProfileImageRoute = (accountType?: "client" | "internal") => {
+    return accountType === "internal" ? routes.users.meProfileImageInternal : routes.users.meProfileImageClient;
+};
+
+const getMyProfileRoute = (accountType?: "client" | "internal") => {
+    return accountType === "internal" ? routes.users.meProfileInternal : routes.users.meProfileClient;
+};
+
+const getMyTwoFactorRoute = (accountType?: "client" | "internal") => {
+    return accountType === "internal" ? routes.users.meTwoFactorInternal : routes.users.meTwoFactorClient;
+};
+
+const getMyPasswordRoute = (accountType?: "client" | "internal") => {
+    return accountType === "internal" ? routes.users.mePasswordInternal : routes.users.mePasswordClient;
+};
+
 export const useFetchLoggedinInternalUser = () => {
     const { setAccount, setPermissions } = useAuthStore();
 
@@ -56,7 +72,7 @@ export const useFetchLoggedinClientUser = () => {
     });
 };
 
-export const useFetchInternalUsers = (params?: any) => {
+export const useFetchInternalUsers = (params?: Record<string, unknown>) => {
     return useQuery({
         queryKey: ["internal-users", params],
         queryFn: async () => {
@@ -70,7 +86,7 @@ export const useFetchInternalUsers = (params?: any) => {
 
 export const useCreateInternalUser = () => {
     return useMutation({
-        mutationFn: async (data: any) => {
+        mutationFn: async (data: Record<string, unknown>) => {
             return await http.post({
                 url: routes.users.internal,
                 body: data,
@@ -113,10 +129,69 @@ export const useRestoreUser = () => {
 };
 export const useUpdateInternalUser = () => {
     return useMutation({
-        mutationFn: async ({ id, data }: { id: string, data: any }) => {
+        mutationFn: async ({ id, data }: { id: string, data: Record<string, unknown> }) => {
             return await http.patch({
                 url: routes.users.internalUpdate(id),
                 body: data,
+            });
+        },
+    });
+};
+
+export const useSaveOrEditMyProfileImage = () => {
+    return useMutation({
+        mutationFn: async ({ image, fileExt }: { image: string; fileExt?: string }) => {
+            const accountType = useAuthStore.getState().account?.accountType;
+            return await http.post({
+                url: getMyProfileImageRoute(accountType),
+                body: { image, fileExt },
+            });
+        },
+    });
+};
+
+export const useDeleteMyProfileImage = () => {
+    return useMutation({
+        mutationFn: async () => {
+            const accountType = useAuthStore.getState().account?.accountType;
+            return await http.delete({
+                url: getMyProfileImageRoute(accountType),
+            });
+        },
+    });
+};
+
+export const useUpdateMyTwoFactor = () => {
+    return useMutation({
+        mutationFn: async ({ enabled }: { enabled: boolean }) => {
+            const accountType = useAuthStore.getState().account?.accountType;
+            return await http.patch({
+                url: getMyTwoFactorRoute(accountType),
+                body: { enabled },
+            });
+        },
+    });
+};
+
+export const useUpdateMyProfile = () => {
+    return useMutation({
+        mutationFn: async ({ name, phoneNumber }: { name: string; phoneNumber: string }) => {
+            const accountType = useAuthStore.getState().account?.accountType;
+            return await http.patch({
+                url: getMyProfileRoute(accountType),
+                body: { name, phoneNumber },
+            });
+        },
+    });
+};
+
+export const useChangeMyPassword = () => {
+    return useMutation({
+        mutationFn: async ({ currentPassword, password }: { currentPassword: string; password: string }) => {
+            const accountType = useAuthStore.getState().account?.accountType;
+            return await http.patch({
+                url: getMyPasswordRoute(accountType),
+                body: { currentPassword, password },
             });
         },
     });

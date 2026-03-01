@@ -50,7 +50,9 @@ export function InsightsTab({
     insightsData,
     onDateChange,
     selectedDate,
-    employmentStartDate
+    employmentStartDate,
+    runInsightsUserId,
+    runInsightsProjectId,
 }: {
     aggregatedSessions: AggregatedSessions[]
     sessionsLoading: boolean,
@@ -58,6 +60,8 @@ export function InsightsTab({
     onDateChange: (date: Date) => void,
     selectedDate: Date,
     employmentStartDate: string | undefined
+    runInsightsUserId?: string
+    runInsightsProjectId?: string
 }) {
     const params = useParams()
     const id = params?.id as string
@@ -70,6 +74,8 @@ export function InsightsTab({
     const [selectedInsightId, setSelectedInsightId] = useState<string | "today">("today")
 
     const { mutate: runInsights, isPending } = useRunUserInsights();
+    const effectiveUserId = runInsightsUserId || staffId || id
+    const effectiveProjectId = runInsightsProjectId || (staffId ? id : "")
 
     const days = useMemo(() => {
         if (aggregatedSessions.length > 0) {
@@ -224,12 +230,17 @@ export function InsightsTab({
                             <FileText className="h-3.5 w-3.5" />
                             Reports
                         </Button>
-                        <Button onClick={() => runInsights({
-                            userId: staffId,
-                            projectId: id,
-                        })} size="sm" className="h-8 text-xs gap-1.5">
+                        <Button
+                            onClick={() => runInsights({
+                                userId: effectiveUserId,
+                                projectId: effectiveProjectId,
+                            })}
+                            size="sm"
+                            disabled={!effectiveProjectId || isPending}
+                            className="h-8 text-xs gap-1.5"
+                        >
                             <FileText className="h-3.5 w-3.5" />
-                            Run Last Insights
+                            {isPending ? "Running..." : "Run Last Insights"}
                         </Button>
                     </div>
                 </CardHeader>

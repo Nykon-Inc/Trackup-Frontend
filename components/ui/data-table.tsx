@@ -286,7 +286,7 @@ const Table = <T extends Record<string, any>>({
         return `${totalWidth}px`;
     }, [columns, hasPixelWidths]);
 
-    console.log(calculatedMinWidth)
+    const effectiveMinWidth = calculatedMinWidth || minTableWidth;
 
     // Container styles: border/rounding + optional max height for internal scroll
     // Use explicit horizontal overflow to confine horizontal scrolling to this container.
@@ -357,7 +357,8 @@ const Table = <T extends Record<string, any>>({
                     ...(calculatedMinWidth ? { minWidth: calculatedMinWidth } : {}),
                     // When we have an explicit calculated/min width, allow the table to size to content
                     // so the container's horizontal scrollbar appears. Otherwise stretch to container.
-                    width: calculatedMinWidth || minTableWidth ? "max-content" : "100%",
+                    // Fill card width on large screens, but preserve horizontal scroll when min width exceeds container.
+                    width: effectiveMinWidth ? `max(100%, ${effectiveMinWidth})` : "100%",
                 }}
             >
                 {/* Table Header */}

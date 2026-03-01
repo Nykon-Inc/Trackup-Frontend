@@ -8,6 +8,7 @@ import TablePagination from '../ui/table-pagination'
 import { useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { IPTORequest } from '@/interfaces/paid-time-offs.interfaces'
 
 const filterOptions = ['all', 'pending', 'approved', 'rejected'] as const
 type FilterOption = typeof filterOptions[number]
@@ -34,7 +35,7 @@ export function PTORequestTable({ orgId }: PTORequestTableProps) {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(20);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const filter = (searchParams.get('status') ?? 'all') as FilterOption
 
@@ -72,7 +73,7 @@ export function PTORequestTable({ orgId }: PTORequestTableProps) {
     };
 
 
-    const columns: TableColumn[] = [
+    const columns: TableColumn<IPTORequest>[] = [
         {
             header: 'Employee',
             key: 'userId',
@@ -99,6 +100,11 @@ export function PTORequestTable({ orgId }: PTORequestTableProps) {
             ),
         },
         {
+            header: 'Project',
+            key: 'projectId',
+            render: (value) => value ? <span className="text-sm">{value?.name}</span> : <span className="text-muted-foreground/50">—</span>,
+        },
+        {
             header: 'Start Date',
             key: 'startDate',
             render: (value) => (
@@ -113,11 +119,13 @@ export function PTORequestTable({ orgId }: PTORequestTableProps) {
             ),
         },
         {
-            header: 'Days',
-            key: 'totalDays',
+            header: 'Duration',
+            key: 'Duratiom',
             align: 'center',
-            render: (value) => (
-                <span className="text-sm">{value}</span>
+            render: (_, row) => (
+                <span className="text-xs font-medium text-foreground">
+                    {row.totalHours === 0 ? 0 : row.totalHours} {row.totalHours === 1 ? 'hour' : 'hours'} / {row.totalDays} {row.totalDays === 1 ? 'day' : 'days'}
+                </span>
             ),
         },
         {
