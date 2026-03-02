@@ -289,16 +289,9 @@ export default function PaymentsPage() {
                                 disabled={processPaymentMutation.isPending || row.paymentStatus === "paid"}
                             >
                                 <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                                Mark as Paid
+                                Process Payment
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => handleMarkUnpaid(row)}
-                                disabled={markUnpaidMutation.isPending}
-                                className="text-destructive focus:text-destructive"
-                            >
-                                <XCircle className="h-4 w-4 mr-2" />
-                                Mark as Unpaid
-                            </DropdownMenuItem>
+                            
                     </DropdownMenuContent>
                 </DropdownMenu>
             ),
