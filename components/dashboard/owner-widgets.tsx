@@ -8,7 +8,7 @@ import { EmptyState } from "./empty-state";
 import { Button } from "@/components/ui/button";
 import { IOwnerDashboard } from "@/interfaces/dashboard.interfaces";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const chartConfig = {
     day: {
@@ -180,6 +180,7 @@ export function OwnerWidgets({ data, isLoading, visibleWidgets, onVisibilityChan
                                 <ChartContainer className="aspect-auto h-[200px] w-full" config={chartConfig}>
                                     <BarChart accessibilityLayer data={data.blocks.worked_week_chart}>
                                         <CartesianGrid vertical={false} horizontal={false} />
+                                        <YAxis domain={[0, (dataMax: number) => Math.max(15, dataMax)]} />
                                         <XAxis
                                             dataKey="day"
                                             tickLine={false}
