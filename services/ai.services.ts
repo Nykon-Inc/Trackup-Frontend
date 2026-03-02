@@ -11,6 +11,7 @@ import {
     IGetUserProjectInsightsParams,
     IUpdateInsightNotesBody,
     GetInsightsSummaryResponse,
+    ITriggerOrgNarrativeBody,
 } from "@/interfaces/ai.interfaces";
 
 export const useGetStaffInsights = (params: IGetStaffInsightsParams) => {
@@ -85,6 +86,17 @@ export const useUpdateInsightNotes = () => {
         mutationFn: async ({ insightId, body }: { insightId: string, body: IUpdateInsightNotesBody }) => {
             return await http.patch({
                 url: routes.ai.updateNotes(insightId),
+                body,
+            });
+        },
+    });
+};
+
+export const useTriggerOrgNarrative = () => {
+    return useMutation({
+        mutationFn: async (body: ITriggerOrgNarrativeBody) => {
+            return await http.post({
+                url: routes.ai.triggerOrgNarrative,
                 body,
             });
         },

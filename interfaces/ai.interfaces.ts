@@ -185,3 +185,8 @@ export interface IAIAnalysisResult {
     confidence: number;
     patterns_observed: string[];
 }
+
+export interface ITriggerOrgNarrativeBody {
+    batchId: string;
+    organizationId: string;
+}

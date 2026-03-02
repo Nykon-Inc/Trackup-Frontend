@@ -88,6 +88,7 @@ export const routes = {
         insightsToReview: "/client/ai/insights-to-review",
         userProjectInsights: "/client/ai/user-project-insights",
         updateNotes: (insightId: string) => `/client/ai/notes/${insightId}`,
+        triggerOrgNarrative: "/client/ai/trigger-org-narrative",
     },
     timesheets: {
         // memberTimesheets: (params?: any) => `/timesheets/member${params ? `?${new URLSearchParams(params)}` : ""}`,
