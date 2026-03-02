@@ -95,6 +95,7 @@ export default function OwnerTimesheetApprovalsPage() {
         {
             header: "Pay Period",
             key: "startDate",
+            width: "300px",
             render: (_, row) => {
                 if (!row?.startDate || !row?.endDate) return "-";
                 const formatDate = (date: Date | string) =>
@@ -105,7 +106,11 @@ export default function OwnerTimesheetApprovalsPage() {
                         year: "numeric",
                     });
 
-                return `${formatDate(row.startDate)} - ${formatDate(row.endDate)}`;
+                return (
+                    <span className="whitespace-nowrap">
+                        {formatDate(row.startDate)} – {formatDate(row.endDate)}
+                    </span>
+                );
             },
         },
         {

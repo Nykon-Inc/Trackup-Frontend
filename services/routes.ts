@@ -97,4 +97,10 @@ export const routes = {
         approveTimesheet: (id: string) => `/internal/timesheets/${id}/approve`,
         rejectTimesheet: (id: string) => `/internal/timesheets/${id}/reject`,
     },
+    payments: {
+        list: "/payments",
+        process: "/payments/process",
+        markPaid: (timesheetId: string) => `/payments/${timesheetId}/mark-paid`,
+        markUnpaid: (timesheetId: string) => `/payments/${timesheetId}/mark-unpaid`,
+    },
 }
