@@ -71,6 +71,8 @@ export const routes = {
     },
     activityLogs: {
         latest: "/internal/activity-logs/latest",
+        list: "/internal/activity-logs",
+        organization: (organizationId: string) => `/client/organizations/${organizationId}/activity-logs`,
     },
     analytics: {
         stats: "/internal/analytics/stats",
