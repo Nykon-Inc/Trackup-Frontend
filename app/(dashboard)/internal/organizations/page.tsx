@@ -29,7 +29,7 @@ export default function InternalOrganizationsPage() {
         {
             header: "Name",
             key: "name",
-            onClick: (row) => window.location.href = `/internal/organizations/${row.id}/projects`,
+            onClick: (_, row) => window.location.href = `/internal/organizations/${row.id}/projects`,
             render: (_: any, row) => (
                 <div className="flex flex-col">
                     <span className="font-medium text-foreground">{row.name}</span>
@@ -40,7 +40,7 @@ export default function InternalOrganizationsPage() {
         {
             header: "Status",
             key: "status",
-            onClick: (row) => window.location.href = `/internal/organizations/${row.id}/projects`,
+            onClick: (_, row) => window.location.href = `/internal/organizations/${row.id}/projects`,
             render: (status) => (
                 <Badge variant={status === "active" ? "default" : "secondary"} className="capitalize">
                     {status}
@@ -50,7 +50,7 @@ export default function InternalOrganizationsPage() {
         {
             header: "Created At",
             key: "createdAt",
-            onClick: (row) => window.location.href = `/internal/organizations/${row.id}/projects`,
+            onClick: (_, row) => window.location.href = `/internal/organizations/${row.id}/projects`,
             render: (date) => (
                 <span className="text-muted-foreground">
                     {date ? format(new Date(date), "MMM d, yyyy") : "-"}
