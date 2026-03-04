@@ -2,11 +2,11 @@
 
 import { PageHeader } from "@/components/page-header"
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ClipboardList, ChevronLeft, ChevronRight, Settings2, Clock3, List, Table2, ExternalLink, X } from "lucide-react";
+import { ClipboardList, Settings2, Clock3, List, Table2, ExternalLink, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DatePickerCalendar } from "@/components/ui/date-picker-calendar";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useMemo, useState } from "react";
-import { addDays, format, subDays } from "date-fns";
+import { format } from "date-fns";
 import { useAuthStore } from "@/stores/auth.store";
 import { useWorkspace } from "@/components/providers/workspace-provider";
 import { OrganizationMember, OrganizationMemberRole } from "@/interfaces/organizations.interfaces";
@@ -27,9 +27,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { DateRange } from "react-day-picker";
 
 type ViewMode = "timeline" | "table";
-type TimeScope = "all_time" | "selected_day";
 type AuditProject = { id: string; name: string };
 
 const actionLabel = (action: string) =>
@@ -57,10 +57,18 @@ export default function AuditLogsPage() {
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [selectedLog, setSelectedLog] = useState<IActivityLog | null>(null);
 
-    const parsedDate = searchParams.get("date");
-    const parsedScope = searchParams.get("timeScope");
-    const [date, setDate] = useState<Date>(parsedDate ? new Date(parsedDate) : new Date());
-    const [timeScope, setTimeScope] = useState<TimeScope>(parsedScope === "selected_day" ? "selected_day" : "all_time");
+    const parsedStartDate = searchParams.get("startDate");
+    const parsedEndDate = searchParams.get("endDate");
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+        if (!parsedStartDate && !parsedEndDate) return undefined;
+        const start = parsedStartDate ? new Date(parsedStartDate) : undefined;
+        const end = parsedEndDate ? new Date(parsedEndDate) : start;
+        if (!start && !end) return undefined;
+        return {
+            from: start || end,
+            to: end || start,
+        };
+    });
 
     const userIdFromUrl = searchParams.get("userId");
     const projectIdFromUrl = searchParams.get("projectId");
@@ -104,33 +112,40 @@ export default function AuditLogsPage() {
     const selectedMember = members.find((m: OrganizationMember) => m.userId === userIdFromUrl) || null;
     const selectedProject = projects.find((p: AuditProject) => p.id === projectIdFromUrl) || null;
 
+    const toDayStartIso = (date: Date) => `${format(date, "yyyy-MM-dd")}T00:00:00.000Z`;
+    const toDayEndIso = (date: Date) => `${format(date, "yyyy-MM-dd")}T23:59:59.999Z`;
+
     const query = useMemo(() => ({
         actorId: userIdFromUrl || undefined,
         projectId: projectIdFromUrl || undefined,
-        startDate: timeScope === "selected_day" ? `${format(date, "yyyy-MM-dd")}T00:00:00.000Z` : undefined,
-        endDate: timeScope === "selected_day" ? `${format(date, "yyyy-MM-dd")}T23:59:59.999Z` : undefined,
+        startDate: dateRange?.from ? toDayStartIso(dateRange.from) : undefined,
+        endDate: (dateRange?.to || dateRange?.from) ? toDayEndIso((dateRange?.to || dateRange?.from) as Date) : undefined,
         page,
         limit: rowsPerPage,
         sortBy: "createdAt:desc",
-    }), [userIdFromUrl, projectIdFromUrl, timeScope, date, page, rowsPerPage]);
+    }), [userIdFromUrl, projectIdFromUrl, dateRange, page, rowsPerPage]);
 
     const { data: logsData, isLoading } = useGetOrganizationActivityLogs(params?.orgId as string, query);
 
     const logs = logsData?.results || [];
     const totalResults = logsData?.totalResults || 0;
 
-    const handlePrevDay = () => {
-        const nextDate = subDays(date, 1);
-        setDate(nextDate);
+    const handleDateRangeChange = (range: DateRange | undefined) => {
+        setDateRange(range);
         setPage(1);
-        updateSearchParam({ date: nextDate.toISOString() });
-    };
 
-    const handleNextDay = () => {
-        const nextDate = addDays(date, 1);
-        setDate(nextDate);
-        setPage(1);
-        updateSearchParam({ date: nextDate.toISOString() });
+        if (!range?.from && !range?.to) {
+            updateSearchParam({ startDate: null, endDate: null });
+            return;
+        }
+
+        const from = range?.from;
+        const to = range?.to || range?.from;
+
+        updateSearchParam({
+            startDate: from ? toDayStartIso(from) : null,
+            endDate: to ? toDayEndIso(to) : null,
+        });
     };
 
     const clearUserFilter = () => {
@@ -143,13 +158,13 @@ export default function AuditLogsPage() {
         updateSearchParam({ projectId: null });
     };
 
-    const clearDateScopeFilter = () => {
-        setTimeScope("all_time");
+    const clearDateRangeFilter = () => {
+        setDateRange(undefined);
         setPage(1);
-        updateSearchParam({ timeScope: "all_time" });
+        updateSearchParam({ startDate: null, endDate: null });
     };
 
-    const hasActiveFilters = Boolean(selectedMember || selectedProject || timeScope === "selected_day");
+    const hasActiveFilters = Boolean(selectedMember || selectedProject || dateRange?.from || dateRange?.to);
 
     const columns: TableColumn<IActivityLog>[] = [
         {
@@ -227,54 +242,12 @@ export default function AuditLogsPage() {
 
             <div className="border-b px-4 py-3 flex items-center justify-between gap-4 sticky top-12 z-20 bg-white shrink-0">
                 <div className="flex items-center gap-2">
-                    <div className="flex items-center border rounded-md overflow-hidden bg-white">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 border-r rounded-none" onClick={handlePrevDay}>
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={handleNextDay}>
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-
-                    <div className="w-56">
-                        <DatePickerCalendar
-                            selected={date}
-                            onSelect={(d) => {
-                                if (!d) return;
-                                setDate(d);
-                                setPage(1);
-                                updateSearchParam({ date: d.toISOString() });
-                            }}
-                            classname="h-9 text-sm"
-                            maxDate={new Date()}
+                    <div className="w-[320px]">
+                        <DatePickerWithRange
+                            date={dateRange}
+                            setDate={handleDateRangeChange}
+                            className="[&>button]:h-9 [&>button]:w-full [&>button]:text-sm"
                         />
-                    </div>
-
-                    <div className="inline-flex items-center rounded-md border bg-white p-1 gap-1">
-                        <Button
-                            variant={timeScope === "all_time" ? "default" : "ghost"}
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={() => {
-                                setTimeScope("all_time");
-                                setPage(1);
-                                updateSearchParam({ timeScope: "all_time" });
-                            }}
-                        >
-                            All time
-                        </Button>
-                        <Button
-                            variant={timeScope === "selected_day" ? "default" : "ghost"}
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={() => {
-                                setTimeScope("selected_day");
-                                setPage(1);
-                                updateSearchParam({ timeScope: "selected_day" });
-                            }}
-                        >
-                            Selected day
-                        </Button>
                     </div>
                 </div>
 
@@ -363,10 +336,13 @@ export default function AuditLogsPage() {
                 <div className="border-b bg-white/90 px-4 py-2 flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-slate-500 font-medium">Active filters:</span>
 
-                    {timeScope === "selected_day" && (
+                    {(dateRange?.from || dateRange?.to) && (
                         <Badge variant="secondary" className="h-7 pl-2 pr-1 gap-1 rounded-md">
-                            <span className="text-xs">Day: {format(date, "MMM d, yyyy")}</span>
-                            <button type="button" onClick={clearDateScopeFilter} className="rounded hover:bg-black/10 p-0.5" aria-label="Clear day filter">
+                            <span className="text-xs">
+                                Date: {dateRange?.from ? format(dateRange.from, "MMM d, yyyy") : "-"}
+                                {dateRange?.to ? ` - ${format(dateRange.to, "MMM d, yyyy")}` : ""}
+                            </span>
+                            <button type="button" onClick={clearDateRangeFilter} className="rounded hover:bg-black/10 p-0.5" aria-label="Clear date range filter">
                                 <X className="h-3 w-3" />
                             </button>
                         </Badge>
@@ -396,8 +372,8 @@ export default function AuditLogsPage() {
                         className="h-7 text-xs"
                         onClick={() => {
                             setPage(1);
-                            setTimeScope("all_time");
-                            updateSearchParam({ userId: null, projectId: null, timeScope: "all_time" });
+                            setDateRange(undefined);
+                            updateSearchParam({ userId: null, projectId: null, startDate: null, endDate: null });
                         }}
                     >
                         Clear all
