@@ -69,11 +69,11 @@ export function OverviewTab({
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Left: Employee Info */}
-            <Card className="border border-border/60 shadow-sm rounded-xl">
+            <Card className="border border-border/60 shadow-sm rounded-xl gap-0">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-semibold">Employee Info</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 gap-0">
                     <div className="flex items-start gap-3">
                         <Mail className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                         <div>
@@ -110,7 +110,7 @@ export function OverviewTab({
             {/* Right: Work & Earnings + Project Assignments */}
             <div className="lg:col-span-2 space-y-4">
                 {/* Work & Earnings */}
-                <Card className="border border-border/60 shadow-sm rounded-xl">
+                <Card className="border border-border/60 shadow-sm rounded-xl gap-0">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between flex-wrap gap-2">
                             <div>
@@ -122,7 +122,7 @@ export function OverviewTab({
                             </div> */}
                         </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="gap-0">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <MetricCard
                                 title="Hours Worked"
@@ -141,7 +141,7 @@ export function OverviewTab({
                 </Card>
 
                 {/* Project Assignments */}
-                <Card className="border border-border/60 shadow-sm rounded-xl">
+                <Card className="border border-border/60 shadow-sm rounded-xl gap-0">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <div>

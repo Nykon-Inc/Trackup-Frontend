@@ -148,9 +148,14 @@ export default function Overview({ insights, isLoading }: { insights: IOrgHourly
     // Dummy values for illustrative data if missing in the schema
     const totalHours = (insight.stats?.totalAnalyzedHours || 0).toLocaleString();
     const staffCount = insight.stats?.staffCount || 0;
-    const productiveTime = insight.distribution?.sustained || 0;
-    const fragmentedTime = insight.distribution?.fragmented || 0;
-    const idleTime = insight.distribution?.idle || 0;
+    const rawProductive = insight.distribution?.sustained || 0;
+    const rawFragmented = insight.distribution?.fragmented || 0;
+    const rawIdle = insight.distribution?.idle || 0;
+    const totalDist = rawProductive + rawFragmented + rawIdle;
+
+    const productiveTime = totalDist > 0 ? Math.round((rawProductive / totalDist) * 100) : 0;
+    const fragmentedTime = totalDist > 0 ? Math.round((rawFragmented / totalDist) * 100) : 0;
+    const idleTime = totalDist > 0 ? (100 - productiveTime - fragmentedTime) : 0;
 
     return (
         <div className="flex flex-col gap-6">
@@ -203,10 +208,10 @@ export default function Overview({ insights, isLoading }: { insights: IOrgHourly
             </Card>
 
             {/* How work time is being used */}
-            <Card className="p-6">
-                <h3 className="text-base font-bold mb-4 tracking-tight">How work time is being used</h3>
+            <Card className="p-6 gap-0">
+                <h3 className="text-base font-bold mb-2 tracking-tight">How work time is being used</h3>
 
-                <div className="h-8 w-full bg-slate-100 rounded-full flex overflow-hidden mb-6">
+                <div className="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden mb-2">
                     <div
                         className="h-full bg-emerald-500"
                         style={{ width: `${productiveTime}%` }}

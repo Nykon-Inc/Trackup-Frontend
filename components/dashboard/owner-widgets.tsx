@@ -180,7 +180,7 @@ export function OwnerWidgets({ data, isLoading, visibleWidgets, onVisibilityChan
                                 <ChartContainer className="aspect-auto h-[200px] w-full" config={chartConfig}>
                                     <BarChart accessibilityLayer data={data.blocks.worked_week_chart}>
                                         <CartesianGrid vertical={false} horizontal={false} />
-                                        <YAxis domain={[0, (dataMax: number) => Math.max(15, dataMax)]} />
+                                        <YAxis hide domain={[0, (dataMax: number) => Math.max(15, dataMax)]} />
                                         <XAxis
                                             dataKey="day"
                                             tickLine={false}

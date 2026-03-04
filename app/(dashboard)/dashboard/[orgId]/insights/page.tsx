@@ -2,25 +2,26 @@
 
 import { PageHeader } from "@/components/page-header"
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ClipboardCheck, Loader2 } from "lucide-react";
+import { ClipboardCheck } from "lucide-react";
 import { useGetInsightsToReview, useGetOrgInsights } from "@/services/ai.services";
 import { useGetProjects } from "@/services/projects.services";
 import { SelectControlled } from "@/components/ui/select-controlled";
 import { useAuthStore } from "@/stores/auth.store";
 import { DateRange } from "react-day-picker";
 import { useState } from "react";
-import { format, endOfDay, startOfDay, subDays } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 import { CustomTabs } from "@/components/custom-tabs";
 import Overview from "./_components/Overview";
 import StaffToReview from "./_components/StaffToReview";
 import { DatePickerCalendar } from "@/components/ui/date-picker-calendar";
+import JobTrackerRefresh from "./_components/JobTrackerRefresh";
 
 export default function InsightsPage() {
     const params = useParams();
     const orgId = params?.orgId as string;
     const router = useRouter();
     const queryParams = useSearchParams();
-    const { account } = useAuthStore();
+    const { account, organization } = useAuthStore();
 
     const [date, setDate] = useState<Date | undefined>(startOfDay(new Date()));
     const [projectSearch, setProjectSearch] = useState("");
@@ -51,7 +52,6 @@ export default function InsightsPage() {
         page: 1,
         limit: 20,
     });
-
     const tab = queryParams.get("tab") || "overview";
 
     return (
@@ -63,8 +63,10 @@ export default function InsightsPage() {
                     { label: "Insights", href: `/dashboard/${orgId}/insights`, active: true }
                 ]}
             />
-            <div className="px-4 lg:px-6 pt-1">
-                <div className="mt-1 mb-4 flex gap-2">
+
+            <div className="border-b px-4 py-2 flex items-center justify-between gap-4 sticky top-12 z-20 bg-white shrink-0">
+                <div className="flex gap-2">
+                    <JobTrackerRefresh orgId={orgId} date={date} />
                     <DatePickerCalendar
                         onSelect={(date) => {
                             setDate(date!)
@@ -98,6 +100,8 @@ export default function InsightsPage() {
                         </div>
                     )}
                 </div>
+            </div>
+            <div className="px-4 lg:px-6 pt-4">
                 <CustomTabs
                     persistInRoute
                     tabs={[
