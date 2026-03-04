@@ -102,5 +102,7 @@ export const routes = {
         process: "/payments/process",
         markPaid: (timesheetId: string) => `/payments/${timesheetId}/mark-paid`,
         markUnpaid: (timesheetId: string) => `/payments/${timesheetId}/mark-unpaid`,
+        batches: "/payments/batch",
+        batchDetail: (batchId: string) => `/payments/batch/${batchId}`,
     },
 }

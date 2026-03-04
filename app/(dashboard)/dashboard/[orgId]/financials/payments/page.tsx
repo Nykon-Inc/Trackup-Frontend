@@ -2,41 +2,28 @@
 
 import React, { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
-import { useParams } from "next/navigation";
-import { MoreHorizontal, CheckCircle, XCircle, Eye } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { Eye, Plus, ChevronDown, CalendarDays, Layers } from "lucide-react";
 import Table, { TableColumn } from "@/components/ui/data-table";
-import {
-    useFetchPayments,
-    useProcessPayment,
-    useMarkPaymentUnpaid,
-} from "@/services/payments";
+import { useFetchPaymentBatches } from "@/services/payments";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DebouncedSearch } from "@/components/ui/debounced-search";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import TablePagination from "@/components/ui/table-pagination";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useWorkspace } from "@/components/providers/workspace-provider";
+import { format, subWeeks } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { IPaymentBatch } from "@/interfaces/payments.interfaces";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useWorkspace } from "@/components/providers/workspace-provider";
-import { toast } from "sonner";
-import { format, subWeeks } from "date-fns";
-import { DateRange } from "react-day-picker";
-import { cn } from "@/lib/utils";
-import { IPaymentRecord, IPaymentItem, IProjectBreakdown } from "@/interfaces/payments.interfaces";
+import { CreateBatchDialog, CreateMode } from "../components/create-batch-dialog";
 
-const formatDate = (date: string | null) => {
+const formatDate = (date: string | null | undefined) => {
     if (!date) return "—";
     return new Date(date).toLocaleDateString("en-US", {
         month: "short",
@@ -45,25 +32,46 @@ const formatDate = (date: string | null) => {
     });
 };
 
-const paymentStatusVariant = (status: string | null) => {
-    if (status === "paid") return "default";
-    return "secondary";
+const batchStatusVariant = (
+    status: string | null | undefined
+): "default" | "secondary" | "outline" => {
+    if (status === "completed") return "default";
+    if (status === "processing" || status === "pending") return "secondary";
+    return "outline";
 };
 
-const paymentStatusLabel = (status: string | null) => {
-    if (status === "paid") return "Paid";
-    return "Unpaid";
-};
+function UserCell({ user }: { user: IPaymentBatch["initiatedBy"] }) {
+    if (!user) return <span className="text-muted-foreground">—</span>;
+    const initials = (user.name ?? user.email ?? "?")
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    return (
+        <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+                {user.avatar && <AvatarImage src={user.avatar} alt={user.name ?? ""} />}
+                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+            </Avatar>
+            <span>{user.name ?? user.email ?? "—"}</span>
+        </div>
+    );
+}
 
-export default function PaymentsPage() {
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function PaymentBatchesPage() {
     const params = useParams();
+    const router = useRouter();
     const { activeOrgId } = useWorkspace();
 
-    const [search, setSearch] = useState("");
+    const orgId = activeOrgId ?? (params?.orgId as string) ?? "";
+
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [paymentStatusFilter, setPaymentStatusFilter] = useState<string | null>(null);
-    const [detailRecord, setDetailRecord] = useState<IPaymentRecord | null>(null);
+    const [createBatchOpen, setCreateBatchOpen] = useState(false);
+    const [createBatchMode, setCreateBatchMode] = useState<CreateMode | null>(null);
 
     const today = new Date();
     const [dateRange, setDateRange] = useState<DateRange>({
@@ -71,11 +79,7 @@ export default function PaymentsPage() {
         to: today,
     });
 
-    const processPaymentMutation = useProcessPayment();
-    const markUnpaidMutation = useMarkPaymentUnpaid();
-
     const fetchParams = {
-        search: search || undefined,
         dateFrom: dateRange?.from
             ? format(dateRange.from, "yyyy-MM-dd") + "T00:00:00.000Z"
             : undefined,
@@ -84,22 +88,18 @@ export default function PaymentsPage() {
             : undefined,
         page,
         limit: rowsPerPage,
-        ...(paymentStatusFilter && { paymentStatus: paymentStatusFilter }),
     };
 
-    const { data: paymentsData, isLoading } = useFetchPayments(
-        activeOrgId ?? (params?.orgId as string) ?? "",
-        fetchParams
-    );
+    const { data: batchesData, isLoading } = useFetchPaymentBatches(orgId, fetchParams);
 
-    const response = paymentsData as any;
-    const records: IPaymentRecord[] = Array.isArray(paymentsData)
-        ? paymentsData
+    const response = batchesData as any;
+    const batches: IPaymentBatch[] = Array.isArray(batchesData)
+        ? batchesData
         : response?.results ?? response?.data ?? [];
 
-    const totalResults: number = Array.isArray(paymentsData)
-        ? records.length
-        : response?.totalResults ?? response?.total ?? records.length;
+    const totalResults: number = Array.isArray(batchesData)
+        ? batches.length
+        : response?.totalResults ?? response?.total ?? batches.length;
 
     const totalPages = Math.max(1, Math.ceil(totalResults / rowsPerPage));
 
@@ -107,117 +107,29 @@ export default function PaymentsPage() {
         if (page > totalPages) setPage(totalPages);
     }, [page, totalPages]);
 
-    const handleMarkPaid = async (record: IPaymentRecord) => {
-        const timesheetId: string = record.timesheetId ?? record._id ?? "";
-
-        if (!timesheetId) {
-            toast.error("Unable to process payment: timesheet ID is missing.");
-            return;
-        }
-
-        const paymentItem: IPaymentItem = {
-            userId: record.userId,
-            timesheetId,
-            timesheetStartDate: new Date(record.startDate),
-            timesheetEndDate: new Date(record.endDate),
-            totalLoggedHours: record.totalLoggedHours,
-            totalHolidayHours: record.totalHolidayHours,
-            totalPtoHours: record.totalPtoHours,
-            projectBreakdowns: record.projectBreakdowns,
-            totalAmount: record.totalAmount,
-            currency: record.currency,
-        };
-        try {
-            await processPaymentMutation.mutateAsync({
-                organizationId: record.organizationId,
-                timesheetId: timesheetId,
-                paymentItems: paymentItem,
-                totalAmount: record.totalAmount,
-                currency: record.currency,
-            });
-            toast.success(`Payment for ${record.userName ?? "user"} processed successfully.`);
-        } catch {
-            toast.error("Failed to process payment. Please try again.");
-        }
-    };
-
-    const handleMarkUnpaid = async (record: IPaymentRecord) => {
-        const timesheetId: string = record.timesheetId ?? record._id ?? "";
-
-        if (!timesheetId) {
-            toast.error("Unable to mark as unpaid: timesheet ID is missing.");
-            return;
-        }
-
-        try {
-            await markUnpaidMutation.mutateAsync({
-                timesheetId: record.timesheetId,
-            });
-            toast.success(`Payment for ${record.userName ?? "user"} marked as unpaid.`);
-        } catch {
-            toast.error("Failed to mark as unpaid. Please try again.");
-        }
-    };
-
-    const columns: TableColumn<IPaymentRecord>[] = [
+    const columns: TableColumn<IPaymentBatch>[] = [
         {
-            header: "Employee",
-            key: "userName",
-            render: (_, row) => (
-                <div className="flex items-center gap-2">
-                    <Avatar className="h-7 w-7">
-                        {row.userAvatar && (
-                            <AvatarImage src={row.userAvatar} alt={row.userName ?? ""} />
-                        )}
-                        <AvatarFallback className="text-xs">
-                            {(row.userName ?? "?")
-                                .split(" ")
-                                .map((n: string) => n[0])
-                                .join("")
-                                .toUpperCase()
-                                .slice(0, 2)}
-                        </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{row.userName ?? "—"}</span>
-                </div>
+            header: "Created On",
+            key: "createdOn",
+            render: (value) => (
+                <span className="whitespace-nowrap">{formatDate(value)}</span>
             ),
         },
         {
-            header: "Pay Period",
-            key: "startDate",
-            width: "220px",
-            render: (_, row) =>
-                row.startDate && row.endDate ? (
-                    <span className="whitespace-nowrap">
-                        {formatDate(row.startDate)} – {formatDate(row.endDate)}
-                    </span>
-                ) : "—",
-        },
-        {
-            header: "Logged Hrs",
-            key: "totalLoggedHours",
+            header: "Timesheets",
+            key: "totalTimesheets",
             align: "right",
             render: (value) => (
-                <span className="tabular-nums">{Number(value ?? 0).toFixed(2)}</span>
+                <span className="tabular-nums font-medium">{value ?? 0}</span>
             ),
         },
         {
-            header: "Holiday Hrs",
-            key: "totalHolidayHours",
+            header: "Processed",
+            key: "processedCount",
             align: "right",
-            render: (value) => (
+            render: (value, row) => (
                 <span className="tabular-nums text-muted-foreground">
-                    {Number(value ?? 0).toFixed(2)}
-                </span>
-            ),
-        },
-        {
-            header: "PTO Hrs",
-            key: "totalPtoHours",
-            align: "right",
-            render: (value) => (
-                <span className="tabular-nums text-muted-foreground">
-                    {Number(value ?? 0).toFixed(2)}
+                    {value ?? 0} / {row.totalTimesheets ?? 0}
                 </span>
             ),
         },
@@ -227,8 +139,7 @@ export default function PaymentsPage() {
             align: "right",
             render: (value, row) => (
                 <span className="tabular-nums font-semibold">
-                    {row.currency ?? ""}{" "}
-                    {Number(value ?? 0).toLocaleString(undefined, {
+                    {row.currency} {Number(value ?? 0).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                     })}
@@ -236,78 +147,49 @@ export default function PaymentsPage() {
             ),
         },
         {
-            header: "Approval Status",
+            header: "Initiated By",
+            key: "initiatedBy",
+            render: (_, row) => <UserCell user={row.initiatedBy} />,
+        },
+        {
+            header: "Processed At",
+            key: "processedAt",
+            render: (value) => formatDate(value),
+        },
+        {
+            header: "Status",
             key: "status",
             render: (value) => (
-                <Badge
-                    variant={value === "approved" ? "default" : "secondary"}
-                    className="capitalize"
-                >
+                <Badge variant={batchStatusVariant(value)} className="capitalize">
                     {value ?? "—"}
                 </Badge>
             ),
         },
         {
-            header: "Payment Status",
-            key: "paymentStatus",
-            render: (value) => (
-                <Badge
-                    variant={paymentStatusVariant(value)}
-                    className={cn(
-                        "capitalize",
-                        value === "paid" && "bg-green-100 text-green-800 hover:bg-green-100"
-                    )}
-                >
-                    {paymentStatusLabel(value)}
-                </Badge>
-            ),
-        },
-        {
-            header: "Approved On",
-            key: "approvedOn",
-            render: (value) => formatDate(value),
-        },
-        {
             header: "",
             key: "actions",
-            width: "50px",
+            width: "60px",
             render: (_, row) => (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setDetailRecord(row)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                                onClick={() => handleMarkPaid(row)}
-                                disabled={processPaymentMutation.isPending || row.paymentStatus === "paid"}
-                            >
-                                <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                                Process Payment
-                            </DropdownMenuItem>
-                            
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() =>
+                        router.push(
+                            `/dashboard/${params?.orgId}/financials/payments/${row.id}`
+                        )
+                    }
+                >
+                    <Eye className="h-4 w-4" />
+                </Button>
             ),
         },
     ];
 
-    const paymentCounts = {
-        all: totalResults,
-        paid: records.filter((r) => r.paymentStatus === "paid").length,
-        unpaid: records.filter((r) => r.paymentStatus !== "paid").length,
-    };
-
     return (
         <div className="flex flex-col h-full min-w-0">
             <PageHeader
-                title="Payments"
+                title="Payment Batches"
                 breadcrumbs={[
                     {
                         label: "Dashboard",
@@ -330,14 +212,6 @@ export default function PaymentsPage() {
             <div className="flex-1 min-w-0 flex flex-col p-4">
                 {/* Toolbar */}
                 <div className="flex flex-wrap items-center gap-3 shrink-0 mb-4">
-                    <DebouncedSearch
-                        onSearch={(val) => {
-                            setSearch(val);
-                            setPage(1);
-                        }}
-                        placeholder="Search employee..."
-                        wrapperClassName="max-w-sm"
-                    />
                     <DatePickerWithRange
                         date={dateRange}
                         setDate={(range: any) => {
@@ -346,47 +220,49 @@ export default function PaymentsPage() {
                         }}
                         className="w-[300px]"
                     />
+                    <div className="ml-auto">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button size="sm">
+                                    <Plus className="h-4 w-4 mr-1.5" />
+                                    Create Batch
+                                    <ChevronDown className="h-3.5 w-3.5 ml-1.5" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        setCreateBatchMode("all");
+                                        setCreateBatchOpen(true);
+                                    }}
+                                >
+                                    <Layers className="h-4 w-4 mr-2" />
+                                    All pending timesheets
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        setCreateBatchMode("dateRange");
+                                        setCreateBatchOpen(true);
+                                    }}
+                                >
+                                    <CalendarDays className="h-4 w-4 mr-2" />
+                                    By date range
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
 
                 {/* Table card */}
                 <div className="flex-1 min-w-0">
                     <div className="w-full overflow-hidden rounded-lg border bg-card">
-                        {/* Payment status filter tabs */}
-                        <div className="flex items-center gap-2 p-2 justify-end border-b">
-                            {(
-                                [
-                                    { key: null, label: "All" },
-                                    { key: "notpaid", label: "Unpaid" },
-                                    { key: "paid", label: "Paid" },
-                                ] as { key: string | null; label: string }[]
-                            ).map(({ key, label }) => (
-                                <Button
-                                    key={label}
-                                    variant={paymentStatusFilter === key ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => {
-                                        setPaymentStatusFilter(key);
-                                        setPage(1);
-                                    }}
-                                >
-                                    {label} (
-                                    {key === null
-                                        ? paymentCounts.all
-                                        : key === "paid"
-                                        ? paymentCounts.paid
-                                        : paymentCounts.unpaid}
-                                    )
-                                </Button>
-                            ))}
-                        </div>
-
                         <div className="min-w-full overflow-auto">
                             <Table
-                                data={records}
+                                data={batches}
                                 columns={columns}
                                 loading={isLoading}
-                                emptyMessage="No approved timesheets found for payments."
-                                rowKey={(row) => row.timesheetId ?? row._id ?? ""}
+                                emptyMessage="No payment batches found."
+                                rowKey={(row) => row.id ?? ""}
                             />
                         </div>
                     </div>
@@ -406,167 +282,13 @@ export default function PaymentsPage() {
                 </div>
             </div>
 
-            {/* Details dialog */}
-            <Dialog open={!!detailRecord} onOpenChange={(open) => !open && setDetailRecord(null)}>
-                <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>Payment Details</DialogTitle>
-                    </DialogHeader>
-                    {detailRecord && (
-                        <div className="space-y-4 text-sm">
-                            {/* Employee */}
-                            <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
-                                    {detailRecord.userAvatar && (
-                                        <AvatarImage
-                                            src={detailRecord.userAvatar}
-                                            alt={detailRecord.userName ?? ""}
-                                        />
-                                    )}
-                                    <AvatarFallback>
-                                        {(detailRecord.userName ?? "?")
-                                            .split(" ")
-                                            .map((n: string) => n[0])
-                                            .join("")
-                                            .toUpperCase()
-                                            .slice(0, 2)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="font-semibold text-base">{detailRecord.userName ?? "—"}</p>
-                                    <p className="text-muted-foreground text-xs">
-                                        {formatDate(detailRecord.startDate)} – {formatDate(detailRecord.endDate)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Summary grid */}
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg border p-3">
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Logged Hours</p>
-                                    <p className="font-medium">
-                                        {Number(detailRecord.totalLoggedHours ?? 0).toFixed(2)} hrs
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Holiday Hours</p>
-                                    <p className="font-medium">
-                                        {Number(detailRecord.totalHolidayHours ?? 0).toFixed(2)} hrs
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">PTO Hours</p>
-                                    <p className="font-medium">
-                                        {Number(detailRecord.totalPtoHours ?? 0).toFixed(2)} hrs
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Total Amount</p>
-                                    <p className="font-semibold">
-                                        {detailRecord.currency}{" "}
-                                        {Number(detailRecord.totalAmount ?? 0).toLocaleString(undefined, {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2,
-                                        })}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Approval Status</p>
-                                    <Badge variant="default" className="capitalize mt-0.5">
-                                        {detailRecord.status}
-                                    </Badge>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Payment Status</p>
-                                    <Badge
-                                        variant={paymentStatusVariant(detailRecord.paymentStatus ?? null)}
-                                        className={cn(
-                                            "capitalize mt-0.5",
-                                            detailRecord.paymentStatus === "paid" &&
-                                                "bg-green-100 text-green-800 hover:bg-green-100"
-                                        )}
-                                    >
-                                        {paymentStatusLabel(detailRecord.paymentStatus ?? null)}
-                                    </Badge>
-                                </div>
-                                {detailRecord.approvedOn && (
-                                    <div className="col-span-2">
-                                        <p className="text-muted-foreground text-xs">Approved On</p>
-                                        <p className="font-medium">{formatDate(detailRecord.approvedOn)}</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Project breakdowns */}
-                            {detailRecord.projectBreakdowns?.length > 0 && (
-                                <div>
-                                    <p className="font-medium mb-2">Project Breakdown</p>
-                                    <div className="rounded-lg border overflow-hidden">
-                                        <table className="w-full text-xs">
-                                            <thead>
-                                                <tr className="border-b bg-muted/50">
-                                                    <th className="text-left px-3 py-2 font-medium">Project</th>
-                                                    <th className="text-right px-3 py-2 font-medium">Hours</th>
-                                                    <th className="text-right px-3 py-2 font-medium">Amount</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {detailRecord.projectBreakdowns.map((pb: IProjectBreakdown, i: number) => (
-                                                    <tr
-                                                        key={pb.projectId ?? i}
-                                                        className="border-b last:border-0"
-                                                    >
-                                                        <td className="px-3 py-2">{pb.projectName ?? pb.projectId}</td>
-                                                        <td className="px-3 py-2 text-right tabular-nums">
-                                                            {Number(pb.hours ?? 0).toFixed(2)}
-                                                        </td>
-                                                        <td className="px-3 py-2 text-right tabular-nums">
-                                                            {detailRecord.currency}{" "}
-                                                            {Number(pb.amount ?? 0).toLocaleString(undefined, {
-                                                                minimumFractionDigits: 2,
-                                                                maximumFractionDigits: 2,
-                                                            })}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Action buttons */}
-                            <div className="flex gap-2 pt-1">
-                                <Button
-                                    size="sm"
-                                    onClick={() => {
-                                        handleMarkPaid(detailRecord);
-                                        setDetailRecord(null);
-                                    }}
-                                    disabled={processPaymentMutation.isPending || detailRecord.paymentStatus === "paid"}
-                                    className="flex-1"
-                                >
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Mark as Paid
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                        handleMarkUnpaid(detailRecord);
-                                        setDetailRecord(null);
-                                    }}
-                                    disabled={markUnpaidMutation.isPending}
-                                    className="flex-1 text-destructive border-destructive hover:bg-destructive/10"
-                                >
-                                    <XCircle className="h-4 w-4 mr-2" />
-                                    Mark as Unpaid
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+            <CreateBatchDialog
+                orgId={orgId}
+                open={createBatchOpen}
+                mode={createBatchMode}
+                onClose={() => setCreateBatchOpen(false)}
+                onSuccess={() => setPage(1)}
+            />
         </div>
     );
 }
