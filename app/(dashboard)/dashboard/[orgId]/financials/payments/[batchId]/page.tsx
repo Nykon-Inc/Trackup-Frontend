@@ -2,14 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
-import { useParams } from "next/navigation";
-import { MoreHorizontal, CheckCircle, XCircle, Eye, CalendarRange, Hash, User } from "lucide-react";
+import { useParams, useSearchParams } from "next/navigation";
+import { MoreHorizontal, CheckCircle, Eye, CalendarRange, Hash, User, Play } from "lucide-react";
 import Table, { TableColumn } from "@/components/ui/data-table";
 import {
     useFetchPaymentBatch,
     useFetchPayments,
     useProcessPayment,
-    useMarkPaymentUnpaid,
+    useProcessBatch,
 } from "@/services/payments";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,15 @@ const paymentStatusLabel = (status: string | null) => {
     return "Unpaid";
 };
 
-function BatchMetaCard({ batch }: { batch: IPaymentBatch }) {
+function BatchMetaCard({
+    batch,
+    onProcess,
+    isProcessing,
+}: {
+    batch: IPaymentBatch;
+    onProcess: () => void;
+    isProcessing: boolean;
+}) {
     const items = [
         {
             icon: CalendarRange,
@@ -87,14 +95,26 @@ function BatchMetaCard({ batch }: { batch: IPaymentBatch }) {
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Batch Details
                 </h2>
-                {batch.status && (
-                    <Badge
-                        variant={batch.status === "completed" ? "default" : "secondary"}
-                        className="capitalize"
-                    >
-                        {batch.status}
-                    </Badge>
-                )}
+                <div className="flex items-center gap-2">
+                    {batch.status && (
+                        <Badge
+                            variant={batch.status === "completed" ? "default" : "secondary"}
+                            className="capitalize"
+                        >
+                            {batch.status}
+                        </Badge>
+                    )}
+                    {batch.status === "pending" && (
+                        <Button
+                            size="sm"
+                            onClick={onProcess}
+                            disabled={isProcessing}
+                        >
+                            <Play className="h-3.5 w-3.5 mr-1.5" />
+                            {isProcessing ? "Processing…" : "Process Batch"}
+                        </Button>
+                    )}
+                </div>
             </div>
             <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
                 {items.map(({ icon: Icon, label, value }) => (
@@ -118,6 +138,8 @@ export default function PaymentBatchDetailPage() {
     const orgId = activeOrgId ?? (params?.orgId as string) ?? "";
     const batchId = params?.batchId as string;
 
+    const searchParams = useSearchParams();
+
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [paymentStatusFilter, setPaymentStatusFilter] = useState<string | null>(null);
@@ -127,13 +149,27 @@ export default function PaymentBatchDetailPage() {
     const batch = batchData as IPaymentBatch | undefined;
 
     const processPaymentMutation = useProcessPayment();
-    const markUnpaidMutation = useMarkPaymentUnpaid();
+    const processBatchMutation = useProcessBatch();
 
-    // Only fetch payments once we have the batch's timesheetIds
+    const handleProcessBatch = async () => {
+        try {
+            await processBatchMutation.mutateAsync(batchId);
+            toast.success("Batch processed successfully.");
+        } catch {
+            toast.error("Failed to process batch. Please try again.");
+        }
+    };
+
+    // paymentIds passed from the batches list page via query param (enables immediate fetch)
+    const paymentIdsFromUrl = batch?.paymentIds ?? searchParams.get("paymentIds") ?? "";
+
+    // Prefer URL-provided paymentIds for an immediate fetch; fall back to batch timesheetIds
     const batchTimesheetIds = batch?.timesheetIds ?? [];
+    const canFetch = paymentIdsFromUrl.length > 0 || batchTimesheetIds.length > 0;
 
     const fetchParams = {
-        timesheetIds: batchTimesheetIds.join(","),
+        timesheetIds: batchTimesheetIds.join(",") || undefined,
+        ...(paymentIdsFromUrl && { paymentIds: paymentIdsFromUrl }),
         page,
         limit: rowsPerPage,
         ...(paymentStatusFilter && { paymentStatus: paymentStatusFilter }),
@@ -142,7 +178,7 @@ export default function PaymentBatchDetailPage() {
     const { data: paymentsData, isLoading: paymentsLoading } = useFetchPayments(
         orgId,
         fetchParams,
-        batchTimesheetIds.length > 0,
+        canFetch,
     );
 
     const isLoading = batchLoading || paymentsLoading;
@@ -191,20 +227,6 @@ export default function PaymentBatchDetailPage() {
             toast.success(`Payment for ${record.userName ?? "user"} processed successfully.`);
         } catch {
             toast.error("Failed to process payment. Please try again.");
-        }
-    };
-
-    const handleMarkUnpaid = async (record: IPaymentRecord) => {
-        const timesheetId = record.timesheetId ?? record._id ?? "";
-        if (!timesheetId) {
-            toast.error("Unable to mark as unpaid: timesheet ID is missing.");
-            return;
-        }
-        try {
-            await markUnpaidMutation.mutateAsync({ timesheetId: record.timesheetId });
-            toast.success(`Payment for ${record.userName ?? "user"} marked as unpaid.`);
-        } catch {
-            toast.error("Failed to mark as unpaid. Please try again.");
         }
     };
 
@@ -391,7 +413,13 @@ export default function PaymentBatchDetailPage() {
 
             <div className="flex-1 min-w-0 flex flex-col p-4">
                 {/* Batch metadata card */}
-                {!batchLoading && batch && <BatchMetaCard batch={batch} />}
+                {!batchLoading && batch && (
+                    <BatchMetaCard
+                        batch={batch}
+                        onProcess={handleProcessBatch}
+                        isProcessing={processBatchMutation.isPending}
+                    />
+                )}
 
                 {/* Payment status filter toolbar */}
                 <div className="flex items-center gap-2 mb-4 justify-end">
@@ -614,20 +642,7 @@ export default function PaymentBatchDetailPage() {
                                     className="flex-1"
                                 >
                                     <CheckCircle className="h-4 w-4 mr-2" />
-                                    Mark as Paid
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                        handleMarkUnpaid(detailRecord);
-                                        setDetailRecord(null);
-                                    }}
-                                    disabled={markUnpaidMutation.isPending}
-                                    className="flex-1 text-destructive border-destructive hover:bg-destructive/10"
-                                >
-                                    <XCircle className="h-4 w-4 mr-2" />
-                                    Mark as Unpaid
+                                    Process Payment
                                 </Button>
                             </div>
                         </div>
