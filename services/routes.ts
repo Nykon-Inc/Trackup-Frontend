@@ -40,6 +40,8 @@ export const routes = {
         reviewPtoRequest: (id: string, requestId: string) => `/client/organizations/${id}/paid-time-offs/${requestId}/review`,
         holidays: (id: string) => `/client/organizations/${id}/holidays`,
         holiday: (id: string, holidayId: string) => `/client/organizations/${id}/holidays/${holidayId}`,
+        workBreaks: (id: string) => `/client/organizations/${id}/work-breaks`,
+        workBreak: (id: string, policyId: string) => `/client/organizations/${id}/work-breaks/${policyId}`,
     },
     projects: {
         index: "/client/projects",
