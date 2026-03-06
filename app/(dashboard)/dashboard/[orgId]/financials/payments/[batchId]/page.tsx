@@ -2,14 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
-import { useParams } from "next/navigation";
-import { MoreHorizontal, CheckCircle, XCircle, Eye, CalendarRange, Hash, User } from "lucide-react";
+import { useParams, useSearchParams } from "next/navigation";
+import { MoreHorizontal, CheckCircle, Eye, CalendarRange, Hash, User, Play } from "lucide-react";
 import Table, { TableColumn } from "@/components/ui/data-table";
 import {
     useFetchPaymentBatch,
     useFetchPayments,
     useProcessPayment,
-    useMarkPaymentUnpaid,
+    useProcessBatch,
 } from "@/services/payments";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWorkspace } from "@/components/providers/workspace-provider";
 import { toast } from "sonner";
@@ -35,8 +29,8 @@ import {
     IPaymentBatch,
     IPaymentRecord,
     IPaymentItem,
-    IProjectBreakdown,
 } from "@/interfaces/payments.interfaces";
+import { PaymentDetailDialog } from "../../components/payment-detail-dialog";
 
 const formatDate = (date: string | null | undefined) => {
     if (!date) return "—";
@@ -57,7 +51,15 @@ const paymentStatusLabel = (status: string | null) => {
     return "Unpaid";
 };
 
-function BatchMetaCard({ batch }: { batch: IPaymentBatch }) {
+function BatchMetaCard({
+    batch,
+    onProcess,
+    isProcessing,
+}: {
+    batch: IPaymentBatch;
+    onProcess: () => void;
+    isProcessing: boolean;
+}) {
     const items = [
         {
             icon: CalendarRange,
@@ -87,14 +89,26 @@ function BatchMetaCard({ batch }: { batch: IPaymentBatch }) {
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Batch Details
                 </h2>
-                {batch.status && (
-                    <Badge
-                        variant={batch.status === "completed" ? "default" : "secondary"}
-                        className="capitalize"
-                    >
-                        {batch.status}
-                    </Badge>
-                )}
+                <div className="flex items-center gap-2">
+                    {batch.status && (
+                        <Badge
+                            variant={batch.status === "completed" ? "default" : "secondary"}
+                            className="capitalize"
+                        >
+                            {batch.status}
+                        </Badge>
+                    )}
+                    {batch.status === "pending" && (
+                        <Button
+                            size="sm"
+                            onClick={onProcess}
+                            disabled={isProcessing}
+                        >
+                            <Play className="h-3.5 w-3.5 mr-1.5" />
+                            {isProcessing ? "Processing…" : "Process Batch"}
+                        </Button>
+                    )}
+                </div>
             </div>
             <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
                 {items.map(({ icon: Icon, label, value }) => (
@@ -118,6 +132,8 @@ export default function PaymentBatchDetailPage() {
     const orgId = activeOrgId ?? (params?.orgId as string) ?? "";
     const batchId = params?.batchId as string;
 
+    const searchParams = useSearchParams();
+
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [paymentStatusFilter, setPaymentStatusFilter] = useState<string | null>(null);
@@ -127,13 +143,27 @@ export default function PaymentBatchDetailPage() {
     const batch = batchData as IPaymentBatch | undefined;
 
     const processPaymentMutation = useProcessPayment();
-    const markUnpaidMutation = useMarkPaymentUnpaid();
+    const processBatchMutation = useProcessBatch();
 
-    // Only fetch payments once we have the batch's timesheetIds
+    const handleProcessBatch = async () => {
+        try {
+            await processBatchMutation.mutateAsync(batchId);
+            toast.success("Batch processed successfully.");
+        } catch {
+            toast.error("Failed to process batch. Please try again.");
+        }
+    };
+
+    // paymentIds passed from the batches list page via query param (enables immediate fetch)
+    const paymentIdsFromUrl = batch?.paymentIds ?? searchParams.get("paymentIds") ?? "";
+
+    // Prefer URL-provided paymentIds for an immediate fetch; fall back to batch timesheetIds
     const batchTimesheetIds = batch?.timesheetIds ?? [];
+    const canFetch = paymentIdsFromUrl.length > 0 || batchTimesheetIds.length > 0;
 
     const fetchParams = {
-        timesheetIds: batchTimesheetIds.join(","),
+        timesheetIds: batchTimesheetIds.join(",") || undefined,
+        ...(paymentIdsFromUrl && { paymentIds: paymentIdsFromUrl }),
         page,
         limit: rowsPerPage,
         ...(paymentStatusFilter && { paymentStatus: paymentStatusFilter }),
@@ -142,7 +172,7 @@ export default function PaymentBatchDetailPage() {
     const { data: paymentsData, isLoading: paymentsLoading } = useFetchPayments(
         orgId,
         fetchParams,
-        batchTimesheetIds.length > 0,
+        canFetch,
     );
 
     const isLoading = batchLoading || paymentsLoading;
@@ -191,20 +221,6 @@ export default function PaymentBatchDetailPage() {
             toast.success(`Payment for ${record.userName ?? "user"} processed successfully.`);
         } catch {
             toast.error("Failed to process payment. Please try again.");
-        }
-    };
-
-    const handleMarkUnpaid = async (record: IPaymentRecord) => {
-        const timesheetId = record.timesheetId ?? record._id ?? "";
-        if (!timesheetId) {
-            toast.error("Unable to mark as unpaid: timesheet ID is missing.");
-            return;
-        }
-        try {
-            await markUnpaidMutation.mutateAsync({ timesheetId: record.timesheetId });
-            toast.success(`Payment for ${record.userName ?? "user"} marked as unpaid.`);
-        } catch {
-            toast.error("Failed to mark as unpaid. Please try again.");
         }
     };
 
@@ -391,7 +407,13 @@ export default function PaymentBatchDetailPage() {
 
             <div className="flex-1 min-w-0 flex flex-col p-4">
                 {/* Batch metadata card */}
-                {!batchLoading && batch && <BatchMetaCard batch={batch} />}
+                {!batchLoading && batch && (
+                    <BatchMetaCard
+                        batch={batch}
+                        onProcess={handleProcessBatch}
+                        isProcessing={processBatchMutation.isPending}
+                    />
+                )}
 
                 {/* Payment status filter toolbar */}
                 <div className="flex items-center gap-2 mb-4 justify-end">
@@ -451,189 +473,12 @@ export default function PaymentBatchDetailPage() {
                 </div>
             </div>
 
-            {/* Details dialog */}
-            <Dialog open={!!detailRecord} onOpenChange={(open) => !open && setDetailRecord(null)}>
-                <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>Payment Details</DialogTitle>
-                    </DialogHeader>
-                    {detailRecord && (
-                        <div className="space-y-4 text-sm">
-                            {/* Employee */}
-                            <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
-                                    {detailRecord.userAvatar && (
-                                        <AvatarImage
-                                            src={detailRecord.userAvatar}
-                                            alt={detailRecord.userName ?? ""}
-                                        />
-                                    )}
-                                    <AvatarFallback>
-                                        {(detailRecord.userName ?? "?")
-                                            .split(" ")
-                                            .map((n: string) => n[0])
-                                            .join("")
-                                            .toUpperCase()
-                                            .slice(0, 2)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="font-semibold text-base">
-                                        {detailRecord.userName ?? "—"}
-                                    </p>
-                                    <p className="text-muted-foreground text-xs">
-                                        {formatDate(detailRecord.startDate)} –{" "}
-                                        {formatDate(detailRecord.endDate)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Summary grid */}
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg border p-3">
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Logged Hours</p>
-                                    <p className="font-medium">
-                                        {Number(detailRecord.totalLoggedHours ?? 0).toFixed(2)} hrs
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Holiday Hours</p>
-                                    <p className="font-medium">
-                                        {Number(detailRecord.totalHolidayHours ?? 0).toFixed(2)} hrs
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">PTO Hours</p>
-                                    <p className="font-medium">
-                                        {Number(detailRecord.totalPtoHours ?? 0).toFixed(2)} hrs
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Total Amount</p>
-                                    <p className="font-semibold">
-                                        {detailRecord.currency}{" "}
-                                        {Number(detailRecord.totalAmount ?? 0).toLocaleString(
-                                            undefined,
-                                            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                                        )}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Approval Status</p>
-                                    <Badge variant="default" className="capitalize mt-0.5">
-                                        {detailRecord.status}
-                                    </Badge>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Payment Status</p>
-                                    <Badge
-                                        variant={paymentStatusVariant(
-                                            detailRecord.paymentStatus ?? null
-                                        )}
-                                        className={cn(
-                                            "capitalize mt-0.5",
-                                            detailRecord.paymentStatus === "paid" &&
-                                                "bg-green-100 text-green-800 hover:bg-green-100"
-                                        )}
-                                    >
-                                        {paymentStatusLabel(detailRecord.paymentStatus ?? null)}
-                                    </Badge>
-                                </div>
-                                {detailRecord.approvedOn && (
-                                    <div className="col-span-2">
-                                        <p className="text-muted-foreground text-xs">Approved On</p>
-                                        <p className="font-medium">
-                                            {formatDate(detailRecord.approvedOn)}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Project breakdowns */}
-                            {detailRecord.projectBreakdowns?.length > 0 && (
-                                <div>
-                                    <p className="font-medium mb-2">Project Breakdown</p>
-                                    <div className="rounded-lg border overflow-hidden">
-                                        <table className="w-full text-xs">
-                                            <thead>
-                                                <tr className="border-b bg-muted/50">
-                                                    <th className="text-left px-3 py-2 font-medium">
-                                                        Project
-                                                    </th>
-                                                    <th className="text-right px-3 py-2 font-medium">
-                                                        Hours
-                                                    </th>
-                                                    <th className="text-right px-3 py-2 font-medium">
-                                                        Amount
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {detailRecord.projectBreakdowns.map(
-                                                    (pb: IProjectBreakdown, i: number) => (
-                                                        <tr
-                                                            key={pb.projectId ?? i}
-                                                            className="border-b last:border-0"
-                                                        >
-                                                            <td className="px-3 py-2">
-                                                                {pb.projectName ?? pb.projectId}
-                                                            </td>
-                                                            <td className="px-3 py-2 text-right tabular-nums">
-                                                                {Number(pb.hours ?? 0).toFixed(2)}
-                                                            </td>
-                                                            <td className="px-3 py-2 text-right tabular-nums">
-                                                                {detailRecord.currency}{" "}
-                                                                {Number(
-                                                                    pb.amount ?? 0
-                                                                ).toLocaleString(undefined, {
-                                                                    minimumFractionDigits: 2,
-                                                                    maximumFractionDigits: 2,
-                                                                })}
-                                                            </td>
-                                                        </tr>
-                                                    )
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Action buttons */}
-                            <div className="flex gap-2 pt-1">
-                                <Button
-                                    size="sm"
-                                    onClick={() => {
-                                        handleMarkPaid(detailRecord);
-                                        setDetailRecord(null);
-                                    }}
-                                    disabled={
-                                        processPaymentMutation.isPending ||
-                                        detailRecord.paymentStatus === "paid"
-                                    }
-                                    className="flex-1"
-                                >
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Mark as Paid
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                        handleMarkUnpaid(detailRecord);
-                                        setDetailRecord(null);
-                                    }}
-                                    disabled={markUnpaidMutation.isPending}
-                                    className="flex-1 text-destructive border-destructive hover:bg-destructive/10"
-                                >
-                                    <XCircle className="h-4 w-4 mr-2" />
-                                    Mark as Unpaid
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+            <PaymentDetailDialog
+                record={detailRecord}
+                onClose={() => setDetailRecord(null)}
+                onProcess={handleMarkPaid}
+                isProcessing={processPaymentMutation.isPending}
+            />
         </div>
     );
 }

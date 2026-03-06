@@ -1,8 +1,11 @@
 export interface GetAggregatedSessionsQuery {
-    userId: string;
+    userId?: string;
+    organizationId?: string;
     startDate: string;
     endDate: string;
     projectId?: string;
+    groupBy?: 'day' | 'week' | 'month';
+    splitByProject?: boolean;
 }
 
 export interface AppUsage {
@@ -52,6 +55,8 @@ export interface SessionBreakdown {
 
 export interface AggregatedSessions {
     day: string;
+    bucketKey?: string;
+    bucketLabel?: string;
     projectId: string;
     projectName: string;
     userId: string;
@@ -61,6 +66,7 @@ export interface AggregatedSessions {
     endTime: number;
     duration: number;
     activityRate: number;
+    totalSpent?: number;
     screenshots: Screenshot[];
     appUsage: AppUsage[];
     breakdown: SessionBreakdown[];

@@ -16,6 +16,6 @@ export const useGetAggregatedSessions = (query: GetAggregatedSessionsQuery) => {
             });
             return data as GetAggregatedSessionsResponse;
         },
-        enabled: !!query.userId && !!query.startDate && !!query.endDate,
+        enabled: (!!query.userId || !!query.organizationId) && !!query.startDate && !!query.endDate,
     });
 };
