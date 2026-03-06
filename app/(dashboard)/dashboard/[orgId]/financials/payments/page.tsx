@@ -176,7 +176,11 @@ export default function PaymentBatchesPage() {
                     className="h-8 w-8 p-0"
                     onClick={() =>
                         router.push(
-                            `/dashboard/${params?.orgId}/financials/payments/${row.id}`
+                            `/dashboard/${params?.orgId}/financials/payments/${row.id}${
+                                row.paymentIds?.length
+                                    ? `?paymentIds=${row.paymentIds.join(",")}`
+                                    : ""
+                            }`
                         )
                     }
                 >

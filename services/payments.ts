@@ -87,6 +87,22 @@ export const useMarkPaymentUnpaid = () => {
     });
 };
 
+export const useProcessBatch = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (batchId: string) => {
+            return await http.post({
+                url: routes.payments.processBatch(batchId),
+                body: {},
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["payments"] });
+            queryClient.invalidateQueries({ queryKey: ["payment-batch"] });
+        },
+    });
+};
+
 export const useCreatePaymentBatch = () => {
     const queryClient = useQueryClient();
     return useMutation({
