@@ -24,6 +24,9 @@ interface Screenshot {
 interface Session {
     id: string;
     project: string;
+    isManual?: boolean;
+    hasManualTime?: boolean;
+    sourceLabel?: string;
     startTime: string;
     endTime: string | null;
     durationSeconds: number;
@@ -118,8 +121,13 @@ export const SessionsByDay: React.FC<SessionsByDayProps> = ({ data, isLoading })
             header: "Project",
             render: (value) => {
                 // value is a project object with a 'name' property
-                const projectName = (value as any)?.name || (typeof value === 'string' ? value : "-");
-                const projectType = (value as any)?.projectType || "-";
+                const isProjectObject = typeof value === "object" && value !== null;
+                const projectName = isProjectObject && "name" in value
+                    ? String((value as { name?: string }).name || "-")
+                    : (typeof value === "string" ? value : "-");
+                const projectType = isProjectObject && "projectType" in value
+                    ? String((value as { projectType?: string }).projectType || "-")
+                    : "-";
                 return (
                     <div className="flex flex-col">
                         <span>{projectName}</span>
@@ -131,17 +139,21 @@ export const SessionsByDay: React.FC<SessionsByDayProps> = ({ data, isLoading })
         {
             key: "activityRate",
             header: "Activity",
-            render: (value) => (
-                <div className="flex items-center gap-2">
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: value as string }}
-                        ></div>
+            render: (value) => {
+                const rateNum = typeof value === "number" ? value : Number(String(value).replace("%", ""));
+                const safeRate = Number.isFinite(rateNum) ? Math.max(0, Math.min(100, rateNum)) : 0;
+                return (
+                    <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                            <div
+                                className="bg-blue-600 h-2 rounded-full"
+                                style={{ width: `${safeRate}%` }}
+                            ></div>
+                        </div>
+                        <span className="text-sm">{safeRate}%</span>
                     </div>
-                    <span className="text-sm">{value}</span>
-                </div>
-            ),
+                );
+            },
         },
         {
             key: "idleSeconds",
@@ -154,9 +166,9 @@ export const SessionsByDay: React.FC<SessionsByDayProps> = ({ data, isLoading })
             },
         },
         {
-            key: "manualTime",
+            key: "isManual",
             header: "Manual",
-            render: (value) => <span>{value || "-"}</span>,
+            render: (value, row) => <span>{(value || row.hasManualTime) ? "Yes" : "No"}</span>,
         },
         {
             key: "durationFormatted",
@@ -164,9 +176,9 @@ export const SessionsByDay: React.FC<SessionsByDayProps> = ({ data, isLoading })
             render: (value) => <span>{value}</span>,
         },
         {
-            key: "source",
+            key: "sourceLabel",
             header: "Source",
-            render: (value) => <span>{value || "-"}</span>,
+            render: (value, row) => <span>{(value as string) || (row.isManual ? "Manually Added Time" : "Tracked Time")}</span>,
         },
         {
             key: "startTime",
@@ -181,10 +193,11 @@ export const SessionsByDay: React.FC<SessionsByDayProps> = ({ data, isLoading })
             header: "Screenshots",
             render: (value, row) => (
                 <button
-                    onClick={() => handleScreenshotClick(row)}
-                    className="hover:underline cursor-pointer"
+                    onClick={() => !row.isManual && handleScreenshotClick(row)}
+                    className={row.isManual ? "cursor-not-allowed opacity-60" : "hover:underline cursor-pointer"}
+                    disabled={!!row.isManual}
                 >
-                    <Badge variant="outline">{value}</Badge>
+                    <Badge variant="outline">{row.isManual ? "Manual" : value}</Badge>
                 </button>
             ),
         },
@@ -230,13 +243,18 @@ export const SessionsByDay: React.FC<SessionsByDayProps> = ({ data, isLoading })
                 <DialogContent className="max-w-3xl">
                     <DialogHeader className="flex flex-row items-center justify-between space-y-0">
                         <DialogTitle>
-                            Screenshots - {selectedSession?.project && (selectedSession.project as any)?.name
-                                ? (selectedSession.project as any).name
+                            Screenshots - {selectedSession?.project && typeof selectedSession.project === "object" && "name" in selectedSession.project
+                                ? String((selectedSession.project as { name?: string }).name || "Session")
                                 : "Session"}
                         </DialogTitle>
                     </DialogHeader>
                     
-                    {selectedSession && selectedSession.screenshots.length > 0 ? (
+                    {selectedSession?.isManual ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                            <p>Manually Added Time</p>
+                            <p className="text-xs mt-1">No screenshots are available for manual sessions.</p>
+                        </div>
+                    ) : selectedSession && selectedSession.screenshots.length > 0 ? (
                         <div className="space-y-4">
                             {/* Image Viewer */}
                             <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center min-h-96">

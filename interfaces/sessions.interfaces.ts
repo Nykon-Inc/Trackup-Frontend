@@ -31,6 +31,7 @@ export interface Screenshot {
 
 export interface SessionBreakdown {
     uuid: string;
+    isManual?: boolean;
     appUsage: AppUsage[];
     createdAt: string;
     deductedSeconds: number;
