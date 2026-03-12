@@ -229,16 +229,22 @@ export default function TimeReportsPage() {
         aggregatedRows.forEach((row) => {
             const key = row.bucketKey || row.day
             const label = row.bucketLabel || format(new Date(row.day), "MMM d, yyyy")
+            const manualFromBreakdown = (row.breakdown || []).reduce((sum, session) => {
+                if (!session.isManual) return sum
+                return sum + ((session.duration || 0) / (1000 * 60 * 60))
+            }, 0)
+            const trackedDuration = Math.max(0, (row.duration || 0) - manualFromBreakdown)
             const existing = byBucket.get(key)
             if (existing) {
-                existing.tracked += row.duration || 0
+                existing.tracked += trackedDuration
+                existing.manual += manualFromBreakdown
                 return
             }
 
             byBucket.set(key, {
                 day: label,
-                tracked: row.duration || 0,
-                manual: 0,
+                tracked: trackedDuration,
+                manual: manualFromBreakdown,
                 sortAt: row.startTime || 0,
             })
         })

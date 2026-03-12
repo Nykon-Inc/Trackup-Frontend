@@ -1,11 +1,19 @@
 "use client"
 
+import { useParams } from "next/navigation"
 import { PageHeader } from "@/components/page-header"
-import { useParams } from "next/navigation";
-import { ClipboardList } from "lucide-react";
+import { useWorkspace } from "@/components/providers/workspace-provider"
+import { OrganizationMemberRole } from "@/interfaces/organizations.interfaces"
+import { ManualTimeRequestsTable } from "@/components/manual-time/manual-time-requests-table"
 
 export default function ManualEditsPage() {
-    const params = useParams();
+    const params = useParams()
+    const orgId = params?.orgId as string
+    const { activeOrg } = useWorkspace()
+
+    const isManagerOrOwner =
+        activeOrg?.role === OrganizationMemberRole.OWNER ||
+        activeOrg?.role === OrganizationMemberRole.MANAGER
 
     return (
         <div className="flex flex-col h-full w-full">
@@ -14,17 +22,18 @@ export default function ManualEditsPage() {
                 breadcrumbs={[
                     { label: "Dashboard", href: `/dashboard/${params?.orgId}`, active: false },
                     { label: "Reports", href: `/dashboard/${params?.orgId}/reports`, active: false },
-                    { label: "Manual Edits", href: `/dashboard/${params?.orgId}/reports/manual-edits`, active: true }
+                    { label: "Manual Edits", href: `/dashboard/${params?.orgId}/reports/manual-edits`, active: true },
                 ]}
             />
-            <div className="p-4 lg:p-6 flex flex-col items-center justify-center min-h-[400px] text-center">
-                <div className="bg-muted p-4 rounded-full mb-4">
-                    <ClipboardList className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground">Manual Time Edits</h3>
-                <p className="text-muted-foreground max-w-sm mt-1">
-                    Review and approve manually added or edited time segments. This page is currently under development.
-                </p>
+
+            <div className="p-4 lg:p-6 overflow-auto">
+                {!isManagerOrOwner ? (
+                    <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground">
+                        You do not have permission to review manual time edits.
+                    </div>
+                ) : (
+                    <ManualTimeRequestsTable organizationId={orgId} />
+                )}
             </div>
         </div>
     )
