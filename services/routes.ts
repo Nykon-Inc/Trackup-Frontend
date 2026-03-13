@@ -42,6 +42,9 @@ export const routes = {
         holiday: (id: string, holidayId: string) => `/client/organizations/${id}/holidays/${holidayId}`,
         workBreaks: (id: string) => `/client/organizations/${id}/work-breaks`,
         workBreak: (id: string, policyId: string) => `/client/organizations/${id}/work-breaks/${policyId}`,
+        manualTimeRequests: (id: string) => `/client/organizations/${id}/manual-time-requests`,
+        manualTimeRequestReview: (id: string, requestId: string) => `/client/organizations/${id}/manual-time-requests/${requestId}/review`,
+        manualTimeRequestDirect: (id: string) => `/client/organizations/${id}/manual-time-requests/direct`,
     },
     projects: {
         index: "/client/projects",

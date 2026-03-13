@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
@@ -27,11 +27,14 @@ import { useWorkspace } from "@/components/providers/workspace-provider";
 import { useSubmitTimesheet } from "@/services/timesheets";
 import { SubmitTimesheetModal } from "../components/SubmitTimesheetModal";
 import { toast } from "sonner";
+import { OrganizationMemberRole } from "@/interfaces/organizations.interfaces";
+import { MemberManualTimeSection } from "@/components/manual-time/member-manual-time-section";
 
 export default function ViewEditTimesheetsPage() {
     const params = useParams();
     const router = useRouter();
-    const { activeOrgId } = useWorkspace();
+    const { activeOrgId, activeOrg } = useWorkspace();
+    const isMember = activeOrg?.role === OrganizationMemberRole.MEMBER;
 
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -40,7 +43,7 @@ export default function ViewEditTimesheetsPage() {
 
     // ✅ Default date range = last 8 weeks
     const today = new Date();
-    const [dateRange, setDateRange] = useState<DateRange>({
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: subWeeks(today, 8),
         to: today,
     });
@@ -55,9 +58,9 @@ export default function ViewEditTimesheetsPage() {
     };
 
     const handleConfirmSubmit = async () => {
-        if (selectedTimesheet && "id" in selectedTimesheet) {
+        if (selectedTimesheet?.id) {
             try {
-                await submitTimesheetMutation.mutateAsync((selectedTimesheet as any).id);
+                await submitTimesheetMutation.mutateAsync(selectedTimesheet.id);
                 setSubmitModalOpen(false);
                 setSelectedTimesheet(null);
                 toast.success("Timesheet submitted successfully");
@@ -176,7 +179,9 @@ export default function ViewEditTimesheetsPage() {
                             if (typeof window !== 'undefined') {
                                 sessionStorage.setItem('timesheetData', JSON.stringify(row));
                             }
-                            router.push(`/dashboard/${params?.orgId}/timesheets/approvals/${(row as any).id}`);
+                            if (row.id) {
+                                router.push(`/dashboard/${params?.orgId}/timesheets/approvals/${row.id}`);
+                            }
                         }}>
                             View
                         </DropdownMenuItem>
@@ -191,7 +196,7 @@ export default function ViewEditTimesheetsPage() {
         },
     ];
 
-    const response = timesheetsData as any;
+    const response = timesheetsData as { results?: ITimesheet[]; totalResults?: number; totalPages?: number } | undefined;
 
     const timesheets = Array.isArray(timesheetsData)
         ? timesheetsData
@@ -201,10 +206,6 @@ export default function ViewEditTimesheetsPage() {
         ? timesheets.length
         : response?.totalResults ?? timesheets.length;
 
-    const totalPages = Array.isArray(timesheetsData)
-        ? Math.max(1, Math.ceil(totalResults / rowsPerPage))
-        : response?.totalPages ?? Math.max(1, Math.ceil(totalResults / rowsPerPage));
-
     // Calculate status counts
     const statusCounts = {
         all: totalResults,
@@ -213,12 +214,6 @@ export default function ViewEditTimesheetsPage() {
         approved: timesheets.filter((t: ITimesheet) => t.status === 'approved').length,
         rejected: timesheets.filter((t: ITimesheet) => t.status === 'rejected').length,
     };
-
-    useEffect(() => {
-        if (page > totalPages) {
-            setPage(totalPages);
-        }
-    }, [page, totalPages]);
 
     return (
         <div className="flex flex-col h-full min-w-0">
@@ -257,7 +252,7 @@ export default function ViewEditTimesheetsPage() {
 
                     <DatePickerWithRange
                         date={dateRange}
-                        setDate={(range: any) => {
+                        setDate={(range: DateRange | undefined) => {
                             setDateRange(range);
                             setPage(1);
                         }}
@@ -265,7 +260,11 @@ export default function ViewEditTimesheetsPage() {
                     />
                 </div>
 
-
+                {isMember && (
+                    <div className="mb-4">
+                        <MemberManualTimeSection organizationId={activeOrgId || ""} />
+                    </div>
+                )}
 
                 {/* Table: occupies remaining space and scrolls only inside its border */}
                 <div className="flex-1 min-w-0 mt-4">

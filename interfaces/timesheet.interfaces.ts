@@ -1,4 +1,5 @@
 export interface ITimesheet {
+    id?: string;
     startDate: Date;
     endDate: Date;
     status: 'open' | 'submitted' | 'approved' | 'rejected';

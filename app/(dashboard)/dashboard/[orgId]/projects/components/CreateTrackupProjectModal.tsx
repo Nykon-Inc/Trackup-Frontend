@@ -14,7 +14,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
-import { useCreateProject, useInviteUser, useInviteMembersToProject } from "@/services/projects.services";
+import { useCreateProject, useInviteMembersToProject } from "@/services/projects.services";
 import { useGetOrganizationMembers } from "@/services/organization.services";
 import { toast } from "sonner";
 import { Stepper, Step } from "@/components/ui/stepper";
@@ -66,6 +66,7 @@ export function CreateTrackupProjectModal({ open, onOpenChange }: CreateTrackupP
             name: "",
             description: "",
             allowScreenshots: false,
+            allowManualTimeEdits: true,
             selectedMembers: [] as string[], // array of user emails or IDs
         },
         validationSchema: currentStep === "details" ? CreateTrackupProjectSchema : Yup.object(),
@@ -79,7 +80,8 @@ export function CreateTrackupProjectModal({ open, onOpenChange }: CreateTrackupP
                     description: values.description,
                     organizationId: activeOrgId,
                     type: "trackup",
-                    screenshotsEnabled: values.allowScreenshots
+                    screenshotsEnabled: values.allowScreenshots,
+                    manualTimeEditsEnabled: values.allowManualTimeEdits,
                 });
 
                 // 2. Add Members if any selected
@@ -102,9 +104,17 @@ export function CreateTrackupProjectModal({ open, onOpenChange }: CreateTrackupP
                     handleClose();
                     resetForm();
                 }, 100);
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("Failed to create project:", error);
-                toast.error(error?.response?.data?.message || "Failed to create project");
+                const message =
+                    typeof error === "object" &&
+                        error !== null &&
+                        "response" in error &&
+                        (error as { response?: { data?: { message?: string } } }).response?.data?.message
+                        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+                        : "Failed to create project";
+
+                toast.error(message);
             } finally {
                 setSubmitting(false);
             }
@@ -206,6 +216,20 @@ export function CreateTrackupProjectModal({ open, onOpenChange }: CreateTrackupP
                                     Disable screenshots
                                 </label>
                             </div>
+
+                            <div className="flex items-center space-x-2 pt-0">
+                                <Checkbox
+                                    id="allowManualTimeEdits"
+                                    checked={!formik.values.allowManualTimeEdits}
+                                    onCheckedChange={(checked) => formik.setFieldValue("allowManualTimeEdits", !checked)}
+                                />
+                                <label
+                                    htmlFor="allowManualTimeEdits"
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                >
+                                    Disable manual time edits
+                                </label>
+                            </div>
                         </div>
                     )}
 
@@ -297,16 +321,30 @@ export function CreateTrackupProjectModal({ open, onOpenChange }: CreateTrackupP
 
                                 <div>
                                     <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Settings</h3>
-                                    <div className="flex items-center gap-2">
-                                        <div className={cn(
-                                            "flex h-5 w-5 items-center justify-center rounded-full text-white",
-                                            formik.values.allowScreenshots ? "bg-black" : "bg-muted-foreground"
-                                        )}>
-                                            {formik.values.allowScreenshots ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className={cn(
+                                                "flex h-5 w-5 items-center justify-center rounded-full text-white",
+                                                formik.values.allowScreenshots ? "bg-black" : "bg-muted-foreground"
+                                            )}>
+                                                {formik.values.allowScreenshots ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                                            </div>
+                                            <span className="text-sm font-medium">
+                                                {formik.values.allowScreenshots ? "Screenshots enabled" : "Screenshots disabled"}
+                                            </span>
                                         </div>
-                                        <span className="text-sm font-medium">
-                                            {formik.values.allowScreenshots ? "Screenshots enabled" : "Screenshots disabled"}
-                                        </span>
+
+                                        <div className="flex items-center gap-2">
+                                            <div className={cn(
+                                                "flex h-5 w-5 items-center justify-center rounded-full text-white",
+                                                formik.values.allowManualTimeEdits ? "bg-black" : "bg-muted-foreground"
+                                            )}>
+                                                {formik.values.allowManualTimeEdits ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                                            </div>
+                                            <span className="text-sm font-medium">
+                                                {formik.values.allowManualTimeEdits ? "Manual time edits enabled" : "Manual time edits disabled"}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

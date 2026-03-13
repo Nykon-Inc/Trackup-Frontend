@@ -8,6 +8,7 @@ export interface CreateProjectPayload {
     hubstaffProjectId?: string;
     type?: string;
     screenshotsEnabled?: boolean;
+    manualTimeEditsEnabled?: boolean;
     // Add other fields as necessary
 }
 
