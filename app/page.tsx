@@ -21,7 +21,7 @@ export default function Home() {
           <Link href="/login">
             <Button size="lg" variant="outline">Log In</Button>
           </Link>
-          <a href="https://ymhcmfgtvkaoqbrhpbma.supabase.co/storage/v1/object/public/app-releases/latest/Trackup-desktop.dmg" download>
+          <a href="https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Trackup-desktop.dmg" download>
             <Button
               variant="outline"
               className="w-full flex items-center justify-center gap-2 h-11"
@@ -31,7 +31,7 @@ export default function Home() {
             </Button>
           </a>
 
-          <a href="https://ymhcmfgtvkaoqbrhpbma.supabase.co/storage/v1/object/public/app-releases/latest/Trackup-desktop.exe" download>
+          <a href="https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Trackup-desktop.exe" download>
             <Button
               variant="outline"
               className="w-full flex items-center justify-center gap-2 h-11"
