@@ -83,7 +83,7 @@ const Navbar = () => {
                                 <Link href="/login" onClick={() => setIsOpen(false)}>
                                     <Button variant="outline" className="w-full h-11">Log In</Button>
                                 </Link>
-                                <Link href="/register" onClick={() => setIsOpen(false)}>
+                                <Link href="/signup" onClick={() => setIsOpen(false)}>
                                     <Button className="w-full h-11 bg-slate-950 text-white">Get Started</Button>
                                 </Link>
                             </div>
@@ -101,8 +101,22 @@ const Hero = () => {
         link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.dmg",
         icon: "mac"
     });
+    const [version, setVersion] = useState("");
 
     React.useEffect(() => {
+        const fetchVersion = async () => {
+            try {
+                const response = await fetch("https://jujjlgwwuhxhjxlkxcfn.supabase.co/storage/v1/object/public/app-releases/latest/update.json");
+                const data = await response.json();
+                if (data.version) {
+                    setVersion(`v${data.version}`);
+                }
+            } catch (error) {
+                console.error("Failed to fetch version info:", error);
+            }
+        };
+        fetchVersion();
+
         const platform = window.navigator.platform.toLowerCase();
         if (platform.includes('win')) {
             setOs({
@@ -144,7 +158,7 @@ const Hero = () => {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                         </span>
-                        Introducing Watchtower 2.0
+                        Introducing Watchtower {version || "2.0"}
                     </span>
                     <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.1] mb-6 font-logo">
                         Workforce Management <br />
@@ -471,7 +485,7 @@ const CTASection = () => {
                         Ready to optimize? Join hundreds of teams already scaling with Watchtower. Start your 14-day free trial today.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link href="/register">
+                        <Link href="/signup">
                             <Button size="lg" className="h-14 px-10 bg-white text-slate-950 hover:bg-slate-100 rounded-full text-base font-bold shadow-xl">
                                 Create My Account
                             </Button>

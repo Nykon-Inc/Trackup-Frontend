@@ -3,10 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { 
-    Download, 
-    Apple, 
-    Monitor, 
+import {
+    Download,
+    Apple,
+    Monitor,
     ChevronRight,
     ArrowRight,
     CheckCircle2,
@@ -46,35 +46,67 @@ const Navbar = () => {
 };
 
 export default function DownloadsPage() {
+    const [version, setVersion] = React.useState("v3.5.18");
+    const [size, setSize] = React.useState("78.2 MB");
+
+    const formatBytes = (bytes: number, decimals = 1) => {
+        if (!bytes) return "0 Bytes";
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+    };
+
+    React.useEffect(() => {
+        const fetchVersion = async () => {
+            try {
+                const response = await fetch("https://jujjlgwwuhxhjxlkxcfn.supabase.co/storage/v1/object/public/app-releases/latest/update.json");
+                const data = await response.json();
+                if (data.version) {
+                    setVersion(`v${data.version}`);
+                }
+                // Try to get size from a common platform
+                const commonPlatform = data.platforms?.["darwin-aarch64"] || data.platforms?.["darwin-x86_64"];
+                if (commonPlatform?.content_length) {
+                    setSize(formatBytes(commonPlatform.content_length));
+                }
+            } catch (error) {
+                console.error("Failed to fetch version info:", error);
+            }
+        };
+        fetchVersion();
+    }, []);
+
     const platforms = [
         {
             name: "macOS",
-            version: "v2.0.4",
-            size: "78.2 MB",
+            version: version,
+            size: size,
             icon: Apple,
             primary: true,
             requirements: "macOS 11.0 or later",
-            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Trackup-desktop.dmg",
+            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.dmg",
             type: "Disk Image (.dmg)"
         },
         {
             name: "Windows",
-            version: "v2.0.4",
-            size: "64.5 MB",
+            version: version,
+            size: size,
             icon: Monitor,
             primary: false,
             requirements: "Windows 10/11 (64-bit)",
-            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-Setup.exe",
+            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.exe",
             type: "Executable (.exe)"
         },
         {
             name: "Linux",
-            version: "v2.0.1",
-            size: "82.1 MB",
+            version: version,
+            size: size,
             icon: Cpu,
             primary: false,
             requirements: "Ubuntu, Fedora, Debian",
-            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower.AppImage",
+            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.AppImage",
             type: "AppImage (.AppImage)"
         }
     ];
@@ -82,7 +114,7 @@ export default function DownloadsPage() {
     return (
         <main className="min-h-screen bg-white">
             <Navbar />
-            
+
             {/* Hero Section */}
             <section className="relative pt-32 pb-20 overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
@@ -120,7 +152,7 @@ export default function DownloadsPage() {
                                         <div className={`h-16 w-16 rounded-2xl flex items-center justify-center mb-8 ${platform.primary ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400'}`}>
                                             <platform.icon className="h-8 w-8" />
                                         </div>
-                                        
+
                                         <div className="mb-8 grow">
                                             <h3 className="text-2xl font-bold text-slate-900 mb-2 font-logo uppercase">{platform.name}</h3>
                                             <div className="flex items-center gap-3 mb-4">
@@ -133,7 +165,7 @@ export default function DownloadsPage() {
                                         </div>
 
                                         <a href={platform.link} download>
-                                            <Button className={`w-full h-12 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-[0.98] ${platform.primary ? 'bg-slate-950 text-white hover:bg-slate-800 shadow-slate-200' : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50'}`}>
+                                            <Button className={`w-full h-12 rounded-xl font-bold text-sm transition-all active:scale-[0.98] ${platform.primary ? 'bg-slate-950 text-white hover:bg-slate-800 shadow-slate-200' : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50'}`}>
                                                 <Download className="mr-2 h-4 w-4" />
                                                 Download for {platform.name}
                                             </Button>
@@ -167,10 +199,10 @@ export default function DownloadsPage() {
                             </ul>
                         </div>
                         <div className="relative aspect-video rounded-3xl overflow-hidden border-8 border-white shadow-2xl bg-slate-900">
-                             <div className="absolute inset-0 bg-linear-to-br from-blue-600/20 to-teal-500/20 mix-blend-overlay" />
-                             <div className="flex items-center justify-center h-full">
+                            <div className="absolute inset-0 bg-linear-to-br from-blue-600/20 to-teal-500/20 mix-blend-overlay" />
+                            <div className="flex items-center justify-center h-full">
                                 <Logo size="lg" />
-                             </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,4 +1,4 @@
-
+import Image from "next/image";
 import { Outfit } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -6,7 +6,7 @@ const outfit = Outfit({ subsets: ["latin"] });
 
 interface LogoProps {
     className?: string;
-    size?: "sm" | "md" | "lg";
+    size?: "sm" | "md" | "lg" | "xl";
     iconOnly?: boolean;
 }
 
@@ -15,32 +15,28 @@ export function Logo({ className, size = "md", iconOnly = false }: LogoProps) {
         sm: "text-lg",
         md: "text-2xl",
         lg: "text-4xl",
+        xl: "text-5xl",
+    };
+
+    const iconSizeClasses = {
+        sm: "h-7 w-7 rounded-md",
+        md: "h-10 w-10 rounded-xl",
+        lg: "h-14 w-14 rounded-2xl",
+        xl: "h-20 w-20 rounded-[28px]",
     };
 
     return (
-        <div className={cn("flex items-center gap-2", className)}>
-            <div className="bg-primary h-8 w-8 rounded-lg flex items-center justify-center">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-5 h-5 text-primary-foreground"
-                >
-                    <path d="M12 2v4" />
-                    <path d="m16.2 7.8 2.9-2.9" />
-                    <path d="M18 12h4" />
-                    <path d="m16.2 16.2 2.9 2.9" />
-                    <path d="M12 18v4" />
-                    <path d="m4.9 19.1 2.9-2.9" />
-                    <path d="M2 12h4" />
-                    <path d="m4.9 4.9 2.9 2.9" />
-                </svg>
+        <div className={cn("flex items-center gap-3", className)}>
+            <div className={cn("relative overflow-hidden shrink-0 shadow-lg shadow-blue-100/50", iconSizeClasses[size])}>
+                <Image
+                    src="/icon.png"
+                    alt="Watchtower Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                />
             </div>
-            {!iconOnly && <span className={cn("font-bold tracking-tight text-primary", outfit.className, sizeClasses[size])}>
+            {!iconOnly && <span className={cn("font-black tracking-tight text-slate-900 font-logo uppercase italic", outfit.className, sizeClasses[size])}>
                 Watchtower
             </span>}
         </div>
