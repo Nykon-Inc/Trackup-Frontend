@@ -1,0 +1,195 @@
+"use client";
+
+import React from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { 
+    Download, 
+    Apple, 
+    Monitor, 
+    ChevronRight,
+    ArrowRight,
+    CheckCircle2,
+    Shield,
+    Zap,
+    Cpu,
+    ArrowLeft
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/ui/logo';
+import { Card, CardContent } from '@/components/ui/card';
+
+const Navbar = () => {
+    return (
+        <nav className="fixed top-0 w-full z-50 border-b border-slate-200/40 bg-white/70 backdrop-blur-xl">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between h-16 items-center">
+                    <div className="flex items-center gap-8">
+                        <Link href="/" className="flex items-center gap-2">
+                            <Logo size="md" />
+                        </Link>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <Link href="/login">
+                            <Button variant="ghost" className="font-semibold text-slate-700">Log In</Button>
+                        </Link>
+                        <Link href="/signup">
+                            <Button className="bg-slate-950 text-white hover:bg-slate-800 px-6 font-semibold shadow-lg shadow-slate-200">
+                                Get Started
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    );
+};
+
+export default function DownloadsPage() {
+    const platforms = [
+        {
+            name: "macOS",
+            version: "v2.0.4",
+            size: "78.2 MB",
+            icon: Apple,
+            primary: true,
+            requirements: "macOS 11.0 or later",
+            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Trackup-desktop.dmg",
+            type: "Disk Image (.dmg)"
+        },
+        {
+            name: "Windows",
+            version: "v2.0.4",
+            size: "64.5 MB",
+            icon: Monitor,
+            primary: false,
+            requirements: "Windows 10/11 (64-bit)",
+            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-Setup.exe",
+            type: "Executable (.exe)"
+        },
+        {
+            name: "Linux",
+            version: "v2.0.1",
+            size: "82.1 MB",
+            icon: Cpu,
+            primary: false,
+            requirements: "Ubuntu, Fedora, Debian",
+            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower.AppImage",
+            type: "AppImage (.AppImage)"
+        }
+    ];
+
+    return (
+        <main className="min-h-screen bg-white">
+            <Navbar />
+            
+            {/* Hero Section */}
+            <section className="relative pt-32 pb-20 overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-50/50 rounded-full blur-[120px]" />
+                    <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-teal-50/50 rounded-full blur-[100px]" />
+                </div>
+
+                <div className="max-w-7xl mx-auto px-4">
+                    <div className="mb-12">
+                        <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 transition-colors group">
+                            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                            Back to Home
+                        </Link>
+                    </div>
+
+                    <div className="max-w-3xl mb-16">
+                        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6 font-logo uppercase italic">
+                            Get the <span className="text-blue-600">Watchtower</span> App
+                        </h1>
+                        <p className="text-xl text-slate-500 leading-relaxed font-sans">
+                            High-performance desktop applications designed for seamless time tracking and productivity monitoring. Choose your platform below to get started.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-8 mb-24">
+                        {platforms.map((platform, i) => (
+                            <motion.div
+                                key={platform.name}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                            >
+                                <Card className={`h-full border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden transition-all hover:scale-[1.02] ${platform.primary ? 'ring-2 ring-blue-600 ring-offset-4' : ''}`}>
+                                    <CardContent className="p-8 flex flex-col h-full">
+                                        <div className={`h-16 w-16 rounded-2xl flex items-center justify-center mb-8 ${platform.primary ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400'}`}>
+                                            <platform.icon className="h-8 w-8" />
+                                        </div>
+                                        
+                                        <div className="mb-8 grow">
+                                            <h3 className="text-2xl font-bold text-slate-900 mb-2 font-logo uppercase">{platform.name}</h3>
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md tracking-wider uppercase">{platform.version}</span>
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{platform.size}</span>
+                                            </div>
+                                            <p className="text-sm text-slate-500 mb-6">
+                                                {platform.type} for {platform.requirements}
+                                            </p>
+                                        </div>
+
+                                        <a href={platform.link} download>
+                                            <Button className={`w-full h-12 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-[0.98] ${platform.primary ? 'bg-slate-950 text-white hover:bg-slate-800 shadow-slate-200' : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50'}`}>
+                                                <Download className="mr-2 h-4 w-4" />
+                                                Download for {platform.name}
+                                            </Button>
+                                        </a>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Features checklist */}
+                    <div className="grid md:grid-cols-2 gap-16 items-center bg-slate-50/50 rounded-[40px] p-12 border border-slate-100">
+                        <div>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-6 font-logo uppercase">Why use the desktop app?</h2>
+                            <ul className="space-y-6">
+                                {[
+                                    { title: "Offline Tracking", desc: "Keep tracking time even when your internet connection drops.", icon: Shield },
+                                    { title: "Smart Screenshots", desc: "Automated, non-intrusive activity monitoring for accurate billing.", icon: CheckCircle2 },
+                                    { title: "Native Performance", desc: "Lightweight application that won't slow down your computer.", icon: Zap }
+                                ].map((item, i) => (
+                                    <li key={i} className="flex gap-4">
+                                        <div className="h-10 w-10 shrink-0 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                                            <item.icon className="h-5 w-5 text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900 mb-1 uppercase tracking-tight">{item.title}</h4>
+                                            <p className="text-sm text-slate-500 leading-relaxed font-sans">{item.desc}</p>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="relative aspect-video rounded-3xl overflow-hidden border-8 border-white shadow-2xl bg-slate-900">
+                             <div className="absolute inset-0 bg-linear-to-br from-blue-600/20 to-teal-500/20 mix-blend-overlay" />
+                             <div className="flex items-center justify-center h-full">
+                                <Logo size="lg" />
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Footer */}
+            <footer className="py-12 border-t border-slate-100">
+                <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <p className="text-sm text-slate-400 font-medium">
+                        © 2026 Nykon Inc. All rights reserved. Registered trademark of Nykon.
+                    </p>
+                    <div className="flex gap-8 text-sm font-bold text-slate-500 uppercase tracking-widest">
+                        <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
+                        <Link href="/privacy" className="hover:text-blue-600 transition-colors">Privacy</Link>
+                        <Link href="/terms" className="hover:text-blue-600 transition-colors">Terms</Link>
+                        <a href="mailto:support@watchtower.com" className="hover:text-blue-600 transition-colors">Support</a>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    );
+}

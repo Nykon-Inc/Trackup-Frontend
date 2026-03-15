@@ -96,6 +96,35 @@ const Navbar = () => {
 };
 
 const Hero = () => {
+    const [os, setOs] = useState<{ name: string; link: string; icon: string }>({
+        name: "App",
+        link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.dmg",
+        icon: "mac"
+    });
+
+    React.useEffect(() => {
+        const platform = window.navigator.platform.toLowerCase();
+        if (platform.includes('win')) {
+            setOs({
+                name: "Windows",
+                link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.exe",
+                icon: "windows"
+            });
+        } else if (platform.includes('mac')) {
+            setOs({
+                name: "macOS",
+                link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.dmg",
+                icon: "mac"
+            });
+        } else if (platform.includes('linux')) {
+            setOs({
+                name: "Linux",
+                link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.AppImage",
+                icon: "linux"
+            });
+        }
+    }, []);
+
     return (
         <section className="relative pt-32 pb-20 overflow-hidden">
             {/* Background elements */}
@@ -126,21 +155,29 @@ const Hero = () => {
                     <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-500 mb-10 leading-relaxed font-sans">
                         The ultimate platform for productivity tracking, project insights, and seamless team optimization. Build high-performing teams with state-of-the-art surveillance and analytics.
                     </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link href="/register">
-                            <Button size="lg" className="h-14 px-10 bg-slate-950 text-white hover:bg-slate-800 rounded-full text-base font-bold shadow-xl shadow-slate-200 group">
-                                Start Free Trial
-                                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                            </Button>
-                        </Link>
-                        <div className="flex items-center gap-3">
-                            <a href="https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Trackup-desktop.dmg">
-                                <Button variant="outline" size="lg" className="h-14 px-8 rounded-full text-base font-semibold bg-white border-slate-200">
-                                    <Download className="mr-2 h-5 w-5" />
-                                    Download App
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <Link href="/signup">
+                                <Button size="lg" className="h-14 px-10 bg-slate-950 text-white hover:bg-slate-800 rounded-full text-base font-bold shadow-xl shadow-slate-200 group">
+                                    Start Free Trial
+                                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                                 </Button>
-                            </a>
+                            </Link>
+                            <div className="flex items-center gap-3">
+                                <a href={os.link} download>
+                                    <Button variant="outline" size="lg" className="h-14 px-8 rounded-full text-base font-semibold bg-white border-slate-200 hover:bg-slate-50 transition-colors">
+                                        <Download className="mr-2 h-5 w-5" />
+                                        Download for {os.name}
+                                    </Button>
+                                </a>
+                            </div>
                         </div>
+                        <Link href="/downloads" className="text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors flex items-center gap-1 group">
+                            Looking for other platforms?
+                            <span className="text-blue-600 group-hover:translate-x-0.5 transition-transform inline-flex items-center">
+                                View all downloads <ChevronRight className="h-4 w-4" />
+                            </span>
+                        </Link>
                     </div>
                 </motion.div>
 
