@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SessionBreakdown } from "@/interfaces/sessions.interfaces";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MemberManualTimeRequestForm } from "@/components/manual-time/member-manual-time-request-form";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function ActivityPage() {
     const params = useParams();
@@ -227,16 +228,27 @@ export default function ActivityPage() {
                         <Settings2 className="h-5 w-5" />
                     </Button>
 
-                    <Button
-                        variant="default"
-                        size="sm"
-                        className="h-9 gap-2 font-medium"
-                        disabled={!selectedProject || !selectedProject.allowManualTimeEdits}
-                        onClick={() => setManualTimeOpen(true)}
-                    >
-                        <Clock className="h-4 w-4" />
-                        Manual Time
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="inline-block">
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="h-9 gap-2 font-medium"
+                                    disabled={!selectedProject || !selectedProject.allowManualTimeEdits}
+                                    onClick={() => setManualTimeOpen(true)}
+                                >
+                                    <Clock className="h-4 w-4" />
+                                    Manual Time
+                                </Button>
+                            </div>
+                        </TooltipTrigger>
+                        {(!selectedProject || !selectedProject.allowManualTimeEdits) && (
+                            <TooltipContent>
+                                You are not allowed to request for manual time
+                            </TooltipContent>
+                        )}
+                    </Tooltip>
                 </div>
             </div>
 
