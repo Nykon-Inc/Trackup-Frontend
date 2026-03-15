@@ -17,33 +17,10 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
+import { MarketingNavbar } from '@/components/MarketingNavbar';
+import { MarketingFooter } from '@/components/MarketingFooter';
 import { Card, CardContent } from '@/components/ui/card';
 
-const Navbar = () => {
-    return (
-        <nav className="fixed top-0 w-full z-50 border-b border-slate-200/40 bg-white/70 backdrop-blur-xl">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16 items-center">
-                    <div className="flex items-center gap-8">
-                        <Link href="/" className="flex items-center gap-2">
-                            <Logo size="md" />
-                        </Link>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Link href="/login">
-                            <Button variant="ghost" className="font-semibold text-slate-700">Log In</Button>
-                        </Link>
-                        <Link href="/signup">
-                            <Button className="bg-slate-950 text-white hover:bg-slate-800 px-6 font-semibold shadow-lg shadow-slate-200">
-                                Get Started
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    );
-};
 
 export default function DownloadsPage() {
     const [version, setVersion] = React.useState("v3.5.18");
@@ -113,7 +90,7 @@ export default function DownloadsPage() {
 
     return (
         <main className="min-h-screen bg-white">
-            <Navbar />
+            <MarketingNavbar />
 
             {/* Hero Section */}
             <section className="relative pt-32 pb-20 overflow-hidden">
@@ -208,20 +185,7 @@ export default function DownloadsPage() {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="py-12 border-t border-slate-100">
-                <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
-                    <p className="text-sm text-slate-400 font-medium">
-                        © 2026 Nykon Inc. All rights reserved. Registered trademark of Nykon.
-                    </p>
-                    <div className="flex gap-8 text-sm font-bold text-slate-500 uppercase tracking-widest">
-                        <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
-                        <Link href="/privacy" className="hover:text-blue-600 transition-colors">Privacy</Link>
-                        <Link href="/terms" className="hover:text-blue-600 transition-colors">Terms</Link>
-                        <a href="mailto:support@watchtower.com" className="hover:text-blue-600 transition-colors">Support</a>
-                    </div>
-                </div>
-            </footer>
+            <MarketingFooter />
         </main>
     );
 }

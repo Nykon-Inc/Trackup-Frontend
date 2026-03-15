@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MarketingNavbar } from '@/components/MarketingNavbar';
+import { MarketingFooter } from '@/components/MarketingFooter';
 import {
     ChevronRight,
     ArrowRight,
@@ -500,79 +502,25 @@ const CTASection = () => {
     );
 };
 
-const Footer = () => {
-    return (
-        <footer className="pt-20 pb-10 bg-white border-t border-slate-100">
-            <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-                <div className="col-span-2 lg:col-span-1">
-                    <Link href="/" className="flex items-center gap-2 mb-6">
-                        <Logo size="md" />
-                    </Link>
-                    <p className="text-sm text-slate-500 max-w-xs leading-relaxed">
-                        Watchtower is the next generation of workforce management, built with scalability and productivity at its core.
-                    </p>
-                </div>
-                <div>
-                    <h5 className="font-bold text-slate-900 mb-6">Product</h5>
-                    <ul className="space-y-4 text-sm text-slate-500 font-medium">
-                        <li><Link href="#features" className="hover:text-primary transition-colors">Features</Link></li>
-                        <li><Link href="#use-cases" className="hover:text-primary transition-colors">Use Cases</Link></li>
-                        <li><Link href="#integrations" className="hover:text-primary transition-colors">Integrations</Link></li>
-                        <li><Link href="/login" className="hover:text-primary transition-colors">Member Sign In</Link></li>
-                    </ul>
-                </div>
-                <div>
-                    <h5 className="font-bold text-slate-900 mb-6">Company</h5>
-                    <ul className="space-y-4 text-sm text-slate-500 font-medium">
-                        <li><a href="#" className="hover:text-primary transition-colors">About Us</a></li>
-                        <li><a href="#" className="hover:text-primary transition-colors">Careers</a></li>
-                        <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
-                        <li><a href="#" className="hover:text-primary transition-colors">Terms of Service</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h5 className="font-bold text-slate-900 mb-6">Support</h5>
-                    <ul className="space-y-4 text-sm text-slate-500 font-medium">
-                        <li><a href="#" className="hover:text-primary transition-colors">Help Center</a></li>
-                        <li><a href="#" className="hover:text-primary transition-colors">Contact Us</a></li>
-                        <li><a href="#" className="hover:text-primary transition-colors">API Docs</a></li>
-                        <li><a href="#" className="hover:text-primary transition-colors">System Status</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-slate-50 gap-6">
-                <p className="text-xs text-slate-400 font-medium font-sans">
-                    © 2026 Nykon Inc. All rights reserved. Registered trademark of Nykon.
-                </p>
-                <div className="flex items-center gap-6">
-                    <Twitter className="h-4 w-4 text-slate-400 hover:text-blue-400 cursor-pointer transition-colors" />
-                    <Linkedin className="h-4 w-4 text-slate-400 hover:text-blue-700 cursor-pointer transition-colors" />
-                    <Github className="h-4 w-4 text-slate-400 hover:text-slate-900 cursor-pointer transition-colors" />
-                </div>
-            </div>
-        </footer>
-    );
-};
 
 export default function Home() {
     return (
         <main className="min-h-screen bg-white">
-            <Navbar />
+            <MarketingNavbar />
             <Hero />
             <div className="max-w-7xl mx-auto px-4 py-12 flex flex-wrap justify-center items-center gap-8 md:gap-20 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
                 {/* Mock logos */}
-                <div className="text-2xl font-black text-slate-900 tracking-tighter italic">Linear</div>
-                <div className="text-2xl font-black text-slate-900 tracking-tighter lowercase">vercel</div>
-                <div className="text-2xl font-black text-slate-900 tracking-tighter">RAILWAY</div>
-                <div className="text-2xl font-black text-slate-900 tracking-tighter italic">Supabase</div>
-                <div className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Nykon</div>
+                <div className="text-2xl font-black text-slate-900 tracking-tighter italic font-logo">Linear</div>
+                <div className="text-2xl font-black text-slate-900 tracking-tighter lowercase font-logo">vercel</div>
+                <div className="text-2xl font-black text-slate-900 tracking-tighter font-logo">RAILWAY</div>
+                <div className="text-2xl font-black text-slate-900 tracking-tighter italic font-logo">Supabase</div>
+                <div className="text-2xl font-black text-slate-900 tracking-tighter uppercase font-logo">Nykon</div>
             </div>
             <Features />
             <UseCases />
             <CTASection />
             <FAQSection />
-            <Footer />
+            <MarketingFooter />
         </main>
     );
 }
