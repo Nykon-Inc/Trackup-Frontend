@@ -46,7 +46,7 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p className="text-[10px] font-medium">{isAnalytics ? "Analytics Project" : "Trackup Project"}</p>
+                                    <p className="text-[10px] font-medium">{isAnalytics ? "Analytics Project" : "Watchtower Project"}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>

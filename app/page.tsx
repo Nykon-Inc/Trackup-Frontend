@@ -14,7 +14,7 @@ export default function Home() {
           Workforce Management <br /> Reimagined.
         </h1>
         <p className="max-w-[600px] text-muted-foreground text-lg">
-          Track time, manage projects, and optimize productivity with Trackup.
+          Track time, manage projects, and optimize productivity with Watchtower.
           The premium solution for modern teams.
         </p>
         <div className="flex gap-4">

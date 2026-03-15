@@ -14,7 +14,7 @@ export default function ManualEditsPage() {
     const isManagerOrOwner =
         activeOrg?.role === OrganizationMemberRole.OWNER ||
         activeOrg?.role === OrganizationMemberRole.MANAGER
-
+    console.log(activeOrg)
     return (
         <div className="flex flex-col h-full w-full">
             <PageHeader
@@ -27,13 +27,11 @@ export default function ManualEditsPage() {
             />
 
             <div className="p-4 lg:p-6 overflow-auto">
-                {!isManagerOrOwner ? (
-                    <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground">
-                        You do not have permission to review manual time edits.
-                    </div>
-                ) : (
-                    <ManualTimeRequestsTable organizationId={orgId} />
-                )}
+                <ManualTimeRequestsTable
+                    showAddButton={isManagerOrOwner}
+                    organizationId={orgId}
+                    userId={isManagerOrOwner ? undefined : activeOrg?.userId}
+                />
             </div>
         </div>
     )

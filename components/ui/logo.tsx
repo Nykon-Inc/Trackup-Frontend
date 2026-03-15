@@ -41,7 +41,7 @@ export function Logo({ className, size = "md", iconOnly = false }: LogoProps) {
                 </svg>
             </div>
             {!iconOnly && <span className={cn("font-bold tracking-tight text-primary", outfit.className, sizeClasses[size])}>
-                Trackup
+                Watchtower
             </span>}
         </div>
     );

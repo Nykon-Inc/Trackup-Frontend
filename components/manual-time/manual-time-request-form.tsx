@@ -16,6 +16,8 @@ import { SelectControlled } from "@/components/ui/select-controlled"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
+import { CalendarWithTime } from "@/components/ui/calendar-with-time"
+import { Label } from "@/components/ui/label"
 
 type ProjectOption = {
     id: string
@@ -45,11 +47,7 @@ interface ManualTimeRequestFormProps {
     onSubmit: (payload: ManualTimeRequestFormPayload, reset: () => void) => Promise<void> | void
 }
 
-const toLocalInputDateTime = (timestamp: number) => {
-    const date = new Date(timestamp)
-    const pad = (n: number) => n.toString().padStart(2, "0")
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
+
 
 export function ManualTimeRequestForm({
     organizationId,
@@ -67,11 +65,11 @@ export function ManualTimeRequestForm({
     const [projectSearch, setProjectSearch] = useState("")
     const [selectedUserId, setSelectedUserId] = useState<string>("")
     const [selectedProjectId, setSelectedProjectId] = useState<string>("")
-    const [startInput, setStartInput] = useState("")
-    const [endInput, setEndInput] = useState("")
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+    const [startTime, setStartTime] = useState("09:00:00")
+    const [endTime, setEndTime] = useState("17:00:00")
     const [reason, setReason] = useState("")
     const [confirmOpen, setConfirmOpen] = useState(false)
-    const [nowTs] = useState(() => Date.now())
 
     const { data: membersData, isLoading: isLoadingMembers } = useGetOrganizationMembers({
         organizationId,
@@ -125,33 +123,42 @@ export function ManualTimeRequestForm({
         [projects, selectedProjectId]
     )
 
-    const maxDateTime = toLocalInputDateTime(nowTs)
+
 
     const resetForm = () => {
         setMemberSearch("")
         setProjectSearch("")
         setSelectedUserId("")
         setSelectedProjectId("")
-        setStartInput("")
-        setEndInput("")
+        setSelectedDate(new Date())
+        setStartTime("09:00:00")
+        setEndTime("17:00:00")
         setReason("")
         setConfirmOpen(false)
     }
 
     const submitPayload = useMemo(() => {
         const ownerUserId = mode === "manager" ? selectedUserId : currentUserId
-        if (!ownerUserId || !selectedProjectId || !startInput || !endInput) {
+        if (!ownerUserId || !selectedProjectId || !selectedDate || !startTime || !endTime) {
             return null
         }
+
+        const start = new Date(selectedDate)
+        const [sh, sm, ss] = startTime.split(":").map(Number)
+        start.setHours(sh || 0, sm || 0, ss || 0, 0)
+
+        const end = new Date(selectedDate)
+        const [eh, em, es] = endTime.split(":").map(Number)
+        end.setHours(eh || 0, em || 0, es || 0, 0)
 
         return {
             userId: mode === "manager" ? ownerUserId : undefined,
             projectId: selectedProjectId,
-            startTime: new Date(startInput).getTime(),
-            endTime: new Date(endInput).getTime(),
+            startTime: start.getTime(),
+            endTime: end.getTime(),
             reason,
         } as ManualTimeRequestFormPayload
-    }, [mode, selectedUserId, currentUserId, selectedProjectId, startInput, endInput, reason])
+    }, [mode, selectedUserId, currentUserId, selectedProjectId, selectedDate, startTime, endTime, reason])
 
     const executeSubmit = async () => {
         if (!submitPayload) return
@@ -197,62 +204,74 @@ export function ManualTimeRequestForm({
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
                 {!confirmOpen ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4 pt-2">
                         {mode === "manager" && (
-                            <SelectControlled<OrganizationMember>
-                                mode="single"
-                                value={selectedMember}
-                                onChange={(member) => {
-                                    setSelectedUserId(member?.userId || "")
-                                    setSelectedProjectId("")
-                                    setProjectSearch("")
-                                }}
-                                onSearch={setMemberSearch}
-                                items={members}
-                                isLoading={isLoadingMembers}
-                                getId={(item) => item.userId}
-                                getLabel={(item) => item.user.name}
-                                placeholder="Select member"
-                                searchable
-                            />
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Member</Label>
+                                <SelectControlled<OrganizationMember>
+                                    mode="single"
+                                    value={selectedMember}
+                                    onChange={(member) => {
+                                        setSelectedUserId(member?.userId || "")
+                                        setSelectedProjectId("")
+                                        setProjectSearch("")
+                                    }}
+                                    onSearch={setMemberSearch}
+                                    items={members}
+                                    isLoading={isLoadingMembers}
+                                    getId={(item) => item.userId}
+                                    getLabel={(item) => item.user.name}
+                                    placeholder="Select member"
+                                    searchable
+                                />
+                            </div>
                         )}
 
-                        <SelectControlled<ProjectOption>
-                            mode="single"
-                            value={selectedProject}
-                            onChange={(project) => setSelectedProjectId(project?.id || "")}
-                            onSearch={setProjectSearch}
-                            items={projects}
-                            isLoading={mode === "manager" ? isLoadingMemberProjects : isLoadingProjects}
-                            getId={(item) => item.id}
-                            getLabel={(item) => item.name}
-                            placeholder={mode === "manager" && !selectedUserId ? "Select member first" : "Select project"}
-                            searchable
-                            disabled={mode === "manager" && !selectedUserId}
-                        />
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Project</Label>
+                            <SelectControlled<ProjectOption>
+                                mode="single"
+                                value={selectedProject}
+                                onChange={(project) => setSelectedProjectId(project?.id || "")}
+                                onSearch={setProjectSearch}
+                                items={projects}
+                                isLoading={mode === "manager" ? isLoadingMemberProjects : isLoadingProjects}
+                                getId={(item) => item.id}
+                                getLabel={(item) => item.name}
+                                placeholder={mode === "manager" && !selectedUserId ? "Select member first" : "Select project"}
+                                searchable
+                                disabled={mode === "manager" && !selectedUserId}
+                            />
+                        </div>
 
-                        <Input
-                            type="datetime-local"
-                            value={startInput}
-                            max={maxDateTime}
-                            onChange={(event) => setStartInput(event.target.value)}
-                        />
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Date & Time Range</Label>
+                            <CalendarWithTime
+                                date={selectedDate}
+                                startTime={startTime}
+                                endTime={endTime}
+                                onChange={(values) => {
+                                    setSelectedDate(values.date)
+                                    setStartTime(values.startTime)
+                                    setEndTime(values.endTime)
+                                }}
+                            />
+                        </div>
 
-                        <Input
-                            type="datetime-local"
-                            value={endInput}
-                            max={maxDateTime}
-                            onChange={(event) => setEndInput(event.target.value)}
-                        />
-
-                        <Textarea
-                            value={reason}
-                            onChange={(event) => setReason(event.target.value)}
-                            placeholder="Reason"
-                        />
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Reason</Label>
+                            <Textarea
+                                value={reason}
+                                onChange={(event) => setReason(event.target.value)}
+                                placeholder="Explain why this time is being added"
+                                className="min-h-[80px]"
+                            />
+                        </div>
 
                         {isInvalidRange && (
-                            <p className="text-xs text-destructive">End time must be greater than start time.</p>
+                            <div className="p-2 rounded bg-destructive/10 border border-destructive/20">
+                                <p className="text-xs font-medium text-destructive">Error: End time must be after the start time.</p>
+                            </div>
                         )}
                     </div>
                 ) : (
@@ -262,8 +281,8 @@ export function ManualTimeRequestForm({
                             <p><span className="font-medium">Member:</span> {selectedMember?.user?.name || "-"}</p>
                         )}
                         <p><span className="font-medium">Project:</span> {selectedProject?.name || "-"}</p>
-                        <p><span className="font-medium">Start:</span> {startInput ? new Date(startInput).toLocaleString() : "-"}</p>
-                        <p><span className="font-medium">End:</span> {endInput ? new Date(endInput).toLocaleString() : "-"}</p>
+                        <p><span className="font-medium">Start:</span> {submitPayload?.startTime ? new Date(submitPayload.startTime).toLocaleString() : "-"}</p>
+                        <p><span className="font-medium">End:</span> {submitPayload?.endTime ? new Date(submitPayload.endTime).toLocaleString() : "-"}</p>
                         <p><span className="font-medium">Duration:</span> {durationHours} hours</p>
                         <p><span className="font-medium">Reason:</span> {reason || "-"}</p>
                         <p className="text-xs text-muted-foreground pt-1">
@@ -284,8 +303,9 @@ export function ManualTimeRequestForm({
                                     isSubmitting ||
                                     isInvalidRange ||
                                     !selectedProjectId ||
-                                    !startInput ||
-                                    !endInput ||
+                                    !selectedDate ||
+                                    !startTime ||
+                                    !endTime ||
                                     (mode === "manager" && !selectedUserId)
                                 }
                             >

@@ -158,6 +158,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         title: "Time & Activity",
                         url: `/dashboard/${activeOrgId}/reports/time`,
                     },
+                    {
+                        title: "Manual Time Edits",
+                        url: `/dashboard/${activeOrgId}/reports/manual-edits`,
+                    },
                 ] : [
                     {
                         title: "Time & Activity Reports",

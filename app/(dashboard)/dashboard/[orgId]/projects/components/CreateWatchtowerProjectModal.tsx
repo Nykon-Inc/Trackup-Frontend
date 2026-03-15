@@ -27,7 +27,7 @@ import { OrganizationMember, OrganizationMemberRole } from "@/interfaces/organiz
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
-const CreateTrackupProjectSchema = Yup.object().shape({
+const CreateWatchtowerProjectSchema = Yup.object().shape({
     name: Yup.string()
         .min(2, "Name must be at least 2 characters")
         .max(50, "Name must be less than 50 characters")
@@ -37,7 +37,7 @@ const CreateTrackupProjectSchema = Yup.object().shape({
         .optional(),
 });
 
-interface CreateTrackupProjectModalProps {
+interface CreateWatchtowerProjectModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
@@ -48,7 +48,7 @@ const steps: Step[] = [
     { title: "Confirm", value: "confirm", icon: CheckCircle2 },
 ];
 
-export function CreateTrackupProjectModal({ open, onOpenChange }: CreateTrackupProjectModalProps) {
+export function CreateWatchtowerProjectModal({ open, onOpenChange }: CreateWatchtowerProjectModalProps) {
     const { activeOrgId } = useWorkspace();
     const [currentStep, setCurrentStep] = useState("details");
     const [memberSearch, setMemberSearch] = useState("");
@@ -69,7 +69,7 @@ export function CreateTrackupProjectModal({ open, onOpenChange }: CreateTrackupP
             allowManualTimeEdits: true,
             selectedMembers: [] as string[], // array of user emails or IDs
         },
-        validationSchema: currentStep === "details" ? CreateTrackupProjectSchema : Yup.object(),
+        validationSchema: currentStep === "details" ? CreateWatchtowerProjectSchema : Yup.object(),
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             if (!activeOrgId) return;
 
@@ -79,7 +79,7 @@ export function CreateTrackupProjectModal({ open, onOpenChange }: CreateTrackupP
                     name: values.name,
                     description: values.description,
                     organizationId: activeOrgId,
-                    type: "trackup",
+                    type: "watchtower",
                     screenshotsEnabled: values.allowScreenshots,
                     manualTimeEditsEnabled: values.allowManualTimeEdits,
                 });

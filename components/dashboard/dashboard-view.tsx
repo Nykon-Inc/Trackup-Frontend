@@ -86,7 +86,7 @@ export default function DashboardView() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">Overview</h2>
-                        <p className="text-muted-foreground text-sm">Welcome back to Trackup.</p>
+                        <p className="text-muted-foreground text-sm">Welcome back to Watchtower.</p>
                     </div>
                     <DashboardWidgetsControl
                         widgets={OWNER_WIDGET_CONFIG}

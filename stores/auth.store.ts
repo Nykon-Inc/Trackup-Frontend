@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { IAuthStore } from "@/interfaces/auth.interfaces";
-export const cookieKey = "AUTH_TOKEN_TRACKUP";
+export const cookieKey = "AUTH_TOKEN_WATCHTOWER";
 
 export const useAuthStore = create(
     persist<IAuthStore>(
@@ -17,7 +17,7 @@ export const useAuthStore = create(
             clearStore: () => set({ account: undefined, access: undefined, refresh: undefined, organization: undefined, permissions: undefined }),
         }),
         {
-            name: "sw-auth-storage",
+            name: "watchtower-auth-storage",
             storage: createJSONStorage(() => localStorage),
         },
     ),

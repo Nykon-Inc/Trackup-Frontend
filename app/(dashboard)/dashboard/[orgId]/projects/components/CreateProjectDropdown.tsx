@@ -9,11 +9,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Plus, ChevronDown, Activity, BarChart3 } from "lucide-react";
-import { CreateTrackupProjectModal } from "./CreateTrackupProjectModal";
+import { CreateWatchtowerProjectModal } from "./CreateWatchtowerProjectModal";
 import { CreateAnalyticsProjectModal } from "./CreateAnalyticsProjectModal";
 
 export function CreateProjectDropdown() {
-    const [trackupModalOpen, setTrackupModalOpen] = useState(false);
+    const [watchtowerModalOpen, setWatchtowerModalOpen] = useState(false);
     const [analyticsModalOpen, setAnalyticsModalOpen] = useState(false);
 
     return (
@@ -28,14 +28,14 @@ export function CreateProjectDropdown() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-[200px]">
                     <DropdownMenuItem
-                        onClick={() => setTrackupModalOpen(true)}
+                        onClick={() => setWatchtowerModalOpen(true)}
                         className="gap-2.5 py-2 cursor-pointer"
                     >
                         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary shrink-0">
                             <Activity className="h-3.5 w-3.5" />
                         </div>
                         <div className="flex flex-col gap-0">
-                            <span className="font-medium text-xs">Trackup project</span>
+                             <span className="font-medium text-xs">Watchtower project</span>
                             <span className="text-[10px] text-muted-foreground line-clamp-1">Track time and activity</span>
                         </div>
                     </DropdownMenuItem>
@@ -54,9 +54,9 @@ export function CreateProjectDropdown() {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <CreateTrackupProjectModal
-                open={trackupModalOpen}
-                onOpenChange={setTrackupModalOpen}
+            <CreateWatchtowerProjectModal
+                open={watchtowerModalOpen}
+                onOpenChange={setWatchtowerModalOpen}
             />
             <CreateAnalyticsProjectModal
                 open={analyticsModalOpen}

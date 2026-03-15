@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SessionBreakdown } from "@/interfaces/sessions.interfaces";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MemberManualTimeRequestForm } from "@/components/manual-time/member-manual-time-request-form";
 
 export default function ActivityPage() {
     const params = useParams();
@@ -59,6 +60,7 @@ export default function ActivityPage() {
     const selectedProject = projects.find((p: any) => p.id === projectIdFromUrl) || null;
 
     const [date, setDate] = useState<Date>(new Date())
+    const [manualTimeOpen, setManualTimeOpen] = useState(false);
 
     const effectiveUserId = (isPrivileged && userIdFromUrl) ? userIdFromUrl : (account?.id || "");
 
@@ -217,11 +219,36 @@ export default function ActivityPage() {
                         Filters
                     </Button>
 
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-primary">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-primary"
+                    >
                         <Settings2 className="h-5 w-5" />
+                    </Button>
+
+                    <Button
+                        variant="default"
+                        size="sm"
+                        className="h-9 gap-2 font-medium"
+                        disabled={!selectedProject || !selectedProject.allowManualTimeEdits}
+                        onClick={() => setManualTimeOpen(true)}
+                    >
+                        <Clock className="h-4 w-4" />
+                        Manual Time
                     </Button>
                 </div>
             </div>
+
+            <MemberManualTimeRequestForm
+                organizationId={params?.orgId as string}
+                userId={effectiveUserId}
+                projectId={projectIdFromUrl || ""}
+                userName={selectedMember?.user.name || account?.name || "User"}
+                projectName={selectedProject?.name || "Unknown Project"}
+                open={manualTimeOpen}
+                onOpenChange={setManualTimeOpen}
+            />
 
             <div className="p-4 lg:p-6 space-y-8 overflow-y-auto flex-1">
                 {sessionsLoading ? (

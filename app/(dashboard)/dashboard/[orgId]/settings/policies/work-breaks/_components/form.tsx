@@ -52,7 +52,7 @@ export function WorkBreakForm({
         organizationId: orgId,
         userId: account?.id || "",
         query: {
-            projectType: "trackup"
+            projectType: "watchtower"
         }
     })
 
@@ -187,14 +187,14 @@ export function WorkBreakForm({
                                 getId={(p) => p.id}
                                 getLabel={(p) => p.name}
                                 searchable
-                                placeholder="Select trackup projects"
+                                placeholder="Select watchtower projects"
                                 onSearch={setProjectSearch}
                                 isLoading={isLoadingProjects}
                             />
                             {formik.touched.projectIds && formik.errors.projectIds && (
                                 <p className="text-xs text-red-500">{formik.errors.projectIds as string}</p>
                             )}
-                            <p className="text-[10px] text-muted-foreground">Select trackup projects for user to select which projects(projectIds) to attach to this policy</p>
+                            <p className="text-[10px] text-muted-foreground">Select watchtower projects for user to select which projects(projectIds) to attach to this policy</p>
                         </div>
 
                         <div className="flex items-center gap-2">

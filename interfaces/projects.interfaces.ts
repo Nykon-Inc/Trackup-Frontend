@@ -27,8 +27,10 @@ export interface IProject {
     description: string;
     organizationId: string;
     status: ProjectStatus;
-    projectType: "analytics" | "trackup";
+    projectType: "analytics" | "watchtower";
     hubstaffProjectId?: string;
+    allowManualTimeEdits?: boolean;
+    screenshotsEnabled?: boolean;
 }
 
 export interface Project extends IProject {

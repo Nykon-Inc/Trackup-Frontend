@@ -204,16 +204,18 @@ export function PTORequestForm({ onSubmit, isSubmitting, isFormOpen, onClose, ho
 
     return (
         <Dialog open={isFormOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-4xl overflow-hidden flex flex-col">
-                <DialogTitle>
-                    <div className="flex items-center gap-2">
-                        <CalendarIcon className="h-5 w-5 text-primary" />
-                        <h2 className="text-xl font-semibold text-foreground">Request Time Off</h2>
-                    </div>
-                </DialogTitle>
+            <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+                <div className="p-6 pb-4 border-b shrink-0">
+                    <DialogTitle>
+                        <div className="flex items-center gap-2">
+                            <CalendarIcon className="h-5 w-5 text-primary" />
+                            <h2 className="text-xl font-semibold text-foreground">Request Time Off</h2>
+                        </div>
+                    </DialogTitle>
+                </div>
 
-                <form onSubmit={formik.handleSubmit}>
-                    <div className="space-y-5">
+                <form onSubmit={formik.handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                    <div className="flex-1 overflow-y-auto p-6 space-y-5">
 
                         {/* Step 1 — Project Selection */}
                         <div className="space-y-1">
@@ -302,7 +304,7 @@ export function PTORequestForm({ onSubmit, isSubmitting, isFormOpen, onClose, ho
                                         </div>
                                     </div>
 
-                                    <div className="overflow-y-auto lg:row-start-1 lg:row-span-2 lg:col-start-2">
+                                    <div className="lg:row-start-1 lg:row-span-2 lg:col-start-2">
                                         <BalanceSummary
                                             totalHours={MAX_HOURS}
                                             usedHours={USED_HOURS}
@@ -390,7 +392,7 @@ export function PTORequestForm({ onSubmit, isSubmitting, isFormOpen, onClose, ho
                         )}
                     </div>
 
-                    <div className="border-t pt-4 mt-4 flex justify-end gap-3 shrink-0">
+                    <div className="p-6 border-t flex justify-end gap-3 shrink-0 bg-background">
                         <Button type="button" variant="outline" onClick={() => { formik.resetForm(); setFiles([]); }}>
                             Clear
                         </Button>

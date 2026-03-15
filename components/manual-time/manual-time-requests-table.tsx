@@ -33,6 +33,8 @@ import { ManualTimeRequestForm, ManualTimeRequestFormPayload } from "./manual-ti
 
 interface ManualTimeRequestsTableProps {
     organizationId: string
+    showAddButton?: boolean
+    userId?: string
 }
 
 type ProjectOption = {
@@ -67,7 +69,7 @@ const toEntityId = (value: unknown) => {
     return ""
 }
 
-export function ManualTimeRequestsTable({ organizationId }: ManualTimeRequestsTableProps) {
+export function ManualTimeRequestsTable({ organizationId, showAddButton, userId }: ManualTimeRequestsTableProps) {
     const { account } = useAuthStore()
     const today = new Date()
 
@@ -97,7 +99,7 @@ export function ManualTimeRequestsTable({ organizationId }: ManualTimeRequestsTa
     const { data: projectsData, isLoading: isLoadingProjects } = useGetProjects({
         organizationId,
         userId: account?.id || "",
-        query: { search: projectSearch, page: 1, limit: 200 },
+        query: { search: projectSearch, page: 1, limit: 200, projectType: "watchtower" },
     })
 
     const members = useMemo(() => {
@@ -122,7 +124,7 @@ export function ManualTimeRequestsTable({ organizationId }: ManualTimeRequestsTa
     const { data: requests, isLoading } = useGetManualTimeRequests({
         organizationId,
         status,
-        userId: selectedMemberId || undefined,
+        userId: userId || selectedMemberId || undefined,
         startDate: dateRange?.from ? toDayStartTs(dateRange.from) : undefined,
         endDate: dateRange?.to ? toDayEndTs(dateRange.to) : undefined,
         page,
@@ -186,12 +188,18 @@ export function ManualTimeRequestsTable({ organizationId }: ManualTimeRequestsTa
     }
 
     const columns: TableColumn<ManualTimeRequest>[] = [
-        {
-            header: "Member",
-            key: "userId",
-            render: (value) => <span className="text-sm font-semibold text-foreground">{toDisplayName(value)}</span>,
-            width: "200px",
-        },
+        ...(!userId
+            ? [
+                {
+                    header: "Member",
+                    key: "userId",
+                    render: (value: any) => (
+                        <span className="text-sm font-semibold text-foreground">{toDisplayName(value)}</span>
+                    ),
+                    width: "200px",
+                } as TableColumn<ManualTimeRequest>,
+            ]
+            : []),
         {
             header: "Project",
             key: "projectId",
@@ -243,44 +251,48 @@ export function ManualTimeRequestsTable({ organizationId }: ManualTimeRequestsTa
             render: (value) => <span className="text-sm">{toDisplayName(value, "-")}</span>,
             width: "170px",
         },
-        {
-            header: "Actions",
-            key: "id",
-            align: "center",
-            render: (_, row) => {
-                if (row.status !== "pending") return <span className="text-muted-foreground">-</span>
+        ...(!userId
+            ? [
+                {
+                    header: "Actions",
+                    key: "id",
+                    align: "center",
+                    render: (_, row: ManualTimeRequest) => {
+                        if (row.status !== "pending") return <span className="text-muted-foreground">-</span>
 
-                return (
-                    <div className="flex gap-1.5 justify-center">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-500/10"
-                            onClick={() => handleApprove(row)}
-                            disabled={reviewMutation.isPending}
-                            aria-label="Approve manual time request"
-                        >
-                            <CheckIcon className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                            onClick={() => {
-                                setSelectedRequest(row)
-                                setRejectReason("")
-                                setRejectOpen(true)
-                            }}
-                            disabled={reviewMutation.isPending}
-                            aria-label="Reject manual time request"
-                        >
-                            <XIcon className="h-3.5 w-3.5" />
-                        </Button>
-                    </div>
-                )
-            },
-            width: "120px",
-        },
+                        return (
+                            <div className="flex gap-1.5 justify-center">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                                    onClick={() => handleApprove(row)}
+                                    disabled={reviewMutation.isPending}
+                                    aria-label="Approve manual time request"
+                                >
+                                    <CheckIcon className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                    onClick={() => {
+                                        setSelectedRequest(row)
+                                        setRejectReason("")
+                                        setRejectOpen(true)
+                                    }}
+                                    disabled={reviewMutation.isPending}
+                                    aria-label="Reject manual time request"
+                                >
+                                    <XIcon className="h-3.5 w-3.5" />
+                                </Button>
+                            </div>
+                        )
+                    },
+                    width: "120px",
+                } as TableColumn<ManualTimeRequest>,
+            ]
+            : []),
     ]
 
     return (
@@ -312,22 +324,24 @@ export function ManualTimeRequestsTable({ organizationId }: ManualTimeRequestsTa
                         }}
                         className="w-[280px]"
                     />
-                    <div className="w-[240px]">
-                        <SelectControlled<OrganizationMember>
-                            mode="single"
-                            value={selectedMember}
-                            onChange={(member) => {
-                                setSelectedMemberId(member?.userId || null)
-                                setPage(1)
-                            }}
-                            onSearch={setMemberSearch}
-                            items={members}
-                            getId={(item) => item.userId}
-                            getLabel={(item) => item.user.name}
-                            placeholder="Filter by member"
-                            searchable
-                        />
-                    </div>
+                    {!userId && (
+                        <div className="w-[240px]">
+                            <SelectControlled<OrganizationMember>
+                                mode="single"
+                                value={selectedMember}
+                                onChange={(member) => {
+                                    setSelectedMemberId(member?.userId || null)
+                                    setPage(1)
+                                }}
+                                onSearch={setMemberSearch}
+                                items={members}
+                                getId={(item) => item.userId}
+                                getLabel={(item) => item.user.name}
+                                placeholder="Filter by member"
+                                searchable
+                            />
+                        </div>
+                    )}
                     <div className="w-[240px]">
                         <SelectControlled<ProjectOption>
                             mode="single"
@@ -345,7 +359,7 @@ export function ManualTimeRequestsTable({ organizationId }: ManualTimeRequestsTa
                             searchable
                         />
                     </div>
-                    <Button onClick={() => setDirectOpen(true)}>Add Manual Time</Button>
+                    {showAddButton && <Button onClick={() => setDirectOpen(true)}>Add Manual Time</Button>}
                 </div>
             </div>
 
@@ -365,7 +379,7 @@ export function ManualTimeRequestsTable({ organizationId }: ManualTimeRequestsTa
                     minTableWidth="1550px"
                 />
 
-                <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/20">
+                <div className="border-t border-slate-100 px-4 bg-slate-50/20">
                     <TablePagination
                         component="div"
                         count={totalFilteredResults}
