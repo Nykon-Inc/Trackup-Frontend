@@ -35,41 +35,42 @@ export default function ForgotPasswordPage() {
     const isLoading = forgotPasswordMutation.isPending;
 
     return (
-        <Card className="w-full max-w-md mx-auto">
-            <CardHeader className="space-y-2 text-center">
-                <CardTitle className="text-3xl font-bold tracking-tight">Reset Password</CardTitle>
-                <CardDescription className="text-base">
-                    Enter your email address and we'll send you a link to reset your password
+        <Card className="w-full border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+            <CardHeader className="space-y-3 pt-10 pb-8 text-center bg-slate-50/30">
+                <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 font-logo uppercase">Reset Password</CardTitle>
+                <CardDescription className="text-slate-500 font-medium px-4 text-sm leading-relaxed">
+                    Don't worry! Enter your email address and we'll send you a secure link to reset your password.
                 </CardDescription>
             </CardHeader>
             <form onSubmit={formik.handleSubmit}>
-                <CardContent className="grid gap-6">
+                <CardContent className="grid gap-7 pt-10 px-8">
                     <div className="grid gap-2.5">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Recovery Email</Label>
                         <Input
                             id="email"
                             type="email"
                             placeholder="m@example.com"
                             autoComplete="email"
+                            className="h-12 px-4 rounded-xl border-slate-200 focus:border-primary transition-all text-base"
                             disabled={isLoading}
                             {...formik.getFieldProps("email")}
                         />
                         {formik.touched.email && formik.errors.email && (
-                            <div className="text-xs font-medium text-destructive">{formik.errors.email}</div>
+                            <div className="text-xs font-bold text-destructive mt-1 ml-1">{formik.errors.email}</div>
                         )}
                     </div>
                 </CardContent>
-                <CardFooter className="flex flex-col gap-5 pb-2 pt-5">
+                <CardFooter className="flex flex-col gap-6 pt-10 pb-10 px-8">
                     <Button
                         type="submit"
-                        className="w-full text-base py-5"
+                        className="w-full h-12 bg-slate-950 text-white hover:bg-slate-800 rounded-xl text-base font-bold shadow-lg shadow-slate-200 transition-all active:scale-[0.98]"
                         loading={isLoading}
                         disabled={isLoading}
                     >
-                        {isLoading ? "Sending..." : "Send Reset Link"}
+                        {isLoading ? "Sending Link..." : "Send Reset Link"}
                     </Button>
-                    <div className="text-center text-sm text-muted-foreground">
-                        <Link href="/login" className="font-medium text-primary hover:underline underline-offset-4">
+                    <div className="text-center text-sm text-slate-500 font-medium">
+                        <Link href="/login" className="text-blue-600 font-bold hover:underline underline-offset-4 flex items-center justify-center gap-2">
                             Back to Sign in
                         </Link>
                     </div>

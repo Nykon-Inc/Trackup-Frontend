@@ -278,7 +278,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-12 focus-visible:ring-0"
                                 >
                                     <Avatar className="h-8 w-8 rounded-lg">
-                                        <AvatarImage src="" alt={account?.name} />
+                                        <AvatarImage src={account?.avatar || ""} alt={account?.name} />
                                         <AvatarFallback className="rounded-lg">{account?.name?.slice(0, 2)?.toUpperCase() || "CN"}</AvatarFallback>
                                     </Avatar>
                                     <div className="grid flex-1 text-left text-sm leading-tight">

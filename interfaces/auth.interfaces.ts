@@ -11,6 +11,10 @@ export interface VerifyPayloadInterface {
     otp: string;
 }
 
+export interface ResendOtpPayloadInterface {
+    email: string;
+}
+
 export interface VerifyOnboardingTokenPayloadInterface {
     token: string;
 }

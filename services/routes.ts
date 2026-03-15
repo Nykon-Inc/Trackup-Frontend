@@ -14,6 +14,7 @@ export const routes = {
         verifyRegistration: "/auth/verify-registration",
         selectOrganization: "/auth/select-organization",
         registerInvitedUser: "/auth/register-invited-user",
+        resendOtp: "/auth/resend-otp",
     },
     organization: {
         index: "/client/organizations",

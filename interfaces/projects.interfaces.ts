@@ -12,6 +12,14 @@ export interface CreateProjectPayload {
     // Add other fields as necessary
 }
 
+export interface UpdateProjectPayload {
+    name?: string;
+    description?: string;
+    screenshotsEnabled?: boolean;
+    allowManualTimeEdits?: boolean;
+    status?: ProjectStatus;
+}
+
 export interface InviteUserPayload {
     email: string;
     role: ProjectMemberRole;

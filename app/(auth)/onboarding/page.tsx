@@ -15,9 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Account, VerifyTokenResponseInterface } from "@/interfaces/auth.interfaces";
 import { useCreateProjectOnboarding } from "@/services/projects.services";
-import { Loader2, FileText, Users, CheckCircle } from "lucide-react";
+import { Loader2, FileText, Users, CheckCircle, X, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Stepper } from "@/components/ui/stepper";
+import { Textarea } from "@/components/ui/textarea";
 
 import { OnboardingStep, OrganizationMember, BulkInviteMember } from "@/interfaces/organizations.interfaces";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -136,52 +137,58 @@ export default function OnboardingPage() {
             )}
 
             {view === "loading" || isVerifying ? (
-                <div className="flex items-center justify-center py-10">
-                    <Loader2 className="h-8 w-8 animate-spin" />
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                    <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Initializing Onboarding...</p>
                 </div>
             ) : view === "error" ? (
-                <Card className="w-full max-w-md mx-auto">
-                    <CardContent className="flex flex-col items-center justify-center gap-4 pt-6 text-center">
-                        <h1 className="text-lg font-semibold">Invalid or Expired Token</h1>
-                        <p className="text-sm text-muted-foreground">Please check your link and try again.</p>
-                        <Button size="sm" onClick={() => router.push("/login")}>Go to Login</Button>
+                <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+                    <CardContent className="flex flex-col items-center justify-center gap-6 pt-12 pb-10 text-center px-8">
+                        <div className="h-16 w-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-2">
+                            <X className="h-8 w-8" />
+                        </div>
+                        <h1 className="text-2xl font-bold font-logo uppercase text-slate-950 tracking-tight">Invalid or Expired Link</h1>
+                        <p className="text-slate-500 font-medium leading-relaxed">The link you followed may have expired or is incorrect. Please request a new one from your workspace owner.</p>
+                        <Button size="lg" className="h-12 px-8 bg-slate-950 text-white rounded-xl font-bold shadow-lg shadow-slate-200 transition-all active:scale-[0.98] w-full" onClick={() => router.push("/login")}>Go to Login</Button>
                     </CardContent>
                 </Card>
             ) : view === "accept-invite" ? (
-                <Card className="w-full max-w-md mx-auto">
-                    <CardHeader className="space-y-1 text-center pb-2">
-                        <CardTitle className="text-lg font-semibold">
-                            Join {onboardingData?.organizationMembership?.organization?.name || onboardingData?.invitation?.organization?.name || "Organization"}
+                <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+                    <CardHeader className="space-y-3 pt-12 pb-8 text-center bg-slate-50/30">
+                        <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 font-logo uppercase">
+                            Join Workspace
                         </CardTitle>
-                        <CardDescription className="text-sm">
+                        <CardDescription className="text-slate-500 font-medium px-4 leading-relaxed">
                             {onboardingData?.projectMembership ? (
-                                <>You have been invited to join project <strong>{onboardingData.projectMembership.project.name}</strong>.</>
+                                <>You have been invited to join project <span className="text-slate-950 font-bold">{onboardingData.projectMembership.project.name}</span> in <span className="text-slate-950 font-bold">{onboardingData?.organizationMembership?.organization?.name || onboardingData?.invitation?.organization?.name}</span>.</>
                             ) : (
-                                <>You have been invited to join organization as <strong>{onboardingData?.organizationMembership?.role || onboardingData?.invitation?.role}</strong>.</>
+                                <>You have been invited to join <span className="text-slate-950 font-bold">{onboardingData?.organizationMembership?.organization?.name || onboardingData?.invitation?.organization?.name}</span> as a <span className="text-blue-600 font-bold">{onboardingData?.organizationMembership?.role || onboardingData?.invitation?.role}</span>.</>
                             )}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-4 grid grid-cols-2 gap-3">
+                    <CardContent className="pt-10 pb-10 px-8 grid grid-cols-2 gap-4">
                         <Button
-                            size="sm"
-                            variant="outline"
+                            size="lg"
+                            variant="ghost"
                             onClick={handleReject}
+                            className="h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
                             disabled={isRejectingOrg}
                         >
-                            {isRejectingOrg ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Reject Invite"}
+                            {isRejectingOrg ? <Loader2 className="h-4 w-4 animate-spin" /> : "Decline"}
                         </Button>
                         <Button
-                            size="sm"
+                            size="lg"
                             onClick={handleAccept}
+                            className="h-12 bg-slate-950 text-white hover:bg-slate-800 rounded-xl font-bold shadow-lg shadow-slate-200 transition-all active:scale-[0.98]"
                             disabled={isAcceptingOrg || isSelecting}
                         >
-                            {(isAcceptingOrg || isSelecting) ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Accept Invite"}
+                            {(isAcceptingOrg || isSelecting) ? <Loader2 className="h-4 w-4 animate-spin" /> : "Accept Invitation"}
                         </Button>
                     </CardContent>
                 </Card>
             ) : view === "owner-setup" ? (
-                <Card className="w-full max-w-md mx-auto">
-                    <CardContent className="pt-6">
+                <Card className="w-full max-w-xl mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+                    <CardContent className="pt-10 pb-10 px-10">
                         <OwnerOnboardingWizard
                             token={token!}
                             user={onboardingData!.user!}
@@ -192,14 +199,14 @@ export default function OnboardingPage() {
                     </CardContent>
                 </Card>
             ) : view === "signup" ? (
-                <Card className="w-full max-w-md mx-auto">
-                    <CardHeader className="space-y-1 text-center pb-2">
-                        <CardTitle className="text-lg font-semibold">Create your account</CardTitle>
-                        <CardDescription className="text-sm">
-                            Join {onboardingData?.invitation?.organization?.name || "the organization"} by completing your profile.
+                <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+                    <CardHeader className="space-y-3 pt-12 pb-8 text-center bg-slate-50/30">
+                        <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 font-logo uppercase">Complete Profile</CardTitle>
+                        <CardDescription className="text-slate-500 font-medium px-4 leading-relaxed text-sm">
+                            Join <span className="text-slate-950 font-bold">{onboardingData?.invitation?.organization?.name || "the organization"}</span> by setting up your profile.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-10 pb-10 px-8">
                         <SignupView
                             token={token!}
                             email={onboardingData?.email || ""}
@@ -208,10 +215,12 @@ export default function OnboardingPage() {
                     </CardContent>
                 </Card>
             ) : view === "member-complete" ? (
-                <Card className="w-full max-w-md mx-auto">
-                    <CardContent className="pt-6">
+                <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+                    <CardContent className="pt-12 pb-12 px-10">
                         <OnboardingSuccessView
-                            onComplete={() => router.push(`/dashboard/${onboardingData?.organizationId}`)}
+                            onComplete={() => {
+                                router.push("/select-organization");
+                            }}
                             isCompleting={false}
                         />
                     </CardContent>
@@ -229,8 +238,6 @@ function SignupView({ token, email, onComplete }: { token: string, email: string
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
-
-
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -266,19 +273,19 @@ function SignupView({ token, email, onComplete }: { token: string, email: string
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-                <Label htmlFor="signup-email">Email</Label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2.5">
+                <Label htmlFor="signup-email" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Email Address</Label>
                 <Input
                     id="signup-email"
                     type="email"
                     value={email}
                     disabled
-                    className="h-9 bg-muted"
+                    className="h-12 px-4 rounded-xl border-slate-200 bg-slate-50 text-slate-400 font-medium"
                 />
             </div>
-            <div className="space-y-1.5">
-                <Label htmlFor="signup-name">Full Name</Label>
+            <div className="space-y-2.5">
+                <Label htmlFor="signup-name" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Full Name</Label>
                 <Input
                     id="signup-name"
                     type="text"
@@ -286,34 +293,36 @@ function SignupView({ token, email, onComplete }: { token: string, email: string
                     onChange={(e) => setName(e.target.value)}
                     required
                     placeholder="e.g. John Doe"
-                    className="h-9"
+                    className="h-12 px-4 rounded-xl border-slate-200 focus:border-primary transition-all text-base"
                 />
             </div>
-            <div className="space-y-1.5">
-                <Label htmlFor="signup-password">Password</Label>
+            <div className="space-y-2.5">
+                <Label htmlFor="signup-password" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Create Password</Label>
                 <Input
                     id="signup-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-9"
+                    placeholder="••••••••"
+                    className="h-12 px-4 rounded-xl border-slate-200 focus:border-primary transition-all text-base"
                 />
-                {error && <p className="text-xs text-red-500">{error}</p>}
+                {error && <p className="text-xs font-bold text-red-500 mt-1 ml-1">{error}</p>}
             </div>
-            <div className="space-y-1.5">
-                <Label htmlFor="confirm-signup-password">Confirm Password</Label>
+            <div className="space-y-2.5">
+                <Label htmlFor="confirm-signup-password" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Confirm Password</Label>
                 <Input
                     id="confirm-signup-password"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="h-9"
+                    placeholder="••••••••"
+                    className="h-12 px-4 rounded-xl border-slate-200 focus:border-primary transition-all text-base"
                 />
             </div>
-            <Button type="submit" size="sm" className="w-full" disabled={isPending || isSelecting}>
-                {(isPending || isSelecting) ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Complete Registration"}
+            <Button type="submit" className="w-full h-12 bg-slate-950 text-white rounded-xl font-bold shadow-lg shadow-slate-200 transition-all mt-4" disabled={isPending || isSelecting}>
+                {(isPending || isSelecting) ? <Loader2 className="h-4 w-4 animate-spin" /> : "Complete My Registration"}
             </Button>
         </form>
     );
@@ -321,22 +330,21 @@ function SignupView({ token, email, onComplete }: { token: string, email: string
 
 function OnboardingSuccessView({ onComplete, isCompleting }: { onComplete: () => void, isCompleting: boolean }) {
     return (
-        <div className="mx-auto flex max-w-[320px] flex-col justify-center gap-4 text-center">
-            <div className="flex justify-center mb-2">
-                <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
-                    <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+        <div className="mx-auto flex max-w-[350px] flex-col justify-center gap-6 text-center">
+            <div className="flex justify-center">
+                <div className="bg-green-50 p-5 rounded-full ring-8 ring-green-50/50">
+                    <CheckCircle2 className="h-10 w-10 text-green-600" />
                 </div>
             </div>
-            <div className="space-y-1">
-                <h1 className="text-xl font-bold">You're all set!</h1>
-                <p className="text-sm text-muted-foreground">
-                    You have successfully joined the organization. Download the desktop app to start tracking your work.
+            <div className="space-y-2">
+                <h1 className="text-2xl font-bold font-logo uppercase tracking-tight text-slate-950">You're all set!</h1>
+                <p className="text-slate-500 font-medium leading-relaxed">
+                    You have successfully joined the organization. Welcome aboard!
                 </p>
             </div>
 
-
-            <Button size="sm" onClick={onComplete} disabled={isCompleting} className="w-full h-11">
-                {isCompleting ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Go to Dashboard"}
+            <Button size="lg" onClick={onComplete} disabled={isCompleting} className="w-full h-14 rounded-2xl bg-slate-950 text-white font-bold shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                {isCompleting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Go to Dashboard"}
             </Button>
         </div>
     );
@@ -360,7 +368,7 @@ function OwnerOnboardingWizard({ token, user, organizationMembership, step, setS
     const handleComplete = () => {
         completeRegistration({ token }, {
             onSuccess: () => {
-                router.push(`/dashboard/${organization?.id}`);
+                router.push("/select-organization");
             },
             onError: () => {
                 toast.error("Failed to complete registration");
@@ -370,10 +378,10 @@ function OwnerOnboardingWizard({ token, user, organizationMembership, step, setS
 
     if (step === "password") {
         return (
-            <div className="mx-auto flex max-w-[320px] flex-col justify-center gap-3">
-                <div className="space-y-1 text-center">
-                    <h1 className="text-lg font-semibold">Set up your account</h1>
-                    <p className="text-sm text-muted-foreground">Create a password to get started.</p>
+            <div className="mx-auto flex max-w-[350px] flex-col justify-center gap-8 py-4">
+                <div className="space-y-2 text-center">
+                    <h1 className="text-2xl font-bold font-logo uppercase text-slate-950 tracking-tight text-center">Set up account</h1>
+                    <p className="text-slate-500 font-medium text-sm">Create a strong password to get started.</p>
                 </div>
                 <PasswordForm onSubmit={onPasswordSubmit} isLoading={isSettingPassword} />
             </div>
@@ -432,32 +440,34 @@ function PasswordForm({ onSubmit, isLoading }: { onSubmit: (p: string) => void, 
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2.5">
+                <Label htmlFor="password" title="Password" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Password</Label>
                 <Input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-9"
+                    placeholder="••••••••"
+                    className="h-12 px-4 rounded-xl border-slate-200 focus:border-primary transition-all text-base"
                 />
-                {error && <p className="text-xs text-red-500">{error}</p>}
+                {error && <p className="text-xs font-bold text-red-500 mt-1 ml-1">{error}</p>}
             </div>
-            <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <div className="space-y-2.5">
+                <Label htmlFor="confirmPassword" title="Confirm Password" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Confirm Password</Label>
                 <Input
                     id="confirmPassword"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="h-9"
+                    placeholder="••••••••"
+                    className="h-12 px-4 rounded-xl border-slate-200 focus:border-primary transition-all text-base"
                 />
             </div>
-            <Button type="submit" size="sm" className="w-full" disabled={isLoading}>
-                {isLoading ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Continue"}
+            <Button type="submit" size="lg" className="w-full h-12 bg-slate-950 text-white rounded-xl font-bold shadow-lg shadow-slate-200 transition-all mt-4" disabled={isLoading}>
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue Setup"}
             </Button>
         </form>
     );
@@ -480,32 +490,35 @@ function CreateProjectStep({ onNext, token, organizationId }: { onNext: () => vo
     };
 
     return (
-        <div className="mx-auto flex max-w-[320px] flex-col justify-center gap-3">
-            <div className="space-y-1 text-center">
-                <h1 className="text-lg font-semibold">Create your first project</h1>
+        <div className="mx-auto flex max-w-[350px] flex-col justify-center gap-8 py-4">
+            <div className="space-y-2 text-center">
+                <h1 className="text-2xl font-bold font-logo uppercase text-slate-950 tracking-tight text-center">First Project</h1>
+                <p className="text-slate-500 font-medium text-sm leading-relaxed">Let's create your first project to start tracking time.</p>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="space-y-1.5">
-                    <Label htmlFor="project-name">Project Name</Label>
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2.5">
+                    <Label htmlFor="project-name" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Project Name</Label>
                     <Input
                         id="project-name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
-                        className="h-9"
+                        placeholder="e.g. Website Overhaul"
+                        className="h-12 px-4 rounded-xl border-slate-200 focus:border-primary transition-all text-base"
                     />
                 </div>
-                <div className="space-y-1.5">
-                    <Label htmlFor="project-description">Description (Optional)</Label>
-                    <Input
+                <div className="space-y-2.5">
+                    <Label htmlFor="project-description" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Description (Optional)</Label>
+                    <Textarea
                         id="project-description"
                         value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        className="h-9"
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
+                        placeholder="What is this project about?"
+                        className="h-24 px-4 py-3 rounded-xl border-slate-200 focus:border-primary transition-all text-base resize-none"
                     />
                 </div>
-                <Button type="submit" size="sm" className="w-full" disabled={isPending}>
-                    {isPending ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : "Create Project"}
+                <Button type="submit" size="lg" className="w-full h-12 bg-slate-950 text-white rounded-xl font-bold shadow-lg shadow-slate-200 transition-all mt-4" disabled={isPending}>
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Project & Continue"}
                 </Button>
             </form>
         </div>
@@ -533,14 +546,18 @@ function AddMembersStep({ onNext, token, organizationId }: { onNext: () => void,
     };
 
     return (
-        <div className="mx-auto flex flex-col justify-center gap-3">
-            <div className="space-y-1 text-center">
-                <h1 className="text-lg font-semibold">Invite Team Members</h1>
-                <p className="text-sm text-muted-foreground">Skip this step for now.</p>
+        <div className="mx-auto flex flex-col justify-center gap-8 py-4">
+            <div className="space-y-2 text-center">
+                <h1 className="text-2xl font-bold font-logo uppercase text-slate-950 tracking-tight text-center">Build your Team</h1>
+                <p className="text-slate-500 font-medium text-sm leading-relaxed">Invite your team members to join this workspace.</p>
             </div>
-            <AddOrganizationMembers onSubmit={handleSubmit} isLoading={isPending} />
-            <Button size="sm" variant="outline" onClick={onNext} className="w-full">
-                Skip
+            
+            <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 shadow-inner">
+                <AddOrganizationMembers onSubmit={handleSubmit} isLoading={isPending} />
+            </div>
+
+            <Button size="lg" variant="ghost" onClick={onNext} className="w-full h-12 rounded-xl font-bold text-slate-500 hover:text-slate-900">
+                Continue without inviting members
             </Button>
         </div>
     )

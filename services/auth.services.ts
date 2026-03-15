@@ -16,6 +16,7 @@ import {
     SetupPasswordPayloadInterface,
     SelectOrganizationPayloadInterface,
     RegisterInvitedUserPayloadInterface,
+    ResendOtpPayloadInterface,
 } from "@/interfaces/auth.interfaces";
 import { cookieKey, useAuthStore } from "@/stores/auth.store";
 import { queryClient } from "@/lib/react-query";
@@ -121,6 +122,17 @@ export const useVerify = () => {
             }
             setCookie(null, cookieKey, data.credentials.access.token, {
                 path: "/",
+            });
+        },
+    });
+};
+
+export const useResendOtp = () => {
+    return useMutation({
+        mutationFn: async (payload: ResendOtpPayloadInterface) => {
+            return await http.post({
+                url: routes.auth.resendOtp,
+                body: payload,
             });
         },
     });

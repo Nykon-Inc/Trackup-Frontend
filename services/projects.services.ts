@@ -13,6 +13,7 @@ import {
     ProjectStatsResponse,
     ProjectMemberProfileResponse,
     UpdateProjectMemberProfilePayload,
+    UpdateProjectPayload,
 } from "@/interfaces/projects.interfaces";
 import { invalidateActivityLogs } from "@/services/activity-logs";
 
@@ -32,6 +33,37 @@ export const useCreateProject = () => {
     });
 };
 
+export const useUpdateProject = () => {
+    return useMutation({
+        mutationFn: async ({ organizationId, projectId, ...payload }: UpdateProjectPayload & { organizationId: string; projectId: string }) => {
+            const data = await http.patch({
+                url: `${routes.organization.index}/${organizationId}/projects/${projectId}`,
+                body: payload,
+            });
+            return data as Project;
+        },
+        onSuccess: (_, { projectId }) => {
+            queryClient.invalidateQueries({ queryKey: ["projects"] });
+            queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+            invalidateActivityLogs();
+        },
+    });
+};
+
+export const useDeleteProject = () => {
+    return useMutation({
+        mutationFn: async ({ organizationId, projectId }: { organizationId: string; projectId: string }) => {
+            const data = await http.delete({
+                url: `${routes.organization.index}/${organizationId}/projects/${projectId}`,
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["projects"] });
+            invalidateActivityLogs();
+        },
+    });
+};
 
 export const useCreateProjectOnboarding = () => {
     return useMutation({
