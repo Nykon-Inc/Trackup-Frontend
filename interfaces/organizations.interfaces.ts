@@ -14,6 +14,15 @@ export interface Organization {
     createdAt: string;
     updatedAt: string;
     isHubstaffConnected: boolean;
+    paymentIntegrations?: {
+        organizationId: string;
+        provider: 'wise' | 'deel';
+        isEnabled: boolean;
+        accessToken?: string;
+        createdAt: string;
+        updatedAt: string;
+        id: string;
+    }[];
 }
 
 
@@ -105,4 +114,17 @@ export interface BulkInviteMember {
 export interface BulkInvitePayload {
     organizationId: string;
     members: BulkInviteMember[];
+}
+
+export enum PaymentIntegrationProvider {
+    WISE = 'wise',
+    DEEL = 'deel',
+}
+
+export interface UpdatePaymentIntegrationPayload {
+    organizationId: string;
+    provider: PaymentIntegrationProvider;
+    isEnabled: boolean;
+    apiKey?: string;
+    config?: Record<string, unknown>;
 }

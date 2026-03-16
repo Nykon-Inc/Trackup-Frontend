@@ -115,4 +115,8 @@ export const routes = {
         batchDetail: (batchId: string) => `/payments/batch/${batchId}`,
         processBatch: (batchId: string) => `/payments/batch/${batchId}/process`,
     },
+    paymentIntegrations: {
+        index: "/client/payment-integrations",
+        reveal: (organizationId: string, provider: string) => `/client/payment-integrations/reveal/${organizationId}/${provider}`,
+    }
 }

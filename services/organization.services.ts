@@ -1,9 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import http from "@/services/base";
 import { routes } from "@/services/routes";
-import { Organization, OrganizationMember, GetInternalOrganizationsParams } from "@/interfaces/organizations.interfaces";
+import { Organization, OrganizationMember, GetInternalOrganizationsParams, BulkInvitePayload, PaymentIntegrationProvider, UpdatePaymentIntegrationPayload } from "@/interfaces/organizations.interfaces";
 import { invalidateActivityLogs } from "@/services/activity-logs";
-import { BulkInvitePayload } from "@/interfaces/organizations.interfaces";
 import { queryClient } from "@/lib/react-query";
 import { LoginResultInterface } from "@/interfaces/auth.interfaces";
 import { cookieKey, useAuthStore } from "@/stores/auth.store";
@@ -405,6 +404,33 @@ export const useRemoveOrganizationInvitation = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
+        },
+    });
+};
+
+export const useUpdatePaymentIntegration = () => {
+    return useMutation({
+        mutationFn: async (payload: UpdatePaymentIntegrationPayload) => {
+            const data = await http.post({
+                url: routes.paymentIntegrations.index,
+                body: payload,
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
+        }
+    });
+};
+
+export const useRevealPaymentIntegrationKey = () => {
+    return useMutation({
+        mutationFn: async (payload: { organizationId: string; provider: string }) => {
+            const data = await http.post({
+                url: routes.paymentIntegrations.reveal(payload.organizationId, payload.provider),
+                body: {},
+            });
+            return data as { apiKey: string };
         },
     });
 };
