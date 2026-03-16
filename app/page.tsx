@@ -203,13 +203,13 @@ const Hero = () => {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="mt-16 relative"
                 >
-                    <div className="relative mx-auto max-w-[1000px] p-2 bg-linear-to-b from-slate-200/50 to-slate-100/20 rounded-3xl border border-white shadow-2xl backdrop-blur-sm">
-                        <div className="rounded-2xl overflow-hidden shadow-inner bg-slate-900 relative aspect-video">
+                    <div className="relative mx-auto max-w-[900px] p-2 bg-linear-to-b from-slate-200/50 to-slate-100/20 rounded-3xl border border-white shadow-2xl backdrop-blur-sm">
+                        <div className="rounded-2xl overflow-hidden shadow-inner bg-slate-50 relative aspect-square">
                             <Image
                                 src="/hero-dashboard.png"
                                 alt="Watchtower Dashboard"
                                 fill
-                                className="object-cover opacity-90"
+                                className="object-cover opacity-95"
                                 priority
                             />
                         </div>
