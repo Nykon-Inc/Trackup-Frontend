@@ -52,9 +52,9 @@ export default function SelectOrganizationPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-10 pb-10 px-8">
-                    <Button 
-                        size="lg" 
-                        variant="outline" 
+                    <Button
+                        size="lg"
+                        variant="outline"
                         onClick={() => router.push("/login")}
                         className="w-full h-12 rounded-xl font-bold border-slate-200 hover:bg-slate-50"
                     >
@@ -86,10 +86,10 @@ export default function SelectOrganizationPage() {
                 {organizations.map((member) => (
                     <Card
                         key={member.organization.id}
-                        className="group cursor-pointer border-slate-200/60 shadow-lg shadow-slate-100/50 rounded-[28px] overflow-hidden transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-100/30 hover:border-blue-200 active:scale-[0.98]"
+                        className="group cursor-pointer border-slate-200/60 shadow-lg shadow-slate-100/50 rounded-[28px] overflow-hidden transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-100/30 hover:border-blue-200 active:scale-[0.98] gap-0"
                         onClick={() => handleSelectOrganization(member.organization.id)}
                     >
-                        <CardContent className="flex items-center justify-between p-7">
+                        <CardContent className="flex items-center justify-between px-7">
                             <div className="flex items-center gap-6">
                                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors border border-slate-100">
                                     <Building2 className="h-8 w-8" />
@@ -114,8 +114,8 @@ export default function SelectOrganizationPage() {
             </div>
 
             <div className="text-center pt-4">
-                <Button 
-                    variant="ghost" 
+                <Button
+                    variant="ghost"
                     onClick={() => router.push("/login")}
                     className="text-slate-400 font-bold hover:text-slate-600"
                 >
