@@ -51,10 +51,10 @@ const Navbar = () => {
                     </div>
                     <div className="hidden md:flex items-center gap-4">
                         <Link href="/login">
-                            <Button variant="ghost" className="font-semibold text-slate-700">Log In</Button>
+                            <Button variant="ghost" className="font-semibold text-foreground/80">Log In</Button>
                         </Link>
                         <Link href="/signup">
-                            <Button className="bg-slate-950 text-white hover:bg-slate-800 px-6 font-semibold shadow-lg shadow-slate-200">
+                            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 font-semibold shadow-lg shadow-primary/20">
                                 Get Started
                             </Button>
                         </Link>
@@ -162,19 +162,19 @@ const Hero = () => {
                         </span>
                         Introducing Watchtower {version || "2.0"}
                     </span>
-                    <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.1] mb-6 font-logo">
+                    <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1] mb-6 font-logo">
                         Workforce Management <br />
-                        <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-teal-500 italic">
+                        <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-secondary italic">
                             Reimagined.
                         </span>
                     </h1>
-                    <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-500 mb-10 leading-relaxed font-sans">
+                    <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed font-sans">
                         The ultimate platform for productivity tracking, project insights, and seamless team optimization. Build high-performing teams with state-of-the-art surveillance and analytics.
                     </p>
                     <div className="flex flex-col items-center gap-6">
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Link href="/signup">
-                                <Button size="lg" className="h-14 px-10 bg-slate-950 text-white hover:bg-slate-800 rounded-full text-base font-bold shadow-xl shadow-slate-200 group">
+                                <Button size="lg" className="h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full text-base font-bold shadow-xl shadow-primary/20 group">
                                     Start Free Trial
                                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                                 </Button>
@@ -266,12 +266,12 @@ const Features = () => {
     ];
 
     return (
-        <section id="features" className="py-24 bg-slate-50/50">
+        <section id="features" className="py-24 bg-muted/50">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="text-center mb-16">
-                    <h2 className="text-sm font-bold text-blue-600 uppercase tracking-widest mb-3">Capabilities</h2>
-                    <h3 className="text-4xl font-bold text-slate-900 mb-4 font-logo">A platform built for every stage.</h3>
-                    <p className="max-w-xl mx-auto text-slate-500">From early startups to enterprise-level organizations, Watchtower provides the tools you need to stay in control.</p>
+                    <h2 className="text-sm font-bold text-primary uppercase tracking-widest mb-3">Capabilities</h2>
+                    <h3 className="text-4xl font-bold text-foreground mb-4 font-logo">A platform built for every stage.</h3>
+                    <p className="max-w-xl mx-auto text-muted-foreground">From early startups to enterprise-level organizations, Watchtower provides the tools you need to stay in control.</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -319,8 +319,8 @@ const UseCases = () => {
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex flex-col lg:flex-row items-center gap-16">
                     <div className="flex-1 w-full lg:w-1/2">
-                        <h2 className="text-sm font-bold text-teal-600 uppercase tracking-widest mb-3">Use Cases</h2>
-                        <h3 className="text-4xl font-bold text-slate-900 mb-8 font-logo">Tailored for your team.</h3>
+                        <h2 className="text-sm font-bold text-secondary uppercase tracking-widest mb-3">Use Cases</h2>
+                        <h3 className="text-4xl font-bold text-foreground mb-8 font-logo">Tailored for your team.</h3>
 
                         <div className="flex gap-4 mb-10 p-1 bg-slate-100 rounded-full w-fit">
                             <button
@@ -423,7 +423,7 @@ const FAQSection = () => {
     ];
 
     return (
-        <section id="faq" className="py-24 bg-white">
+        <section id="faq" className="py-24 bg-background">
             <div className="max-w-3xl mx-auto px-4">
                 <div className="text-center mb-16">
                     <h3 className="text-4xl font-bold text-slate-900 mb-4 font-logo">FAQs</h3>
@@ -481,9 +481,9 @@ const CTASection = () => {
                     viewport={{ once: true }}
                 >
                     <h3 className="text-3xl md:text-5xl font-bold text-white mb-6 font-logo leading-tight">
-                        Give your team the <span className="text-teal-400">Watchtower</span> edge.
+                        Give your team the <span className="text-secondary/80">Watchtower</span> edge.
                     </h3>
-                    <p className="text-slate-300 max-w-xl mx-auto mb-10 text-lg">
+                    <p className="text-white/80 max-w-xl mx-auto mb-10 text-lg">
                         Ready to optimize? Join hundreds of teams already scaling with Watchtower. Start your 14-day free trial today.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -505,7 +505,7 @@ const CTASection = () => {
 
 export default function Home() {
     return (
-        <main className="min-h-screen bg-white">
+        <main className="min-h-screen bg-background">
             <MarketingNavbar />
             <Hero />
             <div className="max-w-7xl mx-auto px-4 py-12 flex flex-wrap justify-center items-center gap-8 md:gap-20 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">

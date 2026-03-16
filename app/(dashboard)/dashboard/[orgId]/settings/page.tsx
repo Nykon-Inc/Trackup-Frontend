@@ -177,7 +177,7 @@ export default function SettingsPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
                         <Input
                             placeholder="Find a setting..."
-                            className="pl-10 h-10 bg-white border-neutral-200 focus-visible:ring-black rounded-lg"
+                            className="pl-10 h-10 bg-white border-border focus-visible:ring-primary rounded-lg"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -198,12 +198,12 @@ export default function SettingsPage() {
                                 {category.items.map((item, itemIdx) => {
                                     const Content = (
                                         <Card className={cn(
-                                            "group relative flex flex-col h-full border-neutral-200 rounded-xl transition-all duration-200 hover:border-black hover:shadow-sm overflow-hidden bg-white gap-0",
+                                            "group relative flex flex-col h-full border-border rounded-xl transition-all duration-200 hover:border-primary hover:shadow-sm overflow-hidden bg-white gap-0",
                                             item.isComingSoon && "opacity-60 cursor-not-allowed"
                                         )}>
                                             <CardHeader className="px-5 pb-2">
                                                 <div className="flex items-start justify-between">
-                                                    <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100 group-hover:bg-black group-hover:text-white transition-all duration-300">
+                                                    <div className="p-2.5 rounded-lg bg-muted border border-border group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
                                                         <item.icon className="h-5 w-5" />
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1.5">
@@ -226,11 +226,11 @@ export default function SettingsPage() {
                                                     </CardDescription>
                                                 </div>
                                             </CardHeader>
-                                            <div className="mt-auto p-5 pt-3 flex items-center justify-between border-t border-neutral-50 bg-neutral-50/30">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 group-hover:text-black transition-colors">
+                                            <div className="mt-auto p-5 pt-3 flex items-center justify-between border-t border-muted bg-muted/30">
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">
                                                     {item.isComingSoon ? 'Request Early Access' : 'Manage Settings'}
                                                 </span>
-                                                <ArrowRight className="h-4 w-4 text-neutral-300 group-hover:text-black group-hover:translate-x-1 transition-all" />
+                                                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                                             </div>
                                         </Card>
                                     );

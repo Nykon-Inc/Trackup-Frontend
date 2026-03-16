@@ -139,7 +139,7 @@ export function DeelIntegrationDialog({ open, onOpenChange, orgId }: Props) {
                             <Switch
                                 checked={isEnabled}
                                 onCheckedChange={handleToggle}
-                                className="data-[state=checked]:bg-black"
+                                className="data-[state=checked]:bg-primary"
                             />
                         </div>
                     </div>
@@ -254,8 +254,8 @@ export function DeelIntegrationDialog({ open, onOpenChange, orgId }: Props) {
                                     disabled={isSaving || !token || !hasChanged}
                                     className={cn(
                                         "w-full rounded-none h-12 text-xs uppercase tracking-widest font-sans transition-all",
-                                        "bg-black text-white hover:bg-neutral-800",
-                                        "disabled:bg-neutral-100 disabled:text-neutral-400"
+                                        "bg-primary text-primary-foreground hover:bg-primary/90",
+                                        "disabled:bg-muted disabled:text-muted-foreground"
                                     )}
                                 >
                                     {isSaving ? "Encrypting & Saving..." : "Save Connection"}

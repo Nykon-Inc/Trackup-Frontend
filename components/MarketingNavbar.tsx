@@ -30,7 +30,7 @@ export const MarketingNavbar = () => {
                                 <Link 
                                     key={link.name} 
                                     href={link.href} 
-                                    className="text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors uppercase tracking-wider"
+                                    className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-wider"
                                 >
                                     {link.name}
                                 </Link>
@@ -39,10 +39,10 @@ export const MarketingNavbar = () => {
                     </div>
                     <div className="hidden md:flex items-center gap-4">
                         <Link href="/login">
-                            <Button variant="ghost" className="font-bold text-slate-700">Log In</Button>
+                            <Button variant="ghost" className="font-bold text-foreground">Log In</Button>
                         </Link>
                         <Link href="/signup">
-                            <Button className="bg-slate-950 text-white hover:bg-slate-800 px-6 font-bold shadow-lg shadow-slate-200 rounded-xl">
+                            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 font-bold shadow-lg shadow-primary/20 rounded-xl">
                                 Get Started
                             </Button>
                         </Link>
@@ -80,7 +80,7 @@ export const MarketingNavbar = () => {
                                     <Button variant="outline" className="w-full h-11 rounded-xl font-bold">Log In</Button>
                                 </Link>
                                 <Link href="/signup" onClick={() => setIsOpen(false)}>
-                                    <Button className="w-full h-11 bg-slate-950 text-white rounded-xl font-bold">Get Started</Button>
+                                    <Button className="w-full h-11 bg-primary text-primary-foreground rounded-xl font-bold">Get Started</Button>
                                 </Link>
                             </div>
                         </div>

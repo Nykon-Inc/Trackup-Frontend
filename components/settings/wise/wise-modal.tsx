@@ -139,7 +139,7 @@ export function WiseIntegrationDialog({ open, onOpenChange, orgId }: Props) {
                             <Switch
                                 checked={isEnabled}
                                 onCheckedChange={handleToggle}
-                                className="data-[state=checked]:bg-black"
+                                className="data-[state=checked]:bg-primary"
                             />
                         </div>
                     </div>
@@ -154,7 +154,7 @@ export function WiseIntegrationDialog({ open, onOpenChange, orgId }: Props) {
                                 <CheckCircle2 className="w-6 h-6 text-green-500" />
                             </div>
                             <div className="text-center">
-                                <h3 className="text-lg font-bold text-black">Connection Successful</h3>
+                                <h3 className="text-lg font-bold text-foreground">Connection Successful</h3>
                                 <p className="text-sm text-neutral-500 font-sans mt-1">Your Wise API token has been securely stored.</p>
                             </div>
                         </div>
@@ -168,7 +168,7 @@ export function WiseIntegrationDialog({ open, onOpenChange, orgId }: Props) {
                                 <div className="flex items-start gap-4 p-4 bg-neutral-50 border border-neutral-100">
                                     <ShieldCheck className="w-5 h-5 text-neutral-400 mt-0.5" />
                                     <div>
-                                        <p className="text-[13px] font-bold text-black mb-1">BYO Account Model</p>
+                                        <p className="text-[13px] font-bold text-foreground mb-1">BYO Account Model</p>
                                         <p className="text-[12px] text-neutral-500 leading-relaxed">Your funds remain in your Wise account. We only trigger payments through your authorized API token.</p>
                                     </div>
                                 </div>
@@ -185,12 +185,12 @@ export function WiseIntegrationDialog({ open, onOpenChange, orgId }: Props) {
                         <div className="space-y-8">
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h4 className="text-[11px] font-bold text-black uppercase tracking-widest">Setup Instructions</h4>
+                                    <h4 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Setup Instructions</h4>
                                     <a
                                         href="https://wise.com/help/articles/2c9XYYpx8v7y2XWq0D5E7X/how-do-i-use-the-wise-api"
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="text-[10px] text-neutral-400 hover:text-black flex items-center gap-1 transition-colors"
+                                        className="text-[10px] text-neutral-400 hover:text-foreground flex items-center gap-1 transition-colors"
                                     >
                                         Detailed Guide <ExternalLink className="w-2.5 h-2.5" />
                                     </a>
@@ -210,7 +210,7 @@ export function WiseIntegrationDialog({ open, onOpenChange, orgId }: Props) {
                                             <p className="text-[13px] text-neutral-600 font-sans">
                                                 {item.text}
                                                 {item.link && (
-                                                    <a href={item.link} target="_blank" rel="noreferrer" className="inline-flex items-center ml-1 text-black font-semibold hover:underline">
+                                                    <a href={item.link} target="_blank" rel="noreferrer" className="inline-flex items-center ml-1 text-foreground font-semibold hover:underline">
                                                         <ExternalLink className="w-3 h-3 ml-0.5" />
                                                     </a>
                                                 )}
@@ -228,7 +228,7 @@ export function WiseIntegrationDialog({ open, onOpenChange, orgId }: Props) {
                                         <Input
                                             type={showKey ? "text" : "password"}
                                             placeholder="Paste your API token here..."
-                                            className="pl-10 pr-12 rounded-none border-neutral-200 focus-visible:ring-black h-12 text-sm font-sans"
+                                            className="pl-10 pr-12 rounded-none border-neutral-200 focus-visible:ring-primary h-12 text-sm font-sans"
                                             value={token}
                                             onChange={(e) => setToken(e.target.value)}
                                         />
@@ -257,8 +257,8 @@ export function WiseIntegrationDialog({ open, onOpenChange, orgId }: Props) {
                                     disabled={isSaving || !token || !hasChanged}
                                     className={cn(
                                         "w-full rounded-none h-12 text-xs uppercase tracking-widest font-sans transition-all",
-                                        "bg-black text-white hover:bg-neutral-800",
-                                        "disabled:bg-neutral-100 disabled:text-neutral-400"
+                                        "bg-primary text-primary-foreground hover:bg-primary/90",
+                                        "disabled:bg-muted disabled:text-muted-foreground"
                                     )}
                                 >
                                     {isSaving ? "Encrypting & Saving..." : "Save Connection"}

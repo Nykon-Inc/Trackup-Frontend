@@ -76,7 +76,7 @@ export function HubstaffIntegrationDialog({ open, onOpenChange, orgId }: Props) 
                                 checked={isConnected} 
                                 onCheckedChange={handleToggle}
                                 disabled={isConnecting || isDisconnecting}
-                                className="data-[state=checked]:bg-black"
+                                className="data-[state=checked]:bg-primary"
                             />
                         </div>
                     </div>
@@ -119,7 +119,7 @@ export function HubstaffIntegrationDialog({ open, onOpenChange, orgId }: Props) 
                             <Button
                                 onClick={handleConnect}
                                 disabled={isConnecting}
-                                className="w-full rounded-none h-12 text-xs uppercase tracking-widest font-sans bg-black text-white hover:bg-neutral-800 transition-all"
+                                className="w-full rounded-none h-12 text-xs uppercase tracking-widest font-sans bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
                             >
                                 {isConnecting ? "Connecting..." : (
                                     <>
