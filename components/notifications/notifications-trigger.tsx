@@ -60,8 +60,13 @@ export function NotificationsTrigger() {
     const WS_URL = useMemo(() => {
         if (!baseUrl) return "";
         let url = baseUrl.replace("http://", "ws://").replace("https://", "wss://");
+        
+        // Remove /v1 from the URL if present
+        url = url.replace("/v1/", "/").replace("/v1", "");
+
         if (!baseUrl.includes("localhost")) {
-            url = url + '/socket';
+            // Ensure we don't end up with //socket if we already have a trailing slash
+            url = url.endsWith("/") ? url + 'socket' : url + '/socket';
         }
         return url;
     }, [baseUrl]);

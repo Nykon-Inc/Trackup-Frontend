@@ -55,8 +55,13 @@ export default function JobTrackerRefresh({ orgId: DOCUMENT_KEY, date }: JobTrac
     // --- URL RESOLUTION ---
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
     let wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://");
+    
+    // Remove /v1 from the URL if present
+    wsUrl = wsUrl.replace("/v1/", "/").replace("/v1", "");
+
     if (!baseUrl.includes("localhost")) {
-        wsUrl = wsUrl + '/socket';
+        // Ensure we don't end up with //socket if we already have a trailing slash
+        wsUrl = wsUrl.endsWith("/") ? wsUrl + 'socket' : wsUrl + '/socket';
     }
     const WS_URL = wsUrl;
 

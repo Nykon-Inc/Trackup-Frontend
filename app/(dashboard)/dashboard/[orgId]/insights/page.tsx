@@ -127,6 +127,8 @@ export default function InsightsPage() {
 
     const tab = queryParams.get("tab") || "overview";
 
+    const isManagerOrOwner = ["owner", "manager"].includes(activeOrg?.role || "");
+
     return (
         <div className="flex flex-col h-full w-full relative overflow-hidden">
             <PageHeader
@@ -182,7 +184,7 @@ export default function InsightsPage() {
             <div className={cn("flex flex-col flex-1 w-full transition-all duration-1000", insightsDisabled && "blur-[1.5px] opacity-90 select-none pointer-events-none")}>
                 <div className="border-b px-4 py-2 flex items-center justify-between gap-4 sticky top-12 z-20 bg-white shrink-0">
                     <div className="flex gap-2">
-                        <JobTrackerRefresh orgId={orgId} date={date} />
+                        {isManagerOrOwner && <JobTrackerRefresh orgId={orgId} date={date} />}
                         <DatePickerCalendar
                             onSelect={(date) => {
                                 setDate(date!)
