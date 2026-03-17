@@ -434,3 +434,52 @@ export const useRevealPaymentIntegrationKey = () => {
         },
     });
 };
+
+export const useUpdateOrganizationInsights = () => {
+    return useMutation({
+        mutationFn: async (payload: { organizationId: string; enableInsights: boolean }) => {
+            const data = await http.patch({
+                url: routes.organization.updateInsights(payload.organizationId),
+                body: { enableInsights: payload.enableInsights },
+            });
+            return data;
+        },
+        onMutate: async (newSetting) => {
+            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            await queryClient.cancelQueries({ queryKey: ["my-organizations"] });
+
+            // Snapshot the previous values
+            const previousOrgs = queryClient.getQueriesData<OrganizationMember[]>({ queryKey: ["my-organizations"] });
+
+            // Optimistically update to the new value across all matching queries
+            queryClient.setQueriesData<OrganizationMember[]>({ queryKey: ["my-organizations"] }, (old) => {
+                if (!old) return [];
+                return old.map(member => {
+                    if (member.organization.id === newSetting.organizationId) {
+                        return {
+                            ...member,
+                            organization: {
+                                ...member.organization,
+                                insightsEnabled: newSetting.enableInsights,
+                                enableInsights: newSetting.enableInsights
+                            }
+                        };
+                    }
+                    return member;
+                });
+            });
+
+            return { previousOrgs };
+        },
+        onError: (err, newSetting, context) => {
+            if (context?.previousOrgs) {
+                context.previousOrgs.forEach(([queryKey, data]) => {
+                    queryClient.setQueryData(queryKey, data);
+                });
+            }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
+        }
+    });
+};

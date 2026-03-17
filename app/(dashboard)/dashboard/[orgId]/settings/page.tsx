@@ -19,11 +19,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { HubstaffIntegrationDialog } from "@/components/settings/hubstaff/hubstaff-modal";
 import { WiseIntegrationDialog } from "@/components/settings/wise/wise-modal";
 import { DeelIntegrationDialog } from "@/components/settings/deel/deel-modal";
 import { cn } from "@/lib/utils";
+import { useWorkspace } from "@/components/providers/workspace-provider";
+import { useUpdateOrganizationInsights } from "@/services/organization.services";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 interface SettingItem {
     title: string;
@@ -33,6 +37,9 @@ interface SettingItem {
     onClick?: () => void;
     tag?: string;
     isComingSoon?: boolean;
+    type?: 'link' | 'button' | 'switch';
+    checked?: boolean;
+    onCheckedChange?: (checked: boolean) => void;
 }
 
 interface SettingCategory {
@@ -47,8 +54,25 @@ export default function SettingsPage() {
     const [isHubStaffOpen, setIsHubStaffOpen] = useState(false);
     const [isWiseOpen, setIsWiseOpen] = useState(false);
     const [isDeelOpen, setIsDeelOpen] = useState(false);
+    const { activeOrg, activeOrgId } = useWorkspace();
+    const updateInsights = useUpdateOrganizationInsights();
 
-    const categories: SettingCategory[] = [
+    const handleInsightsToggle = useCallback((checked: boolean) => {
+        if (!activeOrgId) return;
+        updateInsights.mutate({
+            organizationId: activeOrgId,
+            enableInsights: checked
+        }, {
+            onSuccess: () => {
+                toast.success(`AI Insights ${checked ? 'enabled' : 'disabled'} successfully`);
+            },
+            onError: () => {
+                toast.error("Failed to update AI Insights setting");
+            }
+        });
+    }, [activeOrgId, updateInsights]);
+
+    const categories: SettingCategory[] = useMemo(() => [
         {
             title: "Workflow & integrations",
             description: "Connect and manage third-party tools and services.",
@@ -97,53 +121,28 @@ export default function SettingsPage() {
                 }
             ]
         },
-        // {
-        //     title: "Organization",
-        //     description: "Manage your company profile and team structure.",
-        //     items: [
-        //         {
-        //             title: "General Settings",
-        //             description: "Company name, logo, and basic information.",
-        //             icon: SettingsIcon,
-        //             href: `/dashboard/${params?.orgId}/settings/general`,
-        //         },
-        //         {
-        //             title: "Team Permissions",
-        //             description: "Define custom roles and access levels.",
-        //             icon: ShieldCheck,
-        //             href: `/dashboard/${params?.orgId}/settings/roles`,
-        //             isComingSoon: true
-        //         },
-        //         {
-        //             title: "Security",
-        //             description: "Two-factor authentication and session management.",
-        //             icon: Lock,
-        //             href: `/dashboard/${params?.orgId}/settings/security`,
-        //             isComingSoon: true
-        //         }
-        //     ]
-        // },
-        // {
-        //     title: "Finance & Add-ons",
-        //     description: "Billing, payments, and premium functionality.",
-        //     items: [
-        //         {
-        //             title: "AI Insights",
-        //             description: "Intelligent analytics for apps and URL usage.",
-        //             icon: Lightbulb,
-        //             href: `/dashboard/${params?.orgId}/settings/insights/classifications`,
-        //             tag: "Add-on"
-        //         },
-        //         {
-        //             title: "Billing & Plans",
-        //             description: "Manage subscriptions and payment methods.",
-        //             icon: CreditCard,
-        //             href: `/dashboard/${params?.orgId}/settings/billing`,
-        //             isComingSoon: true
-        //         }
-        //     ]
-        // }
-    ];
+        {
+            title: "Finance & Add-ons",
+            description: "Billing, payments, and premium functionality.",
+            items: [
+                {
+                    title: "Billing & Plans",
+                    description: "Manage subscriptions and payment methods.",
+                    icon: CreditCard,
+                    href: `/dashboard/${params?.orgId}/settings/billing`,
+                    isComingSoon: true
+                },
+                {
+                    title: "AI Insights",
+                    description: "Enable AI-driven productivity analysis and workforce trends.",
+                    icon: Lightbulb,
+                    type: 'switch',
+                    checked: !!(activeOrg?.organization?.insightsEnabled || activeOrg?.organization?.enableInsights),
+                    onCheckedChange: handleInsightsToggle,
+                }
+            ]
+        }
+    ], [params?.orgId, activeOrg, handleInsightsToggle]);
 
     const filteredCategories = useMemo(() => {
         if (!searchQuery) return categories;
@@ -199,14 +198,25 @@ export default function SettingsPage() {
                                     const Content = (
                                         <Card className={cn(
                                             "group relative flex flex-col h-full border-border rounded-xl transition-all duration-200 hover:border-primary hover:shadow-sm overflow-hidden bg-white gap-0",
-                                            item.isComingSoon && "opacity-60 cursor-not-allowed"
+                                            item.isComingSoon && "opacity-60 cursor-not-allowed",
+                                            item.type === 'switch' && "hover:border-border cursor-default"
                                         )}>
                                             <CardHeader className="px-5 pb-2">
                                                 <div className="flex items-start justify-between">
-                                                    <div className="p-2.5 rounded-lg bg-muted border border-border group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+                                                    <div className={cn(
+                                                        "p-2.5 rounded-lg bg-muted border border-border transition-all duration-300",
+                                                        item.type !== 'switch' && "group-hover:bg-primary group-hover:text-primary-foreground"
+                                                    )}>
                                                         <item.icon className="h-5 w-5" />
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1.5">
+                                                        {item.type === 'switch' && (
+                                                            <Switch
+                                                                checked={item.checked}
+                                                                onCheckedChange={item.onCheckedChange}
+                                                                disabled={updateInsights.isPending}
+                                                            />
+                                                        )}
                                                         {item.tag && (
                                                             <Badge variant="secondary" className="bg-neutral-100 text-neutral-900 hover:bg-neutral-100 border-none rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
                                                                 {item.tag}
@@ -228,14 +238,14 @@ export default function SettingsPage() {
                                             </CardHeader>
                                             <div className="mt-auto p-5 pt-3 flex items-center justify-between border-t border-muted bg-muted/30">
                                                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">
-                                                    {item.isComingSoon ? 'Request Early Access' : 'Manage Settings'}
+                                                    {item.isComingSoon ? 'Request Early Access' : item.type === 'switch' ? (item.checked ? 'Enabled' : 'Disabled') : 'Manage Settings'}
                                                 </span>
-                                                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                                                {item.type !== 'switch' && <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />}
                                             </div>
                                         </Card>
                                     );
 
-                                    if (item.isComingSoon) {
+                                    if (item.isComingSoon || item.type === 'switch') {
                                         return <div key={itemIdx}>{Content}</div>;
                                     }
 

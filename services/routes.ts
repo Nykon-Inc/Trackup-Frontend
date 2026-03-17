@@ -46,6 +46,7 @@ export const routes = {
         manualTimeRequests: (id: string) => `/client/organizations/${id}/manual-time-requests`,
         manualTimeRequestReview: (id: string, requestId: string) => `/client/organizations/${id}/manual-time-requests/${requestId}/review`,
         manualTimeRequestDirect: (id: string) => `/client/organizations/${id}/manual-time-requests/direct`,
+        updateInsights: (id: string) => `/client/organizations/${id}/insights`,
     },
     projects: {
         index: "/client/projects",
