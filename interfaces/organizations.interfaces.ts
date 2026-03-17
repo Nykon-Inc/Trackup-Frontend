@@ -5,6 +5,7 @@ export interface Organization {
     name: string;
     domain: string;
     enableInsights?: boolean;
+    insightsEnabled?: boolean;
     status: 'active' | 'disabled'
     onboarding?: {
         currentStep: OnboardingStep;

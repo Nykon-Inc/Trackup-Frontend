@@ -15,6 +15,10 @@ import Overview from "./_components/Overview";
 import StaffToReview from "./_components/StaffToReview";
 import { DatePickerCalendar } from "@/components/ui/date-picker-calendar";
 import JobTrackerRefresh from "./_components/JobTrackerRefresh";
+import { useWorkspace } from "@/components/providers/workspace-provider";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Lightbulb } from "lucide-react";
 
 export default function InsightsPage() {
     const params = useParams();
@@ -22,6 +26,7 @@ export default function InsightsPage() {
     const router = useRouter();
     const queryParams = useSearchParams();
     const { account, organization } = useAuthStore();
+    const { activeOrg, isLoading: isLoadingWorkspace } = useWorkspace();
 
     const [date, setDate] = useState<Date | undefined>(startOfDay(new Date()));
     const [projectSearch, setProjectSearch] = useState("");
@@ -55,7 +60,32 @@ export default function InsightsPage() {
     const tab = queryParams.get("tab") || "overview";
 
     return (
-        <div className="flex flex-col h-full w-full">
+        <div className="flex flex-col h-full w-full relative">
+            {!isLoadingWorkspace && !activeOrg?.organization?.insightsEnabled && (
+                <div className="absolute inset-0 z-100 bg-white/60 backdrop-blur-md flex items-center justify-center p-4">
+                    <div className="max-w-md w-full bg-white border border-border shadow-2xl rounded-2xl p-10 text-center animate-in fade-in zoom-in duration-500">
+                        <div className="h-20 w-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 transform -rotate-6">
+                            <Lightbulb className="h-10 w-10 text-primary" />
+                        </div>
+                        <h2 className="text-3xl font-bold tracking-tight text-neutral-900 mb-3">AI Insights is Disabled</h2>
+                        <p className="text-neutral-500 mb-8 leading-relaxed text-balance">
+                            To unlock powerful AI-driven analytics and productivity trends, you need to enable the <b>Insights</b> setting in your organization settings.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <Button asChild size="lg" className="w-full font-bold shadow-lg shadow-primary/20">
+                                <Link href={`/dashboard/${orgId}/settings`}>
+                                    Go to Settings
+                                </Link>
+                            </Button>
+                            <Button asChild variant="ghost" size="sm" className="w-full text-neutral-400 hover:text-neutral-600">
+                                <Link href={`/dashboard/${orgId}`}>
+                                    Back to Dashboard
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <PageHeader
                 title="Insights"
                 breadcrumbs={[
