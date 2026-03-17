@@ -238,12 +238,38 @@ export function InsightsTab({
                             Reports
                         </Button>
                         <Button
-                            onClick={() => runInsights({
-                                userId: effectiveUserId,
-                                projectId: effectiveProjectId,
-                            })}
+                            onClick={() => {
+                                let startTime: string | undefined;
+                                let endTime: string | undefined;
+
+                                if (selectedInsightId === "today") {
+                                    const start = new Date(selectedDate);
+                                    start.setHours(0, 0, 0, 0);
+                                    startTime = start.toISOString();
+
+                                    const end = new Date(selectedDate);
+                                    end.setHours(23, 59, 59, 999);
+                                    endTime = end.toISOString();
+                                } else {
+                                    const hour = parseInt(selectedInsightId);
+                                    const start = new Date(selectedDate);
+                                    start.setHours(hour, 0, 0, 0);
+                                    startTime = start.toISOString();
+
+                                    const end = new Date(selectedDate);
+                                    end.setHours(hour, 59, 59, 999);
+                                    endTime = end.toISOString();
+                                }
+
+                                runInsights({
+                                    userId: effectiveUserId,
+                                    projectId: effectiveProjectId,
+                                    startTime,
+                                    endTime
+                                })
+                            }}
                             size="sm"
-                            disabled={!effectiveProjectId || isPending}
+                            disabled={!effectiveProjectId || isPending || selectedInsightId === "today"}
                             className="h-8 text-xs gap-1.5"
                         >
                             <FileText className="h-3.5 w-3.5" />
