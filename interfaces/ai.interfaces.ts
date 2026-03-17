@@ -93,8 +93,8 @@ export interface IGetOrgInsightsParams {
 export interface IRunUserInsightsBody {
     userId: string;
     projectId: string;
-    startTime?: string;
-    endTime?: string;
+    startTime?: string | number;
+    endTime?: string | number;
 }
 
 export interface IGetInsightsToReviewParams {

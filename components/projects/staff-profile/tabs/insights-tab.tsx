@@ -239,26 +239,26 @@ export function InsightsTab({
                         </Button>
                         <Button
                             onClick={() => {
-                                let startTime: string | undefined;
-                                let endTime: string | undefined;
+                                let startTime: string | number | undefined;
+                                let endTime: string | number | undefined;
 
                                 if (selectedInsightId === "today") {
                                     const start = new Date(selectedDate);
                                     start.setHours(0, 0, 0, 0);
-                                    startTime = start.toISOString();
+                                    startTime = start.getTime();
 
                                     const end = new Date(selectedDate);
                                     end.setHours(23, 59, 59, 999);
-                                    endTime = end.toISOString();
+                                    endTime = end.getTime();
                                 } else {
                                     const hour = parseInt(selectedInsightId);
                                     const start = new Date(selectedDate);
                                     start.setHours(hour, 0, 0, 0);
-                                    startTime = start.toISOString();
+                                    startTime = start.getTime();
 
                                     const end = new Date(selectedDate);
                                     end.setHours(hour, 59, 59, 999);
-                                    endTime = end.toISOString();
+                                    endTime = end.getTime();
                                 }
 
                                 runInsights({
