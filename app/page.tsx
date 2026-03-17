@@ -203,13 +203,13 @@ const Hero = () => {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="mt-16 relative"
                 >
-                    <div className="relative mx-auto max-w-[900px] p-2 bg-linear-to-b from-slate-200/50 to-slate-100/20 rounded-3xl border border-white shadow-2xl backdrop-blur-sm">
-                        <div className="rounded-2xl overflow-hidden shadow-inner bg-slate-50 relative aspect-square">
+                    <div className="relative mx-auto max-w-[1000px] p-2 bg-linear-to-b from-slate-200/50 to-slate-100/20 rounded-3xl border border-white shadow-2xl backdrop-blur-sm">
+                        <div className="rounded-2xl overflow-hidden shadow-2xl bg-slate-50 relative aspect-video">
                             <Image
                                 src="/hero-dashboard.png"
                                 alt="Watchtower Dashboard"
                                 fill
-                                className="object-cover opacity-95"
+                                className="object-cover object-top opacity-100"
                                 priority
                             />
                         </div>
@@ -303,14 +303,16 @@ const UseCases = () => {
             subtitle: "Lead with data, not guesswork.",
             description: "Empower your managers with real-time dashboards to track team progress, approve manual time requests, and monitor project health without micro-managing.",
             image: "/use-case-manager.png",
-            points: ["Approve time requests instantly", "Monitor team work-life balance", "Detailed activity reports"]
+            points: ["Approve time requests instantly", "Monitor team work-life balance", "Detailed activity reports"],
+            objectPosition: "object-top"
         },
         members: {
             title: "Focus & Productivity",
             subtitle: "Designed for modern workflows.",
             description: "A non-intrusive desktop app that helps team members track their time effectively, manage their tasks, and stay focused on what matters most.",
             image: "/use-case-member.png",
-            points: ["Easy-to-use desktop widget", "Track time across projects", "Privacy-first approach"]
+            points: ["Easy-to-use desktop widget", "Track time across projects", "Privacy-first approach"],
+            objectPosition: "object-center"
         }
     };
 
@@ -371,7 +373,7 @@ const UseCases = () => {
                     </div>
 
                     <div className="flex-1 relative">
-                        <div className="relative z-10 w-full aspect-square rounded-[40px] overflow-hidden shadow-2xl border-4 border-white">
+                        <div className="relative z-10 w-full aspect-[4/5] rounded-[40px] overflow-hidden shadow-2xl border-4 border-white bg-white">
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     key={activeTab}
@@ -385,7 +387,7 @@ const UseCases = () => {
                                         src={(content as any)[activeTab].image}
                                         alt={activeTab}
                                         fill
-                                        className="object-cover"
+                                        className={cn("object-cover", (content as any)[activeTab].objectPosition)}
                                     />
                                 </motion.div>
                             </AnimatePresence>

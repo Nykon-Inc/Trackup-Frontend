@@ -7,7 +7,7 @@ export interface IMemberDashboard {
         projects_worked: { value: number };
         today_activity: IMetricWithTrend;
         worked_today: IMetricWithTrend;
-        earned_today: { value: string };
+        earned_today: IMetricValue;
     };
     blocks: {
         recent_activity: IActivityBlock[];

@@ -118,7 +118,14 @@ export function MemberWidgets({ data, isLoading, visibleWidgets, onVisibilityCha
                     <MetricCard
                         title="EARNED TODAY"
                         value={data.metrics.earned_today.value}
-                        chart={<div className="h-1 w-full bg-blue-100/50 mt-4 rounded-full overflow-hidden"><div className="h-full bg-blue-500 w-0"></div></div>}
+                        chart={
+                            <div className="h-1 w-full bg-blue-100/50 mt-4 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-blue-500"
+                                    style={{ width: `${data.metrics.earned_today.progress || 0}%` }}
+                                ></div>
+                            </div>
+                        }
                         onRemove={() => onVisibilityChange("stats_earned_today", false)}
                     />
                 )}
