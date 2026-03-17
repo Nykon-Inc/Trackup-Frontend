@@ -91,25 +91,27 @@ export function InsightsTab({
     }, [aggregatedSessions])
 
     const hours = useMemo(() => {
-        if (!insightsData) return []
-        return insightsData.map((insight) => {
-            const start = new Date(insight.startTime)
-            const end = new Date(insight.endTime)
-            const startH = format(start, "h")
-            const startAA = format(start, "aa")
-            const endH = format(end, "h")
-            const endAA = format(end, "aa")
+        return Array.from({ length: 24 }).map((_, i) => {
+            const startHour = i;
+            const endHour = (i + 1) % 24;
+            
+            const startAA = startHour >= 12 ? "pm" : "am";
+            const endAA = endHour >= 12 ? "pm" : "am";
+            
+            const startH = startHour % 12 || 12;
+            const endH = endHour % 12 || 12;
 
             const label = startAA === endAA
                 ? `${startH}-${endH}${endAA}`
-                : `${startH}${startAA}-${endH}${endAA}`
+                : `${startH}${startAA}-${endH}${endAA}`;
 
             return {
-                id: insight.id,
-                label
+                id: i.toString(), // Store as hour index
+                label,
+                hour: i
             }
         })
-    }, [insightsData])
+    }, [])
 
     const selectedLabel = useMemo(() => {
         if (selectedInsightId === "today") return "Full Day"
@@ -150,7 +152,12 @@ export function InsightsTab({
     const filteredInsights = useMemo(() => {
         if (!insightsData) return []
         if (selectedInsightId === "today") return insightsData
-        return insightsData.filter(i => i.id === selectedInsightId)
+        
+        const selectedHour = parseInt(selectedInsightId);
+        return insightsData.filter(i => {
+            const start = new Date(i.startTime);
+            return start.getHours() === selectedHour;
+        })
     }, [insightsData, selectedInsightId])
 
     const getInsightLabel = (insight: IStaffHourlyInsight) => {
