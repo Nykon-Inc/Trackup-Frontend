@@ -44,6 +44,9 @@ import { useParams } from "next/navigation"
 import type { AggregatedSessions } from "@/interfaces/sessions.interfaces"
 import { IStaffHourlyInsight } from "@/interfaces/ai.interfaces"
 import { DatePickerCalendar } from "@/components/ui/date-picker-calendar"
+import { useWorkspace } from "@/components/providers/workspace-provider"
+import { cn } from "@/lib/utils"
+import { AIInsightsOverlay } from "@/components/ai-insights-overlay"
 
 export function InsightsTab({
     aggregatedSessions,
@@ -73,6 +76,11 @@ export function InsightsTab({
     const [rawActivityView, setRawActivityView] = useState<"screenshots" | "log">("screenshots")
     const [logFilter, setLogFilter] = useState<"all" | "active" | "idle">("all")
     const [selectedInsightId, setSelectedInsightId] = useState<string | "today">("today")
+
+    const { activeOrg, isLoading: isLoadingWorkspace } = useWorkspace();
+    const isOwner = activeOrg?.role === "owner";
+    const insightsEnabled = !!(activeOrg?.organization?.insightsEnabled || activeOrg?.organization?.enableInsights);
+    const insightsDisabled = !isLoadingWorkspace && !insightsEnabled;
 
     const { mutate: runInsights, isPending } = useRunUserInsights();
     const effectiveUserId = runInsightsUserId || staffId || id
@@ -175,8 +183,11 @@ export function InsightsTab({
     }
 
     return (
-        <div className="space-y-4">
-            <Card className="border border-border/60 shadow-sm rounded-xl">
+        <div className="space-y-4 relative">
+            {insightsDisabled && <AIInsightsOverlay orgId={orgId} />}
+
+            <div className={cn("space-y-4 transition-all duration-1000", insightsDisabled && "blur-[2px] opacity-90 select-none pointer-events-none h-[600px] overflow-hidden")}>
+                <Card className="border border-border/60 shadow-sm rounded-xl">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-semibold">Tessa Insights</CardTitle>
                     <div className="flex items-center gap-2 flex-wrap mt-2">
@@ -669,6 +680,7 @@ export function InsightsTab({
                     </CollapsibleContent>
                 </Collapsible>
             ))}
+            </div>
         </div>
     )
 }
