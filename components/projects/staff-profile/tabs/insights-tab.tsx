@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
+import { queryClient } from "@/lib/react-query"
 import {
     AlignLeft,
     AlertTriangle,
@@ -248,7 +249,8 @@ export function InsightsTab({
                                     startTime = start.getTime();
 
                                     const end = new Date(selectedDate);
-                                    end.setHours(23, 59, 59, 999);
+                                    end.setDate(end.getDate() + 1);
+                                    end.setHours(0, 0, 0, 0);
                                     endTime = end.getTime();
                                 } else {
                                     const hour = parseInt(selectedInsightId);
@@ -257,7 +259,7 @@ export function InsightsTab({
                                     startTime = start.getTime();
 
                                     const end = new Date(selectedDate);
-                                    end.setHours(hour, 59, 59, 999);
+                                    end.setHours(hour + 1, 0, 0, 0);
                                     endTime = end.getTime();
                                 }
 
@@ -266,6 +268,10 @@ export function InsightsTab({
                                     projectId: effectiveProjectId,
                                     startTime,
                                     endTime
+                                }, {
+                                    onSuccess: () => {
+                                        queryClient.invalidateQueries({ queryKey: ["staff-insights"] });
+                                    }
                                 })
                             }}
                             size="sm"
