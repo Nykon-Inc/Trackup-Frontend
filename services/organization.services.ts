@@ -483,3 +483,24 @@ export const useUpdateOrganizationInsights = () => {
         }
     });
 };
+
+export const useUpdateOrganizationSubscription = () => {
+    return useMutation({
+        mutationFn: async (payload: {
+            organizationId: string;
+            currentPeriodEnd?: string;
+            trialEndsAt?: string;
+        }) => {
+            const { organizationId, ...body } = payload;
+            const data = await http.patch({
+                url: routes.organization.internalSubscription(organizationId),
+                body: body,
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
+            queryClient.invalidateQueries({ queryKey: ["internal-organizations"] });
+        }
+    });
+};

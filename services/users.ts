@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, keepPreviousData } from "@tanstack/react-query";
 import http from "@/services/base";
 import { routes } from "@/services/routes";
 import { useAuthStore } from "@/stores/auth.store";
@@ -81,6 +81,7 @@ export const useFetchInternalUsers = (params?: Record<string, unknown>) => {
                 query: params,
             });
         },
+        placeholderData: keepPreviousData,
     });
 };
 

@@ -9,8 +9,8 @@ import { SelectControlled } from "@/components/ui/select-controlled";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createUserSchema } from "@/validators/users";
-import { useCreateInternalUser } from "@/services/users";
-import { useFetchRoles } from "@/services/rbac";
+import { useCreateInternalUser, useFetchInternalUsers } from "@/services/users";
+import { InternalUserRole } from "@/interfaces/auth.interfaces";
 import { useState } from "react";
 
 interface CreateTeamMemberFormProps {
@@ -21,13 +21,24 @@ interface CreateTeamMemberFormProps {
 export function CreateTeamMemberForm({ onClose, onSuccess }: CreateTeamMemberFormProps) {
     const [roleSearch, setRoleSearch] = useState("");
     const { mutateAsync: createUser, isPending: isCreating } = useCreateInternalUser();
-    const { data: rolesData } = useFetchRoles();
+    const { data: usersData } = useFetchInternalUsers({ limit: 1000 });
+    
+    // Check if lead operations already exists
+    const users = (usersData as any)?.results || [];
+    const leadOpsExists = users.some((u: any) => u.role === InternalUserRole.LEAD_OPERATIONS);
 
-    // Map roles to { id, label } format
-    const roles = Array.isArray(rolesData) ? rolesData.map((r: any) => ({
-        id: r.name,
-        label: r.label || r.name
-    })) : [];
+    // Role options mapping including LEAD_OPERATIONS
+    const roleOptions = [
+        { id: InternalUserRole.OPERATIONS, label: "Operations" },
+        { id: InternalUserRole.EXECUTIVE, label: "Executive" },
+        { id: InternalUserRole.ENGINEERING, label: "Engineering" },
+        { id: InternalUserRole.LEAD_OPERATIONS, label: "Lead Operations" },
+    ];
+
+    // Filter roles: if lead ops exists, remove it from selection
+    const availableRoles = leadOpsExists 
+        ? roleOptions.filter(r => r.id !== InternalUserRole.LEAD_OPERATIONS)
+        : roleOptions;
 
     const formik = useFormik({
         initialValues: {
@@ -84,11 +95,11 @@ export function CreateTeamMemberForm({ onClose, onSuccess }: CreateTeamMemberFor
                 <Label>Role</Label>
                 <SelectControlled
                     mode="single"
-                    items={roles.filter(r => r.label.toLowerCase().includes(roleSearch.toLowerCase()))}
+                    items={availableRoles.filter(r => r.label.toLowerCase().includes(roleSearch.toLowerCase()))}
                     onSearch={setRoleSearch}
                     getId={(item) => item.id}
                     getLabel={(item) => item.label}
-                    value={roles.find(r => r.id === formik.values.role)}
+                    value={availableRoles.find(r => r.id === formik.values.role)}
                     onChange={(val) => formik.setFieldValue('role', val?.id)}
                     placeholder="Select a role"
                     searchable={true}

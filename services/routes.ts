@@ -47,6 +47,7 @@ export const routes = {
         manualTimeRequestReview: (id: string, requestId: string) => `/client/organizations/${id}/manual-time-requests/${requestId}/review`,
         manualTimeRequestDirect: (id: string) => `/client/organizations/${id}/manual-time-requests/direct`,
         updateInsights: (id: string) => `/client/organizations/${id}/insights`,
+        internalSubscription: (id: string) => `/internal/organizations/${id}/subscription`,
     },
     projects: {
         index: "/client/projects",
@@ -119,5 +120,21 @@ export const routes = {
     paymentIntegrations: {
         index: "/client/payment-integrations",
         reveal: (organizationId: string, provider: string) => `/client/payment-integrations/reveal/${organizationId}/${provider}`,
+    },
+    tickets: {
+        client: {
+            index: (orgId: string) => `/client/organizations/${orgId}/tickets`,
+            detail: (orgId: string, id: string) => `/client/organizations/${orgId}/tickets/${id}`,
+            resolve: (orgId: string, id: string) => `/client/organizations/${orgId}/tickets/${id}/resolve`,
+            reopen: (orgId: string, id: string) => `/client/organizations/${orgId}/tickets/${id}/reopen`,
+            messages: (orgId: string, id: string) => `/client/organizations/${orgId}/tickets/${id}/messages`,
+        },
+        internal: {
+            index: "/internal/tickets",
+            detail: (id: string) => `/internal/tickets/${id}`,
+            resolve: (id: string) => `/internal/tickets/${id}/resolve`,
+            reopen: (id: string) => `/internal/tickets/${id}/reopen`,
+            messages: (id: string) => `/internal/tickets/${id}/messages`,
+        }
     }
 }

@@ -5,3 +5,11 @@ export interface ITablePagination {
     onRowsPerPageChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
     totalResults: number;
 }
+
+export type PaginatedResult<T> = {
+    results: T[];
+    page: number;
+    limit: number;
+    totalPages: number;
+    totalResults: number;
+};

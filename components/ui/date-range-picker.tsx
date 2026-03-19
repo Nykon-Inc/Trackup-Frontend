@@ -17,22 +17,28 @@ import {
 interface DatePickerWithRangeProps extends React.HTMLAttributes<HTMLDivElement> {
     date: DateRange | undefined
     setDate: (date: DateRange | undefined) => void
+    minDate?: Date
+    maxDate?: Date
 }
 
 export function DatePickerWithRange({
     className,
     date,
     setDate,
+    minDate,
+    maxDate,
 }: DatePickerWithRangeProps) {
+    const [open, setOpen] = React.useState(false)
+
     return (
         <div className={cn("grid gap-2", className)}>
-            <Popover>
+            <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
                         id="date"
                         variant={"outline"}
                         className={cn(
-                            "w-[300px] justify-start text-left font-normal",
+                            "w-full justify-start text-left font-normal",
                             !date && "text-muted-foreground"
                         )}
                     >
@@ -51,7 +57,7 @@ export function DatePickerWithRange({
                         )}
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 flex flex-col" align="start">
                     <Calendar
                         initialFocus
                         mode="range"
@@ -59,8 +65,21 @@ export function DatePickerWithRange({
                         selected={date}
                         onSelect={setDate}
                         numberOfMonths={2}
-                        disabled={(date) => date > new Date()}
+                        disabled={(date) => {
+                            if (minDate && date < minDate) return true
+                            if (maxDate && date > maxDate) return true
+                            return false
+                        }}
                     />
+                    <div className="p-3 border-t border-border flex justify-end">
+                        <Button 
+                            size="sm" 
+                            className="bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-widest text-[10px] h-8 px-4 rounded-lg"
+                            onClick={() => setOpen(false)}
+                        >
+                            Done
+                        </Button>
+                    </div>
                 </PopoverContent>
             </Popover>
         </div>

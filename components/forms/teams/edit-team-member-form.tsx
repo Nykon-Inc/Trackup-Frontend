@@ -10,8 +10,8 @@ import { DatePickerCalendar } from "@/components/ui/date-picker-calendar";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import * as Yup from "yup";
-import { useUpdateInternalUser } from "@/services/users";
-import { useFetchRoles } from "@/services/rbac";
+import { useUpdateInternalUser, useFetchInternalUsers } from "@/services/users";
+import { InternalUserRole } from "@/interfaces/auth.interfaces";
 import { useState } from "react";
 
 interface EditTeamMemberFormProps {
@@ -50,22 +50,23 @@ const editUserSchema = Yup.object().shape({
 export function EditTeamMemberForm({ user, onClose, onSuccess, onSubmit, roleOptions, showExtendedFields = false }: EditTeamMemberFormProps) {
     const [roleSearch, setRoleSearch] = useState("");
     const { mutateAsync: updateUser, isPending: isUpdating } = useUpdateInternalUser();
-    const { data: rolesData } = useFetchRoles();
+    const { data: usersData } = useFetchInternalUsers({ limit: 1000 });
 
-    // Map roles to { id, label } format
-    const rolesFromApi = Array.isArray(rolesData) ? rolesData.map((r: any) => ({
-        id: r.name,
-        label: r.label || r.name
-    })) : [];
-
-    const fallbackRoles = [
-        { id: "manager", label: "Manager" },
-        { id: "member", label: "Member" },
+    // Role options mapping including LEAD_OPERATIONS
+    const standardRoleOptions = [
+        { id: InternalUserRole.OPERATIONS, label: "Operations" },
+        { id: InternalUserRole.EXECUTIVE, label: "Executive" },
+        { id: InternalUserRole.ENGINEERING, label: "Engineering" },
+        { id: InternalUserRole.LEAD_OPERATIONS, label: "Lead Operations" },
     ];
 
-    const roles = (roleOptions && roleOptions.length > 0)
-        ? roleOptions
-        : (rolesFromApi.length > 0 ? rolesFromApi : fallbackRoles);
+    // Check if lead operations already exists and is not the current user being edited
+    const otherUsers = (usersData as any)?.results || [];
+    const leadOpsExistsElsewhere = otherUsers.some((u: any) => u.role === InternalUserRole.LEAD_OPERATIONS && u.id !== user.id);
+
+    const roles = leadOpsExistsElsewhere 
+        ? standardRoleOptions.filter(r => r.id !== InternalUserRole.LEAD_OPERATIONS)
+        : standardRoleOptions;
 
     const toDate = (value?: string | null) => {
         if (!value) return null;

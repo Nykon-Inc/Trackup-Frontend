@@ -28,7 +28,7 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { useWorkspace } from "@/components/providers/workspace-provider"
-import { LayoutDashboard, Folder, Users, Settings, ChevronsUpDown, User, LogOut, DollarSign, ClipboardCheck, ClipboardList, Palmtree, ChevronRight, Activity, Clock } from "lucide-react"
+import { LayoutDashboard, Folder, Users, Settings, ChevronsUpDown, User, LogOut, DollarSign, ClipboardCheck, ClipboardList, Palmtree, ChevronRight, Activity, Clock, LifeBuoy } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import clsx from "clsx"
 import { OrgSwitcher } from "./org-switcher"
@@ -190,7 +190,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 url: `/dashboard/${activeOrgId}/settings`,
                 icon: Settings,
             })
+            items.push({
+                title: "Support",
+                url: `/dashboard/${activeOrgId}/support`,
+                icon: LifeBuoy,
+            })
         }
+
 
         return items
     }, [activeOrgId, activeOrg?.role])

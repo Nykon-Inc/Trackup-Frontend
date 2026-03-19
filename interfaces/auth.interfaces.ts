@@ -1,6 +1,14 @@
 import { OrganizationMember, OrganizationInvitation } from "./organizations.interfaces";
 import { ProjectMembership } from "./projects.interfaces";
 
+
+export enum InternalUserRole {
+    EXECUTIVE = 'executive',
+    OPERATIONS = 'operations',
+    ENGINEERING = 'engineering',
+    LEAD_OPERATIONS = 'lead operations'
+}
+
 export interface LoginPayloadInterface {
     email: string;
     password: string;
