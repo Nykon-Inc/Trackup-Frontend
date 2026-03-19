@@ -22,7 +22,7 @@ export default function AcceptInvitePage() {
     });
 
     return (
-        <Card>
+        <Card className="gap-1">
             <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl text-center">Join the Team</CardTitle>
                 <CardDescription className="text-center">

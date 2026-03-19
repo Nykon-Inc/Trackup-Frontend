@@ -44,7 +44,7 @@ export default function SelectOrganizationPage() {
 
     if (!organizations || organizations.length === 0) {
         return (
-            <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+            <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden gap-1">
                 <CardHeader className="space-y-3 pt-12 pb-8 text-center bg-slate-50/30">
                     <CardTitle className="text-2xl font-bold font-logo uppercase text-slate-950 tracking-tight">No Workspace Found</CardTitle>
                     <CardDescription className="text-slate-500 font-medium px-4 leading-relaxed">
@@ -86,7 +86,7 @@ export default function SelectOrganizationPage() {
                 {organizations.map((member) => (
                     <Card
                         key={member.organization.id}
-                        className="group cursor-pointer border-slate-200/60 shadow-lg shadow-slate-100/50 rounded-[28px] overflow-hidden transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-100/30 hover:border-blue-200 active:scale-[0.98] gap-0"
+                        className="group cursor-pointer border-slate-200/60 shadow-lg shadow-slate-100/50 rounded-[28px] overflow-hidden transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-100/30 hover:border-blue-200 active:scale-[0.98] gap-1"
                         onClick={() => handleSelectOrganization(member.organization.id)}
                     >
                         <CardContent className="flex items-center justify-between px-7">

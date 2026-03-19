@@ -40,7 +40,7 @@ export default function VerifyPage() {
 
     if (!email) {
         return (
-            <Card className="w-full border-slate-200 shadow-xl rounded-[32px] overflow-hidden">
+            <Card className="w-full border-slate-200 shadow-xl rounded-[32px] overflow-hidden gap-1">
                 <CardHeader className="pt-10 pb-10 text-center bg-slate-50/50">
                     <CardTitle className="text-destructive font-bold font-logo uppercase">Invalid Request</CardTitle>
                     <CardDescription className="px-6 pt-4 text-slate-500 font-medium">
@@ -59,7 +59,7 @@ export default function VerifyPage() {
     const isLoading = verifyMutation.isPending;
 
     return (
-        <Card className="w-full border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+        <Card className="w-full border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden gap-1">
             <CardHeader className="space-y-3 pt-10 pb-8 text-center bg-slate-50/30">
                 <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 font-logo uppercase">Verify Account</CardTitle>
                 <CardDescription className="text-slate-500 font-medium px-4 text-sm leading-relaxed">

@@ -142,7 +142,7 @@ export default function OnboardingPage() {
                     <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Initializing Onboarding...</p>
                 </div>
             ) : view === "error" ? (
-                <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+                <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden gap-1">
                     <CardContent className="flex flex-col items-center justify-center gap-6 pt-12 pb-10 text-center px-8">
                         <div className="h-16 w-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-2">
                             <X className="h-8 w-8" />
@@ -153,7 +153,7 @@ export default function OnboardingPage() {
                     </CardContent>
                 </Card>
             ) : view === "accept-invite" ? (
-                <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+                <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden gap-1">
                     <CardHeader className="space-y-3 pt-12 pb-8 text-center bg-slate-50/30">
                         <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 font-logo uppercase">
                             Join Workspace
@@ -187,7 +187,7 @@ export default function OnboardingPage() {
                     </CardContent>
                 </Card>
             ) : view === "owner-setup" ? (
-                <Card className="w-full max-w-xl mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+                <Card className="w-full max-w-xl mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden gap-1">
                     <CardContent className="pt-10 pb-10 px-10">
                         <OwnerOnboardingWizard
                             token={token!}
@@ -199,7 +199,7 @@ export default function OnboardingPage() {
                     </CardContent>
                 </Card>
             ) : view === "signup" ? (
-                <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+                <Card className="w-full max-w-md mx-auto border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden gap-1">
                     <CardHeader className="space-y-3 pt-12 pb-8 text-center bg-slate-50/30">
                         <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 font-logo uppercase">Complete Profile</CardTitle>
                         <CardDescription className="text-slate-500 font-medium px-4 leading-relaxed text-sm">

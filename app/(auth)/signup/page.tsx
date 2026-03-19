@@ -32,7 +32,7 @@ export default function SignupPage() {
     const isLoading = registerMutation.isPending;
 
     return (
-        <Card className="w-full border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+        <Card className="w-full border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden gap-1">
             <CardHeader className="space-y-3 pt-10 pb-8 text-center bg-slate-50/30">
                 <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 font-logo uppercase">Create Account</CardTitle>
                 <CardDescription className="text-slate-500 font-medium px-4">
@@ -40,7 +40,7 @@ export default function SignupPage() {
                 </CardDescription>
             </CardHeader>
             <form onSubmit={formik.handleSubmit}>
-                <CardContent className="grid gap-6 pt-10 px-8">
+                <CardContent className="grid gap-6 pt-5 px-8">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="grid gap-2.5">
                             <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Full Name</Label>
@@ -104,8 +104,8 @@ export default function SignupPage() {
                     </p>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-6 pt-8 pb-10 px-8">
-                    <Button 
-                        type="submit" 
+                    <Button
+                        type="submit"
                         className="w-full h-12 bg-slate-950 text-white hover:bg-slate-800 rounded-xl text-base font-bold shadow-lg shadow-slate-200 transition-all active:scale-[0.98]"
                         loading={isLoading}
                         disabled={isLoading}

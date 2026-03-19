@@ -48,7 +48,7 @@ function ResetPasswordForm() {
 
     if (!code) {
         return (
-            <Card className="w-full border-slate-200 shadow-xl rounded-[32px] overflow-hidden">
+            <Card className="w-full border-slate-200 shadow-xl rounded-[32px] overflow-hidden gap-1">
                 <CardHeader className="pt-10 pb-10 text-center bg-slate-50/50">
                     <CardTitle className="text-destructive font-bold font-logo uppercase">Invalid Link</CardTitle>
                     <CardDescription className="px-6 pt-4 text-slate-500 font-medium leading-relaxed">
@@ -65,7 +65,7 @@ function ResetPasswordForm() {
     }
 
     return (
-        <Card className="w-full border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
+        <Card className="w-full border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden gap-1">
             <CardHeader className="space-y-3 pt-10 pb-8 text-center bg-slate-50/30">
                 <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 font-logo uppercase">New Password</CardTitle>
                 <CardDescription className="text-slate-500 font-medium px-4 text-sm leading-relaxed">
@@ -73,7 +73,7 @@ function ResetPasswordForm() {
                 </CardDescription>
             </CardHeader>
             <form onSubmit={formik.handleSubmit}>
-                <CardContent className="grid gap-7 pt-10 px-8">
+                <CardContent className="grid gap-7 pt-5 px-8">
                     <div className="grid gap-2.5">
                         <Label htmlFor="password" title="New Password" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">New Password</Label>
                         <Input

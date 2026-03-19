@@ -38,15 +38,15 @@ export default function LoginPage() {
     const isLoading = loginMutation.isPending;
 
     return (
-        <Card className="w-full border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden">
-            <CardHeader className="space-y-3 pt-10 pb-8 text-center bg-slate-50/30">
+        <Card className="w-full border-slate-200/60 shadow-2xl shadow-slate-100 rounded-[32px] overflow-hidden gap-1">
+            <CardHeader className="space-y-3 pt-6 pb-8 text-center bg-slate-50/30">
                 <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 font-logo uppercase">Sign in</CardTitle>
                 <CardDescription className="text-slate-500 font-medium px-4">
                     Welcome back! Please enter your credentials to access your workspace.
                 </CardDescription>
             </CardHeader>
             <form onSubmit={formik.handleSubmit}>
-                <CardContent className="grid gap-7 pt-10 px-8">
+                <CardContent className="grid gap-7 pt-5 px-8">
                     <div className="grid gap-2.5">
                         <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Work Email</Label>
                         <Input
