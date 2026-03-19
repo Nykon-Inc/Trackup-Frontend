@@ -277,6 +277,7 @@ export const useGetHubstaffProjects = (organizationId: string, enabled: boolean 
 
 export interface GetOrganizationMembersParams {
     organizationId: string;
+    internal?: boolean;
     query?: {
         search?: string;
         page?: number;
@@ -288,8 +289,11 @@ export const useGetOrganizationMembers = (params: GetOrganizationMembersParams) 
     return useQuery({
         queryKey: ["organization-members", params],
         queryFn: async () => {
+            const url = params.internal
+                ? routes.organization.internalMembers(params.organizationId)
+                : routes.organization.members(params.organizationId);
             const data = await http.get({
-                url: routes.organization.members(params.organizationId),
+                url,
                 query: params.query,
             });
             return data;
@@ -302,8 +306,11 @@ export const useGetOrganizationInvitations = (params: GetOrganizationMembersPara
     return useQuery({
         queryKey: ["organization-invitations", params],
         queryFn: async () => {
+            const url = params.internal
+                ? routes.organization.internalInvitations(params.organizationId)
+                : routes.organization.invitations(params.organizationId);
             const data = await http.get({
-                url: routes.organization.invitations(params.organizationId),
+                url,
                 query: params.query,
             });
             return data;
@@ -501,6 +508,7 @@ export const useUpdateOrganizationSubscription = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["my-organizations"] });
             queryClient.invalidateQueries({ queryKey: ["internal-organizations"] });
+            queryClient.invalidateQueries({ queryKey: ["internal-organization"] });
         }
     });
 };

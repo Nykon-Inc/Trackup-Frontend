@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { useGetInternalOrganizations } from "@/services/organization.services";
 import Table, { TableColumn } from "@/components/ui/data-table";
@@ -15,6 +16,7 @@ import { format } from "date-fns";
 import OrgtableActions from "@/components/internal/organizations/OrgtableActions";
 
 export default function InternalOrganizationsPage() {
+    const router = useRouter();
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [search, setSearch] = useState("");
@@ -29,7 +31,6 @@ export default function InternalOrganizationsPage() {
         {
             header: "Name",
             key: "name",
-            onClick: (_, row) => window.location.href = `/internal/organizations/${row.id}/projects`,
             render: (_: any, row) => (
                 <div className="flex flex-col">
                     <span className="font-medium text-foreground">{row.name}</span>
@@ -40,7 +41,6 @@ export default function InternalOrganizationsPage() {
         {
             header: "Status",
             key: "status",
-            onClick: (_, row) => window.location.href = `/internal/organizations/${row.id}/projects`,
             render: (status) => (
                 <Badge variant={status === "active" ? "default" : "secondary"} className="capitalize">
                     {status}
@@ -50,7 +50,6 @@ export default function InternalOrganizationsPage() {
         {
             header: "Created At",
             key: "createdAt",
-            onClick: (_, row) => window.location.href = `/internal/organizations/${row.id}/projects`,
             render: (date) => (
                 <span className="text-muted-foreground">
                     {date ? format(new Date(date), "MMM d, yyyy") : "-"}
@@ -130,6 +129,7 @@ export default function InternalOrganizationsPage() {
                         rowKey={(row) => row.id}
                         hover
                         emptyMessage="No organizations found."
+                        onRowClick={(row) => router.push(`/internal/organizations/${row.id}`)}
                     />
 
                     <TablePagination

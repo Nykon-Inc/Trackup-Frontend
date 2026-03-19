@@ -86,6 +86,7 @@ export function ProjectsList({ organizationId, basePath = "/internal/projects" }
                 loading={isLoading}
                 rowKey={(row) => row.id}
                 emptyMessage="No projects found."
+                rowClassName={"cursor-pointer"}
                 onRowClick={(row) => {
                     // Careful with slashes
                     const path = basePath.endsWith('/') ? `${basePath}${row.id}` : `${basePath}/${row.id}`;

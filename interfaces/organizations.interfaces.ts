@@ -6,7 +6,10 @@ export interface Organization {
     domain: string;
     enableInsights?: boolean;
     insightsEnabled?: boolean;
-    status: 'active' | 'disabled'
+    status: 'active' | 'disabled';
+    subscriptionStatus?: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
+    trialEndsAt?: string;
+    currentPeriodEnd?: string;
     onboarding?: {
         currentStep: OnboardingStep;
         completedSteps: OnboardingStep[];
