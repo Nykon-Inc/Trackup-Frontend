@@ -89,6 +89,32 @@ export interface SelectOrganizationPayloadInterface {
 export interface Organization {
     id: string;
     name: string;
+    domain: string;
+    enableInsights?: boolean;
+    insightsEnabled?: boolean;
+    status: 'active' | 'disabled';
+    subscriptionStatus?: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
+    subscriptionType?: string;
+    setupFeePaid?: boolean;
+    trialEndsAt?: string;
+    currentPeriodEnd?: string;
+    onboarding?: {
+        currentStep: string;
+        completedSteps: string[];
+        completedAt?: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+    isHubstaffConnected: boolean;
+    paymentIntegrations?: {
+        organizationId: string;
+        provider: 'wise' | 'deel';
+        isEnabled: boolean;
+        accessToken?: string;
+        createdAt: string;
+        updatedAt: string;
+        id: string;
+    }[];
 }
 
 

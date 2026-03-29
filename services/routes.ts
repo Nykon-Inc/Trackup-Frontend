@@ -138,5 +138,11 @@ export const routes = {
             reopen: (id: string) => `/internal/tickets/${id}/reopen`,
             messages: (id: string) => `/internal/tickets/${id}/messages`,
         }
+    },
+    billing: {
+        setupSession: "/client/billing/setup-session",
+        paymentMethods: (organizationId: string) => `/client/billing/payment-methods/${organizationId}`,
+        setDefaultPaymentMethod: (organizationId: string, paymentMethodId: string) => `/client/billing/payment-methods/${organizationId}/${paymentMethodId}/default`,
+        deletePaymentMethod: (organizationId: string, paymentMethodId: string) => `/client/billing/payment-methods/${organizationId}/${paymentMethodId}`,
     }
 }

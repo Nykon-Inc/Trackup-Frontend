@@ -130,7 +130,6 @@ export default function SettingsPage() {
                     description: "Manage subscriptions and payment methods.",
                     icon: CreditCard,
                     href: `/dashboard/${params?.orgId}/settings/billing`,
-                    isComingSoon: true
                 },
                 {
                     title: "AI Insights",

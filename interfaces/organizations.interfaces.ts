@@ -8,12 +8,14 @@ export interface Organization {
     insightsEnabled?: boolean;
     status: 'active' | 'disabled';
     subscriptionStatus?: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
+    subscriptionType?: string;
+    setupFeePaid?: boolean;
     trialEndsAt?: string;
     currentPeriodEnd?: string;
     onboarding?: {
         currentStep: OnboardingStep;
         completedSteps: OnboardingStep[];
-        completedAt?: Date;
+        completedAt?: string;
     };
     createdAt: string;
     updatedAt: string;
