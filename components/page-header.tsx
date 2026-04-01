@@ -12,6 +12,7 @@ import React from "react"
 import { NotificationsTrigger } from "@/components/notifications/notifications-trigger"
 import { GlobalSearch } from "@/components/global-search"
 import { PaymentNudgeBanner } from "./dashboard/payment-nudge-banner"
+import { usePathname } from "next/navigation"
 
 interface BreadcrumbItem {
     label: string
@@ -23,9 +24,12 @@ interface PageHeaderProps {
     title: string
     breadcrumbs?: BreadcrumbItem[]
     rightElement?: React.ReactNode
+    hidePaymentNudge?: boolean
 }
 
-export function PageHeader({ title, breadcrumbs, rightElement }: PageHeaderProps) {
+export function PageHeader({ title, breadcrumbs, rightElement, hidePaymentNudge = false }: PageHeaderProps) {
+    const pathname = usePathname();
+    const isInternal = pathname?.startsWith('/internal');
     return (
         <div className="flex flex-col w-full sticky top-0 z-10">
             <header className="flex h-12 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 w-full bg-white border-b px-4">
@@ -66,7 +70,7 @@ export function PageHeader({ title, breadcrumbs, rightElement }: PageHeaderProps
                     {rightElement}
                 </div>
             </header>
-            <PaymentNudgeBanner />
+            {!hidePaymentNudge && !isInternal && <PaymentNudgeBanner />}
         </div>
     )
 }

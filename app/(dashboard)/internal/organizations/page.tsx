@@ -82,6 +82,7 @@ export default function InternalOrganizationsPage() {
                     { label: "Dashboard", href: "/internal" },
                     { label: "Organizations", href: "/internal/organizations", active: true },
                 ]}
+                hidePaymentNudge={true}
             />
 
             <div className="flex h-[calc(100vh-8rem)] flex-col gap-6 p-6 overflow-y-auto">
