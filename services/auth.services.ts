@@ -79,6 +79,9 @@ export const useLogin = () => {
             setCookie(null, cookieKey, data.credentials.access.token, {
                 path: "/",
             });
+            setCookie(null, "ACCOUNT_TYPE", data.account.accountType, {
+                path: "/",
+            });
 
 
         },

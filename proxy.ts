@@ -6,6 +6,7 @@ import { cookieKey } from "./stores/auth.store";
 
 export async function proxy(request: NextRequest) {
     const accessToken = request.cookies.get(cookieKey)?.value;
+    const accountType = request.cookies.get("ACCOUNT_TYPE")?.value;
     const { pathname } = request.nextUrl;
 
     // Detect if the first segment is an OrgId (UUID format)
@@ -16,13 +17,28 @@ export async function proxy(request: NextRequest) {
 
     const isOrgRoute = firstSegment && uuidRegex.test(firstSegment);
     const isDashboardRoute = pathname.startsWith("/dashboard");
+    const isLoginRoute = pathname.startsWith("/login");
+    const isRootRoute = pathname.startsWith("/");
 
     // Protect Dashboard and Org Routes
     if (isDashboardRoute || isOrgRoute) {
         if (!accessToken) {
             // Redirect to login if not authenticated
             // Adjust login URL as needed, e.g. /auth/login or /login
-            return NextResponse.redirect(new URL("/auth/login", request.url));
+            return NextResponse.redirect(new URL("/logout", request.url));
+        }
+    } else if (isLoginRoute || isRootRoute) {
+        if (accessToken) {
+            if (!accountType) {
+                return NextResponse.redirect(new URL("/logout", request.url));
+            }
+            if (accountType === "client") {
+                // Redirect to dashboard if authenticated
+                return NextResponse.redirect(new URL("/select-organization", request.url));
+            } else {
+                // Redirect to dashboard if authenticated
+                return NextResponse.redirect(new URL("/internal", request.url));
+            }
         }
     }
 
@@ -64,7 +80,7 @@ export async function proxy(request: NextRequest) {
             } else {
                 // API Error (e.g. 401 expired)
                 if (response.status === 401) {
-                    return NextResponse.redirect(new URL("/auth/login", request.url));
+                    return NextResponse.redirect(new URL("/login", request.url));
                 }
                 // Allow or block? Block is safer.
                 // return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -81,6 +97,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
     matcher: [
+        "/",
+        "/login",
         "/dashboard/:path*",
         "/((?!api|_next/static|_next/image|favicon.ico|auth).*)", // Match all strictly to catch /[orgId]
     ],
