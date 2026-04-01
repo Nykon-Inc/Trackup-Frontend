@@ -17,8 +17,8 @@ export async function proxy(request: NextRequest) {
 
     const isOrgRoute = firstSegment && uuidRegex.test(firstSegment);
     const isDashboardRoute = pathname.startsWith("/dashboard");
-    const isLoginRoute = pathname.startsWith("/login");
-    const isRootRoute = pathname.startsWith("/");
+    const isLoginRoute = pathname === "/login";
+    const isRootRoute = pathname === "/";
 
     // Protect Dashboard and Org Routes
     if (isDashboardRoute || isOrgRoute) {

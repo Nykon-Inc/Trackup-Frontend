@@ -16,6 +16,7 @@ export default function LogoutPage() {
 
         // Destroy cookies
         destroyCookie(null, cookieKey, { path: '/' });
+        destroyCookie(null, "ACCOUNT_TYPE", { path: '/' });
 
         // Redirect to login
         router.push("/login"); // or / (auth) which redirects to login
