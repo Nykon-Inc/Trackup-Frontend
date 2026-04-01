@@ -10,8 +10,10 @@ import { loginSchema } from "@/validators/auth";
 import { useLogin } from "@/services/auth.services";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuthRedirect } from "@/hooks/use-auth-redirect";
 
 export default function LoginPage() {
+    useAuthRedirect();
     const loginMutation = useLogin();
     const router = useRouter();
     const formik = useFormik({

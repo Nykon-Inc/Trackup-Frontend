@@ -28,6 +28,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
 import { cn } from '@/lib/utils';
+import { useAuthRedirect } from '@/hooks/use-auth-redirect';
 
 // --- Components ---
 
@@ -373,7 +374,7 @@ const UseCases = () => {
                     </div>
 
                     <div className="flex-1 relative">
-                        <div className="relative z-10 w-full aspect-[4/5] rounded-[40px] overflow-hidden shadow-2xl border-4 border-white bg-white">
+                        <div className="relative z-10 w-full aspect-4/5 rounded-[40px] overflow-hidden shadow-2xl border-4 border-white bg-white">
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     key={activeTab}
@@ -506,6 +507,7 @@ const CTASection = () => {
 
 
 export default function Home() {
+    useAuthRedirect();
     return (
         <main className="min-h-screen bg-background">
             <MarketingNavbar />
