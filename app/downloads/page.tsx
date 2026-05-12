@@ -49,7 +49,13 @@ export default function DownloadsPage() {
 
         const fetchVersion = async () => {
             try {
-                const response = await fetch("https://jujjlgwwuhxhjxlkxcfn.supabase.co/storage/v1/object/public/app-releases/latest/update.json");
+                // Determine base URL for fetching version info
+                let versionBaseUrl = "https://nykon-apps.sfo3.digitaloceanspaces.com/watchtower-staging";
+                if (typeof window !== 'undefined' && window.location.hostname === 'watchtower.nykon.cloud') {
+                    versionBaseUrl = "https://nykon-apps.sfo3.digitaloceanspaces.com/watchtower-production";
+                }
+
+                const response = await fetch(`${versionBaseUrl}/latest/update.json`);
                 const data = await response.json();
                 if (data.version) {
                     setVersion(`v${data.version}`);

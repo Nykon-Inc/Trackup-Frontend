@@ -99,17 +99,27 @@ const Navbar = () => {
 };
 
 const Hero = () => {
+    const [baseUrl, setBaseUrl] = useState("https://nykon-apps.sfo3.digitaloceanspaces.com/watchtower-staging");
     const [os, setOs] = useState<{ name: string; link: string; icon: string }>({
         name: "App",
-        link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.dmg",
+        link: "https://nykon-apps.sfo3.digitaloceanspaces.com/watchtower-production/latest/Watchtower-desktop.dmg",
         icon: "mac"
     });
     const [version, setVersion] = useState("");
 
     React.useEffect(() => {
+        let currentBaseUrl = "https://nykon-apps.sfo3.digitaloceanspaces.com/watchtower-staging";
+        if (typeof window !== 'undefined') {
+            const hostname = window.location.hostname;
+            if (hostname === 'watchtower.nykon.cloud') {
+                currentBaseUrl = "https://nykon-apps.sfo3.digitaloceanspaces.com/watchtower-production";
+            }
+        }
+        setBaseUrl(currentBaseUrl);
+
         const fetchVersion = async () => {
             try {
-                const response = await fetch("https://jujjlgwwuhxhjxlkxcfn.supabase.co/storage/v1/object/public/app-releases/latest/update.json");
+                const response = await fetch(`${currentBaseUrl}/latest/update.json`);
                 const data = await response.json();
                 if (data.version) {
                     setVersion(`v${data.version}`);
@@ -124,19 +134,19 @@ const Hero = () => {
         if (platform.includes('win')) {
             setOs({
                 name: "Windows",
-                link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.exe",
+                link: `${currentBaseUrl}/latest/Watchtower-desktop.exe`,
                 icon: "windows"
             });
         } else if (platform.includes('mac')) {
             setOs({
                 name: "macOS",
-                link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.dmg",
+                link: `${currentBaseUrl}/latest/Watchtower-desktop.dmg`,
                 icon: "mac"
             });
         } else if (platform.includes('linux')) {
             setOs({
                 name: "Linux",
-                link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.AppImage",
+                link: `${currentBaseUrl}/latest/Watchtower-desktop.AppImage`,
                 icon: "linux"
             });
         }
