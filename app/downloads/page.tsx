@@ -60,7 +60,7 @@ export default function DownloadsPage() {
                 if (data.version) {
                     setVersion(`v${data.version}`);
                 }
-                // Try to get size from a common platform
+                // Try to get size from a common platf
                 const commonPlatform = data.platforms?.["darwin-aarch64"] || data.platforms?.["darwin-x86_64"];
                 if (commonPlatform?.content_length) {
                     setSize(formatBytes(commonPlatform.content_length));
