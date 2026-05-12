@@ -25,6 +25,7 @@ import { Card, CardContent } from '@/components/ui/card';
 export default function DownloadsPage() {
     const [version, setVersion] = React.useState("v3.5.18");
     const [size, setSize] = React.useState("78.2 MB");
+    const [baseUrl, setBaseUrl] = React.useState("https://nykon-apps.sfo3.digitaloceanspaces.com/watchtower-staging");
 
     const formatBytes = (bytes: number, decimals = 1) => {
         if (!bytes) return "0 Bytes";
@@ -36,6 +37,16 @@ export default function DownloadsPage() {
     };
 
     React.useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const hostname = window.location.hostname;
+            if (hostname === 'watchtower.nykon.cloud') {
+                setBaseUrl("https://nykon-apps.sfo3.digitaloceanspaces.com/watchtower-production");
+            } else {
+                // Default to staging for staging.watchtower.nykon.cloud and other environments
+                setBaseUrl("https://nykon-apps.sfo3.digitaloceanspaces.com/watchtower-staging");
+            }
+        }
+
         const fetchVersion = async () => {
             try {
                 const response = await fetch("https://jujjlgwwuhxhjxlkxcfn.supabase.co/storage/v1/object/public/app-releases/latest/update.json");
@@ -63,7 +74,7 @@ export default function DownloadsPage() {
             icon: Apple,
             primary: true,
             requirements: "macOS 11.0 or later",
-            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.dmg",
+            link: `${baseUrl}/latest/Watchtower-desktop.dmg`,
             type: "Disk Image (.dmg)"
         },
         {
@@ -73,7 +84,7 @@ export default function DownloadsPage() {
             icon: Monitor,
             primary: false,
             requirements: "Windows 10/11 (64-bit)",
-            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.exe",
+            link: `${baseUrl}/latest/Watchtower-desktop.exe`,
             type: "Executable (.exe)"
         },
         {
@@ -83,7 +94,7 @@ export default function DownloadsPage() {
             icon: Cpu,
             primary: false,
             requirements: "Ubuntu, Fedora, Debian",
-            link: "https://jujjlgwwuhxhjxlkxcfn.storage.supabase.co/storage/v1/object/public/app-releases/latest/Watchtower-desktop.AppImage",
+            link: `${baseUrl}/latest/Watchtower-desktop.AppImage`,
             type: "AppImage (.AppImage)"
         }
     ];
