@@ -147,7 +147,7 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
                         <div className="flex -space-x-1.5 overflow-hidden">
                             {members.slice(0, 3).map((member, i) => (
                                 <Avatar key={i} className="h-6 w-6 border border-white ring-0">
-                                    <AvatarImage src={`https://i.pravatar.cc/150?u=${member.email}`} />
+                                    <AvatarImage src={member.avatar || `https://i.pravatar.cc/150?u=${member.email}`} />
                                     <AvatarFallback className="text-[9px] bg-slate-100">
                                         {member.name.charAt(0)}
                                     </AvatarFallback>

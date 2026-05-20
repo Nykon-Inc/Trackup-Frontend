@@ -48,6 +48,7 @@ interface UnifiedMember {
     id: string;
     name: string;
     email: string;
+    avatar?: string;
     role: string;
     status: string;
     payRate?: number;
@@ -176,6 +177,7 @@ export default function TeamsPage() {
             id: m.id,
             name: m.user?.name || "",
             email: m.user?.email || "",
+            avatar: m.user?.avatar || "",
             role: m.role,
             status: m.status,
             isInvitation: false,
@@ -221,7 +223,7 @@ export default function TeamsPage() {
             render: (value, member) => (
                 <div className="flex items-center gap-3 py-2">
                     <Avatar className="h-10 w-10 border border-slate-100">
-                        <AvatarImage src={`https://i.pravatar.cc/150?u=${member.email}`} alt={member.name} />
+                        <AvatarImage src={member.avatar || `https://i.pravatar.cc/150?u=${member.email}`} alt={member.name} />
                         <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
                             {getInitials(member.name)}
                         </AvatarFallback>
