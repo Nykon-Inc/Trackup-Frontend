@@ -49,7 +49,7 @@ interface MenuItem {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const { activeOrgId, activeOrg } = useWorkspace()
+    const { activeOrgId, activeOrg, isLoading } = useWorkspace()
     const { account } = useAuthStore()
     const router = useRouter()
     const { state } = useSidebar()
@@ -210,7 +210,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarGroup>
                     <SidebarGroupLabel>Menu</SidebarGroupLabel>
                     <SidebarMenu>
-                        {activeMenuItems.map((item) => {
+                        {isLoading || !activeOrg ? (
+                            Array.from({ length: 8 }).map((_, index) => (
+                                <SidebarMenuItem key={index}>
+                                    <SidebarMenuSkeleton showIcon />
+                                </SidebarMenuItem>
+                            ))
+                        ) : activeMenuItems.map((item) => {
                             const isActive = item.exact
                                 ? pathname === item.url
                                 : pathname?.startsWith(item.url);
