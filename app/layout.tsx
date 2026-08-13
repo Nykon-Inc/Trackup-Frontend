@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google"; // Import Outfit and Inter
 import React from "react";
 
 import "./globals.css";
 import { Providers } from "./providers"; // We will create this
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata: Metadata = {
   title: {
@@ -28,7 +24,7 @@ export const metadata: Metadata = {
     description: "The ultimate workforce management and analytics platform. Monitor productivity, track time, and optimize your team's performance.",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-watchtower-v2.png",
         width: 1200,
         height: 630,
         alt: "Watchtower Workspace Analytics",
@@ -39,7 +35,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Watchtower | Workforce Management & Analytics",
     description: "The ultimate workforce management and analytics platform.",
-    images: ["/twitter-image.png"],
+    images: ["/og-watchtower-v2.png"],
     creator: "@nykoninc",
   },
   icons: {
@@ -68,7 +64,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${outfit.variable} font-sans antialiased`}
+        className="font-sans antialiased"
       >
         <div className="flex flex-col min-h-screen">
           <Providers>
