@@ -14,7 +14,7 @@ export const MarketingNavbar = () => {
         { name: 'Features', href: '/#features' },
         { name: 'Use Cases', href: '/#use-cases' },
         { name: 'Downloads', href: '/downloads' },
-        { name: 'Docs', href: '/docs' },
+        { name: 'Resources', href: '/resources' },
     ];
 
     return (

@@ -1,8 +1,5 @@
 import Image from "next/image";
-import { Outfit } from "next/font/google";
 import { cn } from "@/lib/utils";
-
-const outfit = Outfit({ subsets: ["latin"] });
 
 interface LogoProps {
     className?: string;
@@ -36,7 +33,7 @@ export function Logo({ className, size = "md", iconOnly = false }: LogoProps) {
                     priority
                 />
             </div>
-            {!iconOnly && <span className={cn("font-black tracking-tight text-slate-900 font-logo uppercase italic", outfit.className, sizeClasses[size])}>
+            {!iconOnly && <span className={cn("font-black tracking-tight text-slate-900 font-logo uppercase italic", sizeClasses[size])}>
                 Watchtower
             </span>}
         </div>

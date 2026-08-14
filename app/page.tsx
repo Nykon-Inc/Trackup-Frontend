@@ -199,12 +199,19 @@ const Hero = () => {
                                 </a>
                             </div>
                         </div>
-                        <Link href="/downloads" className="text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors flex items-center gap-1 group">
-                            Looking for other platforms?
-                            <span className="text-blue-600 group-hover:translate-x-0.5 transition-transform inline-flex items-center">
-                                View all downloads <ChevronRight className="h-4 w-4" />
-                            </span>
-                        </Link>
+                        <div className="flex flex-col items-center justify-center gap-2 text-sm font-bold sm:flex-row sm:gap-6">
+                            <Link href="/downloads" className="text-slate-400 hover:text-blue-600 transition-colors flex items-center gap-1 group">
+                                Looking for other platforms?
+                                <span className="text-blue-600 group-hover:translate-x-0.5 transition-transform inline-flex items-center">
+                                    View all downloads <ChevronRight className="h-4 w-4" />
+                                </span>
+                            </Link>
+                            <span className="hidden text-slate-300 sm:inline" aria-hidden="true">•</span>
+                            <Link href="/request-demo" className="group inline-flex items-center gap-1 text-primary transition-colors hover:text-primary/80">
+                                Prefer a guided walkthrough? Request a demo
+                                <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                            </Link>
+                        </div>
                     </div>
                 </motion.div>
 
@@ -500,14 +507,16 @@ const CTASection = () => {
                         Ready to optimize? Join hundreds of teams already scaling with Watchtower. Start your 14-day free trial today.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link href="/signup">
+                        <Link href="/request-demo">
                             <Button size="lg" className="h-14 px-10 bg-white text-slate-950 hover:bg-slate-100 rounded-full text-base font-bold shadow-xl">
-                                Create My Account
+                                Request a Demo
                             </Button>
                         </Link>
-                        <Button variant="ghost" className="text-white hover:bg-white/10 font-bold px-8 h-14 rounded-full border border-white/20">
-                            Book a Demo
-                        </Button>
+                        <Link href="/resources">
+                            <Button variant="ghost" className="text-white hover:bg-white/10 font-bold px-8 h-14 rounded-full border border-white/20">
+                                Explore Resources
+                            </Button>
+                        </Link>
                     </div>
                 </motion.div>
             </div>

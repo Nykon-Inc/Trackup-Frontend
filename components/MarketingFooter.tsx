@@ -23,6 +23,7 @@ export const MarketingFooter = () => {
                         <li><Link href="/#features" className="hover:text-blue-600 transition-colors">Features</Link></li>
                         <li><Link href="/#use-cases" className="hover:text-blue-600 transition-colors">Use Cases</Link></li>
                         <li><Link href="/downloads" className="hover:text-blue-600 transition-colors">Downloads</Link></li>
+                        <li><Link href="/request-demo" className="hover:text-blue-600 transition-colors">Request a Demo</Link></li>
                         <li><Link href="/login" className="hover:text-blue-600 transition-colors">Member Sign In</Link></li>
                     </ul>
                 </div>
@@ -38,7 +39,7 @@ export const MarketingFooter = () => {
                     <h5 className="font-bold text-slate-900 mb-6 uppercase tracking-wider text-xs">Support</h5>
                     <ul className="space-y-4 text-sm text-slate-500 font-medium">
                         <li><Link href="/contact" className="hover:text-blue-600 transition-colors">Contact Us</Link></li>
-                        <li><Link href="/docs" className="hover:text-blue-600 transition-colors">API Docs</Link></li>
+                        <li><Link href="/resources" className="hover:text-blue-600 transition-colors">Resources</Link></li>
                         <li><Link href="/status" className="hover:text-blue-600 transition-colors">System Status</Link></li>
                     </ul>
                 </div>
